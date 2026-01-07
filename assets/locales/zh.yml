@@ -1,0 +1,19 @@
+auth:
+  user-not-exist: "用户不存在"
+  error: "登录失败"
+  password-error: "登录密码错误"
+  already-logged-in: "账号已在其他地方登录"
+  phone-not-registered: "手机号未注册"
+  phone-exists: "手机已注册，请登录"
+  code-send-too-frequent: "验证码发送频繁"
+  code-expire: "验证码失效"
+  email-exists: "邮箱已注册，请登录"
+  email-not-registered: "邮箱未注册"
+  user-banned: "您的账户因违反平台使用规则已被禁用"
+
+param:
+  success: "操作成功"
+  fail: "操作失败"
+  validate-failed: "参数校验错误: {{.errors}}"
+  phone-format-error: "手机号格式不正确"
+  email-format-error: "邮箱格式不正确"

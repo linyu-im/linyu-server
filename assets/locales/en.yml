@@ -1,0 +1,18 @@
+auth:
+  error: "Login failed"
+  password-error: "Incorrect password"
+  already-logged-in: "Account logged in elsewhere"
+  phone-not-registered: "Phone number not registered"
+  phone-exists: "Mobile phone registered, please log in"
+  code-send-too-frequent: "Verification code sent too frequently"
+  code-expire: "Verification code has expired"
+  email-exists: "Email registered, please log in"
+  email-not-registered: "Email not registered"
+  user-banned: "Your account has been disabled for violating the platform's rules of use"
+
+param:
+  success: "Success"
+  fail: "Fail"
+  validate-failed: "Parameter validation failed: {{.errors}}"
+  phone-format-error: "The phone number format is incorrect"
+  email-format-error: "The email format is incorrect"

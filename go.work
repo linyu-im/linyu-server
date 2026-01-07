@@ -1,0 +1,10 @@
+go 1.25.5
+
+use (
+	.
+	./linyu-ai
+	./linyu-basic-service
+	./linyu-common
+	./linyu-gateway
+	./linyu-im
+)
