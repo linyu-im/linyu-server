@@ -7,6 +7,7 @@ type device struct {
 	Unknown string // 未知来源
 }
 
+// Device 登录设备
 var Device = device{
 	Web:     "web",
 	Desktop: "desktop",

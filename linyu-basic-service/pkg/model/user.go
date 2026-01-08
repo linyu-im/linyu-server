@@ -12,9 +12,9 @@ func init() {
 
 // User 用户账号表
 type User struct {
-	ID        string              `gorm:"size:32;primaryKey;autoIncrement:false;comment:id" json:"id"`
+	ID        string              `gorm:"size:64;primaryKey;autoIncrement:false;comment:id" json:"id"`
 	Username  string              `gorm:"size:255;not null;comment:用户名" json:"username"`
-	Account   string              `gorm:"size:32;uniqueIndex;not null;comment:账号" json:"account"`
+	Account   string              `gorm:"size:64;uniqueIndex;not null;comment:账号" json:"account"`
 	Password  string              `gorm:"size:255;not null;comment:密码" json:"-"`
 	Phone     string              `gorm:"size:11;uniqueIndex:uniq_phone_deleted_at;comment:手机号" json:"phone"`
 	Email     string              `gorm:"size:255;uniqueIndex:uniq_email_deleted_at;comment:邮箱" json:"email"`
