@@ -10,6 +10,7 @@ type ClientManager struct {
 }
 
 func NewClientManager() *ClientManager {
+	InitRoute()
 	return &ClientManager{
 		Users: make(map[string]map[string]*Client),
 	}
