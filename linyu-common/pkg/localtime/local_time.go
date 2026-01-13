@@ -10,7 +10,7 @@ import (
 
 var Location *time.Location = time.FixedZone("CST", 8*3600)
 
-func Init() {
+func InitLocalTime() {
 	loc, err := time.LoadLocation(config.C.Mysql.Timezone)
 	if err != nil {
 		panic("failed to init time zone: " + err.Error())

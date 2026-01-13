@@ -9,7 +9,7 @@ import (
 var MysqlDB *gorm.DB
 var RedisDB *redis.RedisClient
 
-func Init() {
+func InitDB() {
 	MysqlDB = mysql.CreateMysqlDB()
 	RedisDB = redis.CreateRedisClient()
 	//表结构新建

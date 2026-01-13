@@ -6,7 +6,7 @@ import (
 
 var Log *zap.Logger
 
-func Init() {
+func InitLog() {
 	var err error
 	Log, err = zap.NewProduction()
 	if err != nil {

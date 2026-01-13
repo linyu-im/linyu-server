@@ -12,7 +12,7 @@ import (
 
 var Bundle *i18n.Bundle
 
-func Init(localesDir string) {
+func InitI18n(localesDir string) {
 	Bundle = i18n.NewBundle(language.English)
 	Bundle.RegisterUnmarshalFunc("yml", yaml.Unmarshal)
 

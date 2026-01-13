@@ -21,12 +21,12 @@ var emailDir = flag.String("email-templates", "assets/email_templates", "Directo
 
 func main() {
 	flag.Parse()
-	config.Init(*configPath) //配置初始化
-	logger.Init()            //日志初始化
-	db.Init()                //数据库相关初始化
-	email.Init(*emailDir)    //邮件相关初始化
-	i18n.Init(*localesDir)   //国际化初始化
-	gateway.Run()            //服务运行
+	config.InitConfig(*configPath) //配置初始化
+	logger.InitLog()               //日志初始化
+	db.InitDB()                    //数据库相关初始化
+	email.InitEmail(*emailDir)     //邮件相关初始化
+	i18n.InitI18n(*localesDir)     //国际化初始化
+	gateway.Run()                  //服务运行
 
 	defer func() {
 		//日志缓冲区内容强制刷新

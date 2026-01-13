@@ -1,6 +1,9 @@
 package ws
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 var Manager = NewClientManager()
 
@@ -10,10 +13,12 @@ type ClientManager struct {
 }
 
 func NewClientManager() *ClientManager {
-	InitRoute()
-	return &ClientManager{
+	m := &ClientManager{
 		Users: make(map[string]map[string]*Client),
 	}
+	InitTask(m)
+	InitRoute()
+	return m
 }
 
 func (m *ClientManager) Join(userId string, client *Client) {
@@ -32,6 +37,11 @@ func (m *ClientManager) Join(userId string, client *Client) {
 func (m *ClientManager) Leave(userId string, deviceId string) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+
+	m.LeaveUnlock(userId, deviceId)
+}
+
+func (m *ClientManager) LeaveUnlock(userId string, deviceId string) {
 
 	devices, ok := m.Users[userId]
 	if !ok {
@@ -56,4 +66,37 @@ func (m *ClientManager) SendToUser(userId string, msg []byte) {
 			}
 		}
 	}
+}
+
+func (m *ClientManager) CleanExpiredClients() bool {
+	const timeoutSeconds = 10 * 60
+
+	now := uint64(time.Now().Unix())
+	expireThreshold := now - timeoutSeconds
+
+	var expiredClients []struct {
+		userId   string
+		deviceId string
+	}
+
+	m.lock.RLock()
+	for userId, devices := range m.Users {
+		for deviceId, client := range devices {
+			if client.HeartbeatTime < expireThreshold {
+				expiredClients = append(expiredClients, struct {
+					userId   string
+					deviceId string
+				}{userId, deviceId})
+			}
+		}
+	}
+	m.lock.RUnlock()
+
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	for _, ec := range expiredClients {
+		m.LeaveUnlock(ec.userId, ec.deviceId)
+	}
+	return true
 }

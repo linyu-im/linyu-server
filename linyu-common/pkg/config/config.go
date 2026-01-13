@@ -40,7 +40,7 @@ type Config struct {
 
 var C Config
 
-func Init(path string) {
+func InitConfig(path string) {
 	v := viper.New()
 	v.SetConfigFile(path)
 

@@ -11,7 +11,7 @@ import (
 
 var EmailDir string
 
-func Init(emailDir string) {
+func InitEmail(emailDir string) {
 	EmailDir = emailDir
 }
 

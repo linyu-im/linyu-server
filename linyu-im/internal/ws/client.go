@@ -45,9 +45,7 @@ func (c *Client) Read() {
 	for {
 		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
-			response, _ := json.Marshal(ErrorResponse("", "", err.Error()))
-			c.SendMsg(response)
-			continue
+			return
 		}
 		request := &Request{}
 		if err := json.Unmarshal(message, request); err != nil {
