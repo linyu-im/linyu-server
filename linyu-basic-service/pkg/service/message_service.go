@@ -20,6 +20,7 @@ func newMessageService() *messageService {
 type messageService struct{}
 
 func (s messageService) SendMessage(userId string, param *basicParam.SendMessageParam) error {
+	//创建消息
 	message := &model.Message{
 		ID:      utils.GenerateSfIDString(),
 		FromID:  userId,
@@ -33,6 +34,9 @@ func (s messageService) SendMessage(userId string, param *basicParam.SendMessage
 	if err != nil {
 		return err
 	}
+	//更新对方的聊天会话
+	_ = ChatService.UpdateUserChat(param.ToUserId, userId, constant.ChatType.User, message)
+	//发送消息
 	_ = eventbus.DefaultEventBus.Publish(event.MessageEvent{
 		FromUserId: userId,
 		ToUserId:   param.ToUserId,

@@ -10,11 +10,11 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/message/send", SendMessage, false)
+	route.Register("POST", "/basic/v1/message/send", SendMessageHandler, false)
 }
 
-// SendMessage 发送消息
-func SendMessage(c *gin.Context) {
+// SendMessageHandler 发送消息
+func SendMessageHandler(c *gin.Context) {
 	param := &basicParam.SendMessageParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
 		return

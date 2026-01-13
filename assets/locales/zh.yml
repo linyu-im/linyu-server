@@ -17,3 +17,4 @@ param:
   validate-failed: "参数校验错误: {{.errors}}"
   phone-format-error: "手机号格式不正确"
   email-format-error: "邮箱格式不正确"
+  type-not-exist: "相关类型不存在"

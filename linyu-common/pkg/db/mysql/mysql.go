@@ -5,6 +5,7 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // CreateMysqlDB 创建Mysql客户端
@@ -14,6 +15,7 @@ func CreateMysqlDB() *gorm.DB {
 		c.User, c.Password, c.Host, c.Port, c.Database)
 	var err error
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db.Logger.LogMode(logger.Warn)
 	if err != nil {
 		panic("failed to connect mysql database: " + err.Error())
 	}
