@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	"gorm.io/gorm"
 )
 
@@ -14,23 +14,23 @@ func newUserDao() *userDao {
 type userDao struct{}
 
 // GetUserByAccount 根据账号获取用户信息
-func (r userDao) GetUserByAccount(db *gorm.DB, account string) *model.User {
-	result := &model.User{}
+func (r userDao) GetUserByAccount(db *gorm.DB, account string) *basicModel.User {
+	result := &basicModel.User{}
 	if err := db.First(result, "account = ?", account).Error; err != nil {
 		return nil
 	}
 	return result
 }
 
-func (r userDao) GetUserByEmail(db *gorm.DB, email string) *model.User {
-	result := &model.User{}
+func (r userDao) GetUserByEmail(db *gorm.DB, email string) *basicModel.User {
+	result := &basicModel.User{}
 	if err := db.First(result, "email = ?", email).Error; err != nil {
 		return nil
 	}
 	return result
 }
 
-func (r userDao) Create(db *gorm.DB, user *model.User) error {
+func (r userDao) Create(db *gorm.DB, user *basicModel.User) error {
 	if err := db.Create(user).Error; err != nil {
 		return err
 	}

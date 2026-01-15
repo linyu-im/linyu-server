@@ -7,5 +7,5 @@ import (
 )
 
 func init() {
-	eventbus.DefaultEventBus.Subscribe(event.MessageEvent{}, consumer.MessageConsumerHandler)
+	eventbus.DefaultEventBus.Subscribe(event.WsDataEvent{}, consumer.WsDataConsumerHandler)
 }

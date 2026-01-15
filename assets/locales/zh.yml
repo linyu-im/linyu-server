@@ -18,3 +18,11 @@ param:
   phone-format-error: "手机号格式不正确"
   email-format-error: "邮箱格式不正确"
   type-not-exist: "相关类型不存在"
+  error: "参数错误"
+
+common:
+  data-not-exist: "相关数据不存在"
+
+basic:
+  contacts:
+    rel-already-exists: "关系已经存在"

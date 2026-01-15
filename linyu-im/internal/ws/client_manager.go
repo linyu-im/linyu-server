@@ -57,6 +57,12 @@ func (m *ClientManager) LeaveUnlock(userId string, deviceId string) {
 	}
 }
 
+func (m *ClientManager) SendToUsers(userIds []string, msg []byte) {
+	for _, userId := range userIds {
+		m.SendToUser(userId, msg)
+	}
+}
+
 func (m *ClientManager) SendToUser(userId string, msg []byte) {
 	if devices, ok := m.Users[userId]; ok {
 		for _, client := range devices {

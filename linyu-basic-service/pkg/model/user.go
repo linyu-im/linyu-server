@@ -21,7 +21,7 @@ type User struct {
 	Gender    string              `gorm:"size:10;comment:性别" json:"gender"`
 	Birthday  localtime.LocalTime `gorm:"comment:生日" json:"birthday"`
 	Avatar    string              `gorm:"size:512;comment:头像URL" json:"avatar"`
-	Status    string              `gorm:"size:20;default:'active';comment:用户状态" json:"status"`
+	Status    string              `gorm:"size:64;default:'active';comment:用户状态" json:"status"`
 	CreatedAt localtime.LocalTime `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt localtime.LocalTime `gorm:"autoUpdateTime" json:"updatedAt"`
 	DeletedAt gorm.DeletedAt      `gorm:"uniqueIndex:uniq_phone_deleted_at;uniqueIndex:uniq_email_deleted_at;index" json:"deletedAt"`

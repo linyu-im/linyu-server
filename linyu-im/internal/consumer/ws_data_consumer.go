@@ -1,15 +1,17 @@
 package consumer
 
 import (
+	"encoding/json"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/event"
 	"github.com/linyu-im/linyu-server/linyu-im/internal/ws"
 )
 
-func MessageConsumerHandler(e event.Event) error {
-	me, ok := e.(event.MessageEvent)
+func WsDataConsumerHandler(e event.Event) error {
+	me, ok := e.(event.WsDataEvent)
 	if !ok {
 		return nil
 	}
-	ws.Manager.SendToUser(me.ToUserId, []byte(me.Content))
+	msgBytes, _ := json.Marshal(e)
+	ws.Manager.SendToUsers(me.ToUserIds, msgBytes)
 	return nil
 }
