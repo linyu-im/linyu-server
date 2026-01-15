@@ -31,3 +31,24 @@ func (d *contactsDao) Create(db *gorm.DB, contacts *basicModel.Contacts) error {
 	}
 	return nil
 }
+
+func (d *contactsDao) ContactsList(db *gorm.DB, userId string) ([]*basicModel.Contacts, error) {
+	var list []*basicModel.Contacts
+	if err := db.Where("user_id = ?", userId).Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (d *contactsDao) GetById(db *gorm.DB, contactsId string) (*basicModel.Contacts, error) {
+	result := &basicModel.Contacts{}
+	if err := db.First(result, "id = ?", contactsId).Error; err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (d *contactsDao) UnscopedDeleteByUserAndPeerId(db *gorm.DB, userId string, peerId string) error {
+	result := db.Unscoped().Where("user_id = ? AND peer_id = ?", userId, peerId).Delete(&basicModel.Contacts{}).Error
+	return result
+}
