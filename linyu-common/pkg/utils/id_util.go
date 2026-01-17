@@ -52,3 +52,18 @@ func GenerateSfIDString() string {
 func GenerateUuid() string {
 	return uuid.New().String()
 }
+
+func GenerateOnlyNumber(accountPrefix string, checkFun func(account string) bool) string {
+	const maxRetry = 5
+	var account string
+	for i := 0; i < maxRetry; i++ {
+		account = GenerateAccount(accountPrefix)
+		if is := checkFun(account); is {
+			break
+		}
+		if i == maxRetry-1 {
+			account = accountPrefix + GenerateSfIDString()
+		}
+	}
+	return account
+}

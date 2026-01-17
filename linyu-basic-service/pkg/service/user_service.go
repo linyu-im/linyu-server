@@ -48,20 +48,13 @@ func (s *userService) SendCodeByEmail(email string) error {
 
 // RegisterByEmail 根据邮箱创建账号
 func (s *userService) RegisterByEmail(email string) error {
-	const maxRetry = 5
-	var account string
-	for i := 0; i < maxRetry; i++ {
-		account = utils.GenerateAccount("linyu_")
-		if user := basicDao.UserDao.GetUserByAccount(db.MysqlDB, account); user == nil {
-			break
-		}
-		if i == maxRetry-1 {
-			account = "linyu_" + utils.GenerateSfIDString()
-		}
-	}
+	account := utils.GenerateOnlyNumber("linyu_", func(account string) bool {
+		user := basicDao.UserDao.GetUserByAccount(db.MysqlDB, account)
+		return user == nil
+	})
 	user := &basicModel.User{
 		ID:       utils.GenerateSfIDString(),
-		Email:    email,
+		Email:    &email,
 		Username: utils.RandUsername("林语"),
 		Account:  account,
 	}
