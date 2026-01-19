@@ -13,8 +13,8 @@ func init() {
 // Apply 申请相关表
 type Apply struct {
 	ID        string              `gorm:"size:64;primaryKey;autoIncrement:false;comment:id" json:"id"`
-	UserID    string              `gorm:"size:64;not null;comment:用户id" json:"userId"`
-	PeerID    string              `gorm:"size:64;comment:对方的id" json:"peerId"`
+	UserID    string              `gorm:"size:64;index;not null;comment:用户id" json:"userId"`
+	PeerID    string              `gorm:"size:64;index;comment:对方的id" json:"peerId"`
 	Type      string              `gorm:"size:64;default:null;comment:类型" json:"type"`
 	Describe  string              `gorm:"type:text;default:null;comment:描述" json:"describe"`
 	Status    string              `gorm:"size:64;comment:状态" json:"status"`

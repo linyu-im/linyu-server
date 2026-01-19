@@ -13,8 +13,8 @@ func init() {
 // Message 消息表
 type Message struct {
 	ID         string              `gorm:"size:64;primaryKey;autoIncrement:false;comment:消息id" json:"id"`
-	FromID     string              `gorm:"size:64;not null;comment:消息发送方id" json:"fromId"`
-	ToID       string              `gorm:"size:64;not null;comment:消息接受方id" json:"toId"`
+	FromID     string              `gorm:"size:64;index;not null;comment:消息发送方id" json:"fromId"`
+	ToID       string              `gorm:"size:64;index;not null;comment:消息接受方id" json:"toId"`
 	Type       string              `gorm:"size:64;comment:消息类型" json:"type"`
 	IsShowTime bool                `gorm:"comment:是否显示时间;default:0" json:"isShowTime"`
 	Content    string              `gorm:"type:text;comment:消息内容" json:"content"`

@@ -20,7 +20,20 @@ func (d *groupMemberDao) Create(db *gorm.DB, groupMember *basicModel.GroupMember
 	return nil
 }
 
-func (d *groupMemberDao) DeleteMemberByGroupId(db *gorm.DB, groupId string) error {
-	err := db.Where("group_id = ?", groupId).Delete(&basicModel.GroupMember{}).Error
+func (d *groupMemberDao) UnscopedDeleteMemberByGroupId(db *gorm.DB, groupId string) error {
+	err := db.Unscoped().Where("group_id = ?", groupId).Delete(&basicModel.GroupMember{}).Error
+	return err
+}
+
+func (d *groupMemberDao) GetGroupMemberByGroupIdAndUserId(db *gorm.DB, groupId string, userId string) *basicModel.GroupMember {
+	result := &basicModel.GroupMember{}
+	if err := db.First(result, "group_id = ? AND user_id = ?", groupId, userId).Error; err != nil {
+		return nil
+	}
+	return result
+}
+
+func (d *groupMemberDao) UnscopedRemoveMember(db *gorm.DB, groupId string, userId string) error {
+	err := db.Unscoped().Where("group_id = ? AND user_id = ?", groupId, userId).Delete(&basicModel.GroupMember{}).Error
 	return err
 }

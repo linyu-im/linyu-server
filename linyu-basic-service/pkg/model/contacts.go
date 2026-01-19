@@ -14,7 +14,7 @@ func init() {
 type Contacts struct {
 	ID        string              `gorm:"size:64;primaryKey;autoIncrement:false;comment:好友表id" json:"id"`
 	UserID    string              `gorm:"size:64;index;not null;comment:用户id" json:"userId"`
-	PeerId    string              `gorm:"size:64;not null;comment:对方的id" json:"peerId"`
+	PeerId    string              `gorm:"size:64;index;not null;comment:对方的id" json:"peerId"`
 	Remark    string              `gorm:"size:64;comment:备注" json:"remark"`
 	IsBack    bool                `gorm:"comment:是否拉黑;default:0" json:"isBack"`
 	IsConcern bool                `gorm:"comment:是否关心;default:0" json:"isConcern"`

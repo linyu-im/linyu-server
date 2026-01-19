@@ -40,3 +40,18 @@ func (d *groupDao) GetGroupById(db *gorm.DB, id string) *basicModel.Group {
 	}
 	return result
 }
+
+func (d *groupDao) UpdateMemberNum(db *gorm.DB, groupId string) error {
+	var memberCount int64
+	if err := db.Model(&basicModel.GroupMember{}).
+		Where("group_id = ?", groupId).
+		Count(&memberCount).Error; err != nil {
+		return err
+	}
+	if err := db.Model(&basicModel.Group{}).
+		Where("id = ?", groupId).
+		Update("member_num", memberCount).Error; err != nil {
+		return err
+	}
+	return nil
+}

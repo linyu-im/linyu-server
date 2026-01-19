@@ -12,6 +12,8 @@ import (
 func init() {
 	route.Register("POST", "/basic/v1/group/create", GroupCreateHandler, false)
 	route.Register("POST", "/basic/v1/group/dissolve", GroupDissolveHandler, false)
+	route.Register("POST", "/basic/v1/group/invite-member", GroupInviteMemberHandler, false)
+	route.Register("POST", "/basic/v1/group/remove-member", GroupRemoveMemberHandler, false)
 }
 
 // GroupCreateHandler 群聊创建
@@ -37,6 +39,36 @@ func GroupDissolveHandler(c *gin.Context) {
 	}
 	currentUserId := c.GetString("userId")
 	err := basicService.GroupService.GroupDissolve(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// GroupInviteMemberHandler 群聊邀请成员
+func GroupInviteMemberHandler(c *gin.Context) {
+	param := &basicParam.GroupInviteMemberParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.InviteMember(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// GroupRemoveMemberHandler 群聊移除成员
+func GroupRemoveMemberHandler(c *gin.Context) {
+	param := &basicParam.GroupRemoveMemberParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.RemoveMember(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
