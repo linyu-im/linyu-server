@@ -62,3 +62,8 @@ func (s *chatService) ChatCreate(userId string, param *basicParam.ChatCreatePara
 	}
 	return chat, nil
 }
+
+func (s *chatService) SetTop(userId string, param *basicParam.ChatSetTopParam) error {
+	err := basicDao.ChatDao.SetIsTopByIdAndUserId(db.MysqlDB, param.IsTop, userId, param.ChatId)
+	return err
+}

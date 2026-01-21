@@ -16,7 +16,10 @@ type chatDao struct{}
 
 func (d *chatDao) ChatList(db *gorm.DB, userId string) ([]*basicModel.Chat, error) {
 	var chatList []*basicModel.Chat
-	if err := db.Where("user_id = ?", userId).Find(&chatList).Error; err != nil {
+	if err := db.Model(&basicModel.Chat{}).
+		Where("user_id = ?", userId).
+		Order("is_top DESC, updated_at DESC").
+		Find(&chatList).Error; err != nil {
 		return nil, err
 	}
 	return chatList, nil
@@ -49,6 +52,15 @@ func (d *chatDao) Create(db *gorm.DB, chat *basicModel.Chat) error {
 
 func (d *chatDao) Update(db *gorm.DB, chat *basicModel.Chat) error {
 	if err := db.Updates(chat).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *chatDao) SetIsTopByIdAndUserId(db *gorm.DB, isTop bool, userId string, chatId string) error {
+	if err := db.Model(&basicModel.Chat{}).
+		Where("id = ? AND user_id = ?", chatId, userId).
+		Update("is_top", isTop).Error; err != nil {
 		return err
 	}
 	return nil

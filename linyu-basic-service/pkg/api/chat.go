@@ -12,6 +12,7 @@ import (
 func init() {
 	route.Register("POST", "/basic/v1/chat/list", ChatListHandler, false)
 	route.Register("POST", "/basic/v1/chat/create", ChatCreateHandler, false)
+	route.Register("POST", "/basic/v1/chat/set/top", ChatSetTopHandler, false)
 }
 
 // ChatListHandler 聊天会话列表
@@ -38,4 +39,19 @@ func ChatCreateHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c, chat)
+}
+
+// ChatSetTopHandler 聊天会话置顶设置
+func ChatSetTopHandler(c *gin.Context) {
+	param := &basicParam.ChatSetTopParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.ChatService.SetTop(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
 }
