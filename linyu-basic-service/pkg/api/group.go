@@ -10,10 +10,10 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/group/create", GroupCreateHandler, false)
-	route.Register("POST", "/basic/v1/group/dissolve", GroupDissolveHandler, false)
-	route.Register("POST", "/basic/v1/group/invite-member", GroupInviteMemberHandler, false)
-	route.Register("POST", "/basic/v1/group/remove-member", GroupRemoveMemberHandler, false)
+	route.Register("POST", "/basic/v1/group/create", GroupCreateHandler)
+	route.Register("POST", "/basic/v1/group/dissolve", GroupDissolveHandler)
+	route.Register("POST", "/basic/v1/group/invite-member", GroupInviteMemberHandler)
+	route.Register("POST", "/basic/v1/group/remove-member", GroupRemoveMemberHandler)
 }
 
 // GroupCreateHandler 群聊创建

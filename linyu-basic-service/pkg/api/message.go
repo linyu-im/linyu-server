@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/message/send", SendMessageHandler, false)
+	route.Register("POST", "/basic/v1/message/send", SendMessageHandler)
 }
 
 // SendMessageHandler 发送消息

@@ -10,11 +10,11 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/apply/add/contacts", ApplyAddContactsHandler, false)
-	route.Register("POST", "/basic/v1/apply/agree/contacts", ApplyAgreeContactsHandler, false)
-	route.Register("POST", "/basic/v1/apply/reject", ApplyRejectHandler, false)
-	route.Register("POST", "/basic/v1/apply/cancel", ApplyCancelHandler, false)
-	route.Register("POST", "/basic/v1/apply/list", ApplyListHandler, false)
+	route.Register("POST", "/basic/v1/apply/add/contacts", ApplyAddContactsHandler)
+	route.Register("POST", "/basic/v1/apply/agree/contacts", ApplyAgreeContactsHandler)
+	route.Register("POST", "/basic/v1/apply/reject", ApplyRejectHandler)
+	route.Register("POST", "/basic/v1/apply/cancel", ApplyCancelHandler)
+	route.Register("POST", "/basic/v1/apply/list", ApplyListHandler)
 }
 
 // ApplyListHandler 申请列表

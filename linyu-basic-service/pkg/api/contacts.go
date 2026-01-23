@@ -10,8 +10,8 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/contacts/list", ContactsListHandler, false)
-	route.Register("POST", "/basic/v1/contacts/rel/delete", ContactsRelDelHandler, false)
+	route.Register("POST", "/basic/v1/contacts/list", ContactsListHandler)
+	route.Register("POST", "/basic/v1/contacts/rel/delete", ContactsRelDelHandler)
 }
 
 // ContactsListHandler 通讯录列表

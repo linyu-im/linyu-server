@@ -10,8 +10,8 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/register/email", EmailRegisterHandler, true)
-	route.Register("POST", "/basic/v1/code/email", SendEmailCodeHandler, true)
+	route.RegisterWhite("POST", "/basic/v1/register/email", EmailRegisterHandler)
+	route.RegisterWhite("POST", "/basic/v1/code/email", SendEmailCodeHandler)
 }
 
 // SendEmailCodeHandler 发送邮件验证码

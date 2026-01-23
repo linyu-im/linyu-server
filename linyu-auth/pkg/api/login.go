@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/auth/v1/login/pwd", PwdLoginHandler, true)
+	route.RegisterWhite("POST", "/auth/v1/login/pwd", PwdLoginHandler)
 }
 
 // PwdLoginHandler 密码登录

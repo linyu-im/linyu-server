@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	route.Register("GET", "/ws", WsGinApiHandler, false)
+	route.Register("GET", "/ws", WsGinApiHandler)
 }
 
 var upgrader = websocket.Upgrader{

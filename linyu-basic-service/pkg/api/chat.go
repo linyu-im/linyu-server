@@ -10,9 +10,9 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/chat/list", ChatListHandler, false)
-	route.Register("POST", "/basic/v1/chat/create", ChatCreateHandler, false)
-	route.Register("POST", "/basic/v1/chat/set/top", ChatSetTopHandler, false)
+	route.Register("POST", "/basic/v1/chat/list", ChatListHandler)
+	route.Register("POST", "/basic/v1/chat/create", ChatCreateHandler)
+	route.Register("POST", "/basic/v1/chat/set/top", ChatSetTopHandler)
 }
 
 // ChatListHandler 聊天会话列表
