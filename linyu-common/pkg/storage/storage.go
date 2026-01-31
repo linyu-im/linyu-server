@@ -20,6 +20,8 @@ func InitStorage() {
 	switch config.C.Storage.Type {
 	case config.LocalStorageType:
 		S = NewLocalStorage(config.C.Storage.LocalStorage)
+	case config.OssStorageType:
+		S = NewOssStorage(config.C.Storage.OssStorage)
 	default:
 		panic("storage type not supported: " + config.C.Storage.Type)
 	}

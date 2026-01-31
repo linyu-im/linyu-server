@@ -31,3 +31,9 @@ storage:
   local:
     base-url: "http://localhost:9088"
     file-path: "./linyu-storage"
+  oss:
+    base-url: "https://xxxx.com"
+    endpoint: "oss-cn-shanghai.aliyuncs.com"
+    access-key-id: "access-key-id"
+    access-key-secret: "access-key-secret"
+    bucket-name: "linyu-storage"
