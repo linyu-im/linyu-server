@@ -6,7 +6,8 @@ import (
 
 type Config struct {
 	Server struct {
-		Port int `mapstructure:"port"`
+		Port        int    `mapstructure:"port"`
+		RoutePrefix string `mapstructure:"route-prefix"`
 	} `mapstructure:"server"`
 
 	Mysql struct {
@@ -36,6 +37,12 @@ type Config struct {
 		Password string `mapstructure:"password"`
 		Username string `mapstructure:"username"`
 	} `mapstructure:"email"`
+
+	Storage struct {
+		Type         StorageType        `mapstructure:"type"`
+		LocalStorage LocalStorageConfig `mapstructure:"local"`
+		OssStorage   OssStorageConfig   `mapstructure:"oss"`
+	}
 }
 
 var C Config

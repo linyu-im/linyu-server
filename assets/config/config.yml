@@ -1,5 +1,6 @@
 server:
   port: 9088
+  route-prefix: "/api"
 
 redis:
   addr: "127.0.0.1:6379"
@@ -24,3 +25,9 @@ mysql:
   password: 123456
   database: linyu
   timezone: Asia/Shanghai
+
+storage:
+  type: "local"
+  local:
+    base-url: "http://localhost:9088"
+    file-path: "./linyu-storage"

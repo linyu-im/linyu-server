@@ -11,13 +11,11 @@ import (
 	_ "github.com/linyu-im/linyu-server/linyu-im/pkg/api"
 )
 
-const pathPrefix = "/api"
-
 func Run() {
 	engine := gin.New()
 	engine.Use(middleware.Cors())
 	engine.Use(middleware.Auth())
-	apiGroup := engine.Group(pathPrefix)
+	apiGroup := engine.Group(config.C.Server.RoutePrefix)
 	apiGroup.Use(middleware.ReqLogger())
 	// 加载路由 使用 import _ 将相关模块引入
 	for _, apiRoute := range route.Routers {
@@ -26,7 +24,7 @@ func Run() {
 		}
 		// 添加白名单
 		if apiRoute.IsWhite {
-			middleware.AddWhiteListPath(pathPrefix + apiRoute.Path)
+			middleware.AddWhiteListPath(config.C.Server.RoutePrefix + apiRoute.Path)
 		}
 		switch apiRoute.Method {
 		case "GET":

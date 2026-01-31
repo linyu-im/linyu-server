@@ -8,6 +8,7 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/email"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/i18n"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/logger"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/storage"
 	"github.com/linyu-im/linyu-server/linyu-gateway/pkg/gateway"
 	"os"
 	"os/signal"
@@ -24,6 +25,7 @@ func main() {
 	config.InitConfig(*configPath) //配置初始化
 	logger.InitLog()               //日志初始化
 	db.InitDB()                    //数据库相关初始化
+	storage.InitStorage()          //文件存储相关初始化
 	email.InitEmail(*emailDir)     //邮件相关初始化
 	i18n.InitI18n(*localesDir)     //国际化初始化
 	gateway.Run()                  //服务运行
