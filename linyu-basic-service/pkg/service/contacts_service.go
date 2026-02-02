@@ -19,17 +19,17 @@ func newContactsService() *contactsService {
 type contactsService struct{}
 
 func (s *contactsService) ContactsList(userId string) ([]*basicModel.Contacts, error) {
-	list, err := basicDao.ContactsDao.ContactsList(db.MysqlDB, userId)
+	list, err := basicDao.ContactsDao.ContactsList(db.RDB, userId)
 	return list, err
 }
 
 func (s *contactsService) ContactsRelDelete(userId string, param *basicParam.ContactsRelDeleteParam) error {
-	contacts, err := basicDao.ContactsDao.GetById(db.MysqlDB, param.ContactsId)
+	contacts, err := basicDao.ContactsDao.GetById(db.RDB, param.ContactsId)
 	if contacts == nil || contacts.UserID != userId {
 		return errors.New("param.error")
 	}
 	if contacts.Type == constant.ContactsType.User {
-		err = db.MysqlDB.Transaction(func(tx *gorm.DB) error {
+		err = db.RDB.Transaction(func(tx *gorm.DB) error {
 			// 双方关系删除
 			if err := basicDao.ContactsDao.UnscopedDeleteByUserAndPeerId(tx, contacts.UserID, contacts.PeerId); err != nil {
 				return err

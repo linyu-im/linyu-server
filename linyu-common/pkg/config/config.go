@@ -10,14 +10,11 @@ type Config struct {
 		RoutePrefix string `mapstructure:"route-prefix"`
 	} `mapstructure:"server"`
 
-	Mysql struct {
-		Host     string `mapstructure:"host"`
-		Port     int    `mapstructure:"port"`
-		User     string `mapstructure:"user"`
-		Password string `mapstructure:"password"`
-		Database string `mapstructure:"database"`
-		Timezone string `mapstructure:"timezone"`
-	} `mapstructure:"mysql"`
+	Rdb struct {
+		Type      RdbType         `mapstructure:"type"`
+		MysqlRdb  MysqlRdbConfig  `mapstructure:"mysql"`
+		SqliteRdb SqliteRdbConfig `mapstructure:"sqlite"`
+	} `mapstructure:"rdb"`
 
 	Redis struct {
 		Addr     string `mapstructure:"addr"`

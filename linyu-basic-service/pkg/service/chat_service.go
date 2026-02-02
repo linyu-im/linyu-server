@@ -19,17 +19,17 @@ func newChatService() *chatService {
 type chatService struct{}
 
 func (s *chatService) ChatList(userId string) ([]*basicModel.Chat, error) {
-	list, err := basicDao.ChatDao.ChatList(db.MysqlDB, userId)
+	list, err := basicDao.ChatDao.ChatList(db.RDB, userId)
 	return list, err
 }
 
 func (s *chatService) UpdateUserChat(userId, peerId, chatType string, message *basicModel.Message) error {
-	chat, err := basicDao.ChatDao.GetChatByUserAndPeer(db.MysqlDB, userId, peerId)
+	chat, err := basicDao.ChatDao.GetChatByUserAndPeer(db.RDB, userId, peerId)
 	if err != nil {
 		return err
 	}
 	if chat == nil {
-		return basicDao.ChatDao.Create(db.MysqlDB, &basicModel.Chat{
+		return basicDao.ChatDao.Create(db.RDB, &basicModel.Chat{
 			ID:             utils.GenerateSfIDString(),
 			UserID:         userId,
 			PeerID:         peerId,
@@ -39,14 +39,14 @@ func (s *chatService) UpdateUserChat(userId, peerId, chatType string, message *b
 	}
 	chat.LastMsgContent = message
 	chat.UnreadNum = chat.UnreadNum + 1
-	return basicDao.ChatDao.Update(db.MysqlDB, chat)
+	return basicDao.ChatDao.Update(db.RDB, chat)
 }
 
 func (s *chatService) ChatCreate(userId string, param *basicParam.ChatCreateParam) (*basicModel.Chat, error) {
 	if !constant.ChatType.Validate(param.ChatType) {
 		return nil, errors.New("param.type-not-exist")
 	}
-	chat, _ := basicDao.ChatDao.GetChatByUserAndPeer(db.MysqlDB, userId, param.PeerId)
+	chat, _ := basicDao.ChatDao.GetChatByUserAndPeer(db.RDB, userId, param.PeerId)
 	if chat != nil {
 		return chat, nil
 	}
@@ -56,7 +56,7 @@ func (s *chatService) ChatCreate(userId string, param *basicParam.ChatCreatePara
 		PeerID: param.PeerId,
 		Type:   param.ChatType,
 	}
-	err := basicDao.ChatDao.Create(db.MysqlDB, chat)
+	err := basicDao.ChatDao.Create(db.RDB, chat)
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +64,6 @@ func (s *chatService) ChatCreate(userId string, param *basicParam.ChatCreatePara
 }
 
 func (s *chatService) SetTop(userId string, param *basicParam.ChatSetTopParam) error {
-	err := basicDao.ChatDao.SetIsTopByIdAndUserId(db.MysqlDB, param.IsTop, userId, param.ChatId)
+	err := basicDao.ChatDao.SetIsTopByIdAndUserId(db.RDB, param.IsTop, userId, param.ChatId)
 	return err
 }

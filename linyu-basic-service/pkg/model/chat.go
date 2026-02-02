@@ -12,8 +12,8 @@ func init() {
 
 type Chat struct {
 	ID             string              `gorm:"size:64;primaryKey;autoIncrement:false;comment:id" json:"id"`
-	UserID         string              `gorm:"size:64;index;not null;index;comment:用户id" json:"userId"`
-	PeerID         string              `gorm:"size:64;index;not null;index:idx_userid_peerid;comment:会话对方id" json:"peerId	"`
+	UserID         string              `gorm:"size:64;index;not null;comment:用户id" json:"userId"`
+	PeerID         string              `gorm:"size:64;index;not null;comment:会话对方id" json:"peerId"`
 	IsTop          bool                `gorm:"default:0;comment:是否置顶" json:"isTop"`
 	UnreadNum      int                 `gorm:"type:int;default:0;comment:未读消息数量" json:"unreadNum"`
 	LastMsgContent *Message            `gorm:"type:text;serializer:json;comment:最后消息内容" json:"lastMsgContent"`

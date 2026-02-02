@@ -1,4 +1,4 @@
-package mysql
+package rdb
 
 import (
 	"fmt"
@@ -8,9 +8,8 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// CreateMysqlDB 创建Mysql客户端
-func CreateMysqlDB() *gorm.DB {
-	c := config.C.Mysql
+func NewCreateMysqlDB() *gorm.DB {
+	c := config.C.Rdb.MysqlRdb
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		c.User, c.Password, c.Host, c.Port, c.Database)
 	var err error
@@ -20,4 +19,17 @@ func CreateMysqlDB() *gorm.DB {
 		panic("failed to connect mysql database: " + err.Error())
 	}
 	return db
+}
+
+func MysqlMigrate(MysqlDB *gorm.DB, models []interface{}) error {
+	for _, m := range models {
+		comment := ""
+		if tc, ok := m.(interface{ TableComment() string }); ok {
+			comment = tc.TableComment()
+		}
+		if err := MysqlDB.Set("gorm:table_options", "COMMENT='"+comment+"'").AutoMigrate(m); err != nil {
+			return err
+		}
+	}
+	return nil
 }

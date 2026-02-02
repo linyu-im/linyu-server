@@ -23,13 +23,13 @@ func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreatePa
 	// 邀请的用户必须是好友
 	var friendIds = []string{userId}
 	for _, friendId := range param.GroupMemberList {
-		if is := basicDao.ContactsDao.IsContactByUserAndPeer(db.MysqlDB, userId, friendId); is {
+		if is := basicDao.ContactsDao.IsContactByUserAndPeer(db.RDB, userId, friendId); is {
 			friendIds = append(friendIds, friendId)
 		}
 	}
 	// 生成唯一群号
 	number := utils.GenerateOnlyNumber("LINYU-", func(number string) bool {
-		user := basicDao.GroupDao.GetGroupByGroupNumber(db.MysqlDB, number)
+		user := basicDao.GroupDao.GetGroupByGroupNumber(db.RDB, number)
 		return user == nil
 	})
 	group := &basicModel.Group{
@@ -41,7 +41,7 @@ func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreatePa
 		MemberNum:     len(friendIds),
 	}
 	// 创建群聊
-	err := db.MysqlDB.Transaction(func(tx *gorm.DB) error {
+	err := db.RDB.Transaction(func(tx *gorm.DB) error {
 		// 群成员关系新建
 		for _, id := range friendIds {
 			// 判断角色
@@ -73,7 +73,7 @@ func (s groupService) GroupDissolve(userId string, param *basicParam.GroupDissol
 	if !s.isOwnerUser(param.GroupId, userId) {
 		return errors.New("param.error")
 	}
-	err := db.MysqlDB.Transaction(func(tx *gorm.DB) error {
+	err := db.RDB.Transaction(func(tx *gorm.DB) error {
 		// 清空群成员
 		if err := basicDao.GroupMemberDao.UnscopedDeleteMemberByGroupId(tx, param.GroupId); err != nil {
 			return err
@@ -88,7 +88,7 @@ func (s groupService) GroupDissolve(userId string, param *basicParam.GroupDissol
 }
 
 func (s groupService) isOwnerUser(groupId string, userId string) bool {
-	group := basicDao.GroupDao.GetGroupById(db.MysqlDB, groupId)
+	group := basicDao.GroupDao.GetGroupById(db.RDB, groupId)
 	if group == nil || group.OwnerUserID != userId {
 		return false
 	}
@@ -96,7 +96,7 @@ func (s groupService) isOwnerUser(groupId string, userId string) bool {
 }
 
 func (s groupService) isGroupMember(groupId string, userId string) bool {
-	member := basicDao.GroupMemberDao.GetGroupMemberByGroupIdAndUserId(db.MysqlDB, groupId, userId)
+	member := basicDao.GroupMemberDao.GetGroupMemberByGroupIdAndUserId(db.RDB, groupId, userId)
 	if member == nil {
 		return false
 	}
@@ -111,7 +111,7 @@ func (s groupService) InviteMember(userId string, param *basicParam.GroupInviteM
 	// 过滤非好友用户和已经存在的用户
 	var friendIds []string
 	for _, friendId := range param.GroupMemberList {
-		if is := basicDao.ContactsDao.IsContactByUserAndPeer(db.MysqlDB, userId, friendId); !is {
+		if is := basicDao.ContactsDao.IsContactByUserAndPeer(db.RDB, userId, friendId); !is {
 			continue
 		}
 		if is := s.isGroupMember(param.GroupId, friendId); is {
@@ -119,7 +119,7 @@ func (s groupService) InviteMember(userId string, param *basicParam.GroupInviteM
 		}
 		friendIds = append(friendIds, friendId)
 	}
-	err := db.MysqlDB.Transaction(func(tx *gorm.DB) error {
+	err := db.RDB.Transaction(func(tx *gorm.DB) error {
 		// 群成员关系新建
 		for _, id := range friendIds {
 			err := basicDao.GroupMemberDao.Create(tx, &basicModel.GroupMember{
@@ -146,7 +146,7 @@ func (s groupService) RemoveMember(userId string, param *basicParam.GroupRemoveM
 	if !s.isGroupRole(param.GroupId, userId, constant.MemberRole.Administrator) {
 		return errors.New("param.error")
 	}
-	err := db.MysqlDB.Transaction(func(tx *gorm.DB) error {
+	err := db.RDB.Transaction(func(tx *gorm.DB) error {
 		for _, id := range param.GroupMemberList {
 			// 移除普通成员
 			if s.isGroupRole(param.GroupId, id, constant.MemberRole.General) {
@@ -165,7 +165,7 @@ func (s groupService) RemoveMember(userId string, param *basicParam.GroupRemoveM
 }
 
 func (s groupService) isGroupRole(groupId string, userId string, role string) bool {
-	member := basicDao.GroupMemberDao.GetGroupMemberByGroupIdAndUserId(db.MysqlDB, groupId, userId)
+	member := basicDao.GroupMemberDao.GetGroupMemberByGroupIdAndUserId(db.RDB, groupId, userId)
 	if member == nil {
 		return false
 	}

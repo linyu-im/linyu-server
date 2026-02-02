@@ -30,7 +30,7 @@ func (s messageService) SendMessage(userId string, param *basicParam.SendMessage
 		Status:  constant.MessageStatus.Unread,
 		Type:    constant.MessageType.Text,
 	}
-	err := dao.MessageDao.Create(db.MysqlDB, message)
+	err := dao.MessageDao.Create(db.RDB, message)
 	if err != nil {
 		return err
 	}

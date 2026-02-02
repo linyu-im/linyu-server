@@ -1,14 +1,14 @@
 server:
   port: 9088
-  route-prefix: "/api"
+  route-prefix: /api
 
 redis:
-  addr: "127.0.0.1:6379"
+  addr: 127.0.0.1:6379
   password: ""
   db: 0
 
 jwt:
-  secret: "linyu_cL8$yF6^yA"
+  secret: linyu_cL8$yF6^yA
   expire-hours: 24
 
 email:
@@ -18,22 +18,28 @@ email:
   password: 123456
   username: 林语团队
 
-mysql:
-  host: 127.0.0.1
-  port: 3306
-  user: root
-  password: 123456
-  database: linyu
-  timezone: Asia/Shanghai
+
+rdb:
+  type: mysql
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    user: root
+    password: 123456
+    database: linyu
+    timezone: Asia/Shanghai
+  sqlite:
+    db-path: ./linyu/db
+    db-name: linyu
 
 storage:
-  type: "local"
+  type: oss
   local:
-    base-url: "http://localhost:9088"
-    file-path: "./linyu-storage"
+    base-url: http://localhost:9088
+    file-path: ./linyu/storage
   oss:
-    base-url: "https://xxxx.com"
-    endpoint: "oss-cn-shanghai.aliyuncs.com"
-    access-key-id: "access-key-id"
-    access-key-secret: "access-key-secret"
-    bucket-name: "linyu-storage"
+    base-url: https://xxxx.com
+    endpoint: oss-cn-shanghai.aliyuncs.com
+    access-key-id: access-key-id
+    access-key-secret: access-key-secret
+    bucket-name: linyu

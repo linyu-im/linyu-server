@@ -22,7 +22,7 @@ type userService struct{}
 
 // GetUserInfoByAccount 根据账号获取用户信息
 func (s *userService) GetUserInfoByAccount(account string) *basicModel.User {
-	user := basicDao.UserDao.GetUserByAccount(db.MysqlDB, account)
+	user := basicDao.UserDao.GetUserByAccount(db.RDB, account)
 	return user
 }
 
@@ -49,7 +49,7 @@ func (s *userService) SendCodeByEmail(email string) error {
 // RegisterByEmail 根据邮箱创建账号
 func (s *userService) RegisterByEmail(email string) error {
 	account := utils.GenerateOnlyNumber("linyu_", func(account string) bool {
-		user := basicDao.UserDao.GetUserByAccount(db.MysqlDB, account)
+		user := basicDao.UserDao.GetUserByAccount(db.RDB, account)
 		return user == nil
 	})
 	user := &basicModel.User{
@@ -58,7 +58,7 @@ func (s *userService) RegisterByEmail(email string) error {
 		Username: utils.RandUsername("林语"),
 		Account:  account,
 	}
-	err := basicDao.UserDao.Create(db.MysqlDB, user)
+	err := basicDao.UserDao.Create(db.RDB, user)
 	if err != nil {
 		return err
 	}
