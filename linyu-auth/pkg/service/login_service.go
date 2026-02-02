@@ -33,7 +33,7 @@ func (s *loginService) Login(user *basicModel.User, device string) (*authResult.
 	if err != nil {
 		return nil, errors.New("auth.error")
 	}
-	err = db.RedisDB.Set(fmt.Sprintf(constant.RedisKey.UserToken, user.ID, device), loginVersion, jwt.GetJwtExpireTime())
+	err = db.CacheDB.Set(fmt.Sprintf(constant.RedisKey.UserToken, user.ID, device), loginVersion, jwt.GetJwtExpireTime())
 	if err != nil {
 		return nil, errors.New("auth.error")
 	}

@@ -16,11 +16,11 @@ type Config struct {
 		SqliteRdb SqliteRdbConfig `mapstructure:"sqlite"`
 	} `mapstructure:"rdb"`
 
-	Redis struct {
-		Addr     string `mapstructure:"addr"`
-		Password string `mapstructure:"password"`
-		DB       int    `mapstructure:"db"`
-	} `mapstructure:"redis"`
+	Cache struct {
+		Type       CacheType        `mapstructure:"type"`
+		RedisCache RedisCacheConfig `mapstructure:"redis"`
+		OtterCache OtterConfig      `mapstructure:"otter"`
+	} `mapstructure:"cache"`
 
 	Jwt struct {
 		Secret      string `mapstructure:"secret"`

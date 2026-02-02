@@ -29,11 +29,11 @@ func (s *userService) GetUserInfoByAccount(account string) *basicModel.User {
 // VerifyCode 校验验证码
 func (s *userService) VerifyCode(tag string, code string) bool {
 	key := fmt.Sprintf(constant.RedisKey.UserCode, tag)
-	codeRedis, err := db.RedisDB.Get(key)
+	codeRedis, err := db.CacheDB.Get(key)
 	if err != nil || code != codeRedis {
 		return false
 	}
-	_ = db.RedisDB.Del(key)
+	_ = db.CacheDB.Del(key)
 	return true
 }
 
@@ -68,7 +68,7 @@ func (s *userService) RegisterByEmail(email string) error {
 // GenerateCode 生成验证码
 func (s *userService) GenerateCode(tag string) (string, error) {
 	//60s内，只能发送一次
-	lock, err := db.RedisDB.Exists(fmt.Sprintf(constant.RedisKey.UserCodeLock, tag))
+	lock, err := db.CacheDB.Exists(fmt.Sprintf(constant.RedisKey.UserCodeLock, tag))
 	if err != nil {
 		return "", err
 	}
@@ -77,10 +77,10 @@ func (s *userService) GenerateCode(tag string) (string, error) {
 	}
 	code := utils.Random6DigitCode()
 	//验证码10分钟内有效
-	if err := db.RedisDB.Set(fmt.Sprintf(constant.RedisKey.UserCode, tag), code, 10*time.Minute); err != nil {
+	if err := db.CacheDB.Set(fmt.Sprintf(constant.RedisKey.UserCode, tag), code, 10*time.Minute); err != nil {
 		return "", err
 	}
-	if err := db.RedisDB.Set(fmt.Sprintf(constant.RedisKey.UserCodeLock, tag), 1, 60*time.Second); err != nil {
+	if err := db.CacheDB.Set(fmt.Sprintf(constant.RedisKey.UserCodeLock, tag), 1, 60*time.Second); err != nil {
 		return "", err
 	}
 	return code, nil

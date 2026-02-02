@@ -1,4 +1,4 @@
-package redis
+package cache
 
 import (
 	"context"
@@ -14,9 +14,8 @@ type RedisClient struct {
 
 var Ctx = context.Background()
 
-// CreateRedisClient 创建redis客户端
-func CreateRedisClient() *RedisClient {
-	c := config.C.Redis
+func NewRedisClient() *RedisClient {
+	c := config.C.Cache.RedisCache
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     c.Addr,
 		Password: c.Password,
@@ -24,7 +23,7 @@ func CreateRedisClient() *RedisClient {
 	})
 	_, err := rdb.Ping(Ctx).Result()
 	if err != nil {
-		panic("failed to connect redis database: " + err.Error())
+		panic("failed to connect cache database: " + err.Error())
 	}
 	return &RedisClient{client: rdb, ctx: context.Background()}
 }

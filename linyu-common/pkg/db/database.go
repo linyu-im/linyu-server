@@ -1,17 +1,17 @@
 package db
 
 import (
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/db/cache"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db/rdb"
-	"github.com/linyu-im/linyu-server/linyu-common/pkg/db/redis"
 	"gorm.io/gorm"
 )
 
-var RDB *gorm.DB
-var RedisDB *redis.RedisClient
+var RDB *gorm.DB        //关系型
+var CacheDB cache.Cache //缓存
 
 func InitDB() {
 	RDB = rdb.InitRdb(mysqlModels)
-	RedisDB = redis.CreateRedisClient()
+	CacheDB = cache.InitCache()
 }
 
 var mysqlModels []interface{}
