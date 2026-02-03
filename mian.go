@@ -6,6 +6,7 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/email"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/event/eventbus"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/i18n"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/logger"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/storage"
@@ -26,6 +27,7 @@ func main() {
 	logger.InitLog()               //日志初始化
 	db.InitDB()                    //数据库相关初始化
 	storage.InitStorage()          //文件存储相关初始化
+	eventbus.InitEventBus()        //事件总线初始化
 	email.InitEmail(*emailDir)     //邮件相关初始化
 	i18n.InitI18n(*localesDir)     //国际化初始化
 	gateway.Run()                  //服务运行

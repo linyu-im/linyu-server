@@ -37,11 +37,13 @@ func (s messageService) SendMessage(userId string, param *basicParam.SendMessage
 	//更新对方的聊天会话
 	_ = ChatService.UpdateUserChat(param.ToUserId, userId, constant.ChatType.User, message)
 	//发送消息
-	_ = eventbus.DefaultEventBus.Publish(event.WsDataEvent{
+	_ = eventbus.GlobalBus.Publish(event.WsDataEvent{
 		FromUserId: userId,
 		ToUserIds:  []string{param.ToUserId},
-		Type:       constant.WsDataType.Message,
-		Content:    message,
+		Data: &event.WsData{
+			Type:    constant.WsDataType.Message,
+			Content: message,
+		},
 	})
 	return nil
 }

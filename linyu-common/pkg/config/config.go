@@ -16,6 +16,11 @@ type Config struct {
 		SqliteRdb SqliteRdbConfig `mapstructure:"sqlite"`
 	} `mapstructure:"rdb"`
 
+	EventBus struct {
+		Type           EventBusType         `mapstructure:"type"`
+		RocketEventBus RocketEventBusConfig `mapstructure:"rocket"`
+	} `mapstructure:"event-bus"`
+
 	Cache struct {
 		Type       CacheType        `mapstructure:"type"`
 		RedisCache RedisCacheConfig `mapstructure:"redis"`

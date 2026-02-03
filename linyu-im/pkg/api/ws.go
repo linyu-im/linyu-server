@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
+	_ "github.com/linyu-im/linyu-server/linyu-im/internal/subscriber"
 	"github.com/linyu-im/linyu-server/linyu-im/internal/ws"
 	"net/http"
 )

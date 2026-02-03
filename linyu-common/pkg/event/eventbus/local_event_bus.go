@@ -16,21 +16,22 @@ func NewLocalEventBus() *LocalEventBus {
 	}
 }
 
-func (b *LocalEventBus) Subscribe(e event.Event, handler event.Handler) {
+func (b *LocalEventBus) Subscribe(eventName string, factory Factory, handler event.Handler) {
 	b.Lock.Lock()
 	defer b.Lock.Unlock()
-
-	b.Handlers[e.EventName()] = append(b.Handlers[e.EventName()], handler)
+	b.Handlers[eventName] = append(b.Handlers[eventName], handler)
 }
 
 func (b *LocalEventBus) Publish(e event.Event) error {
 	b.Lock.RLock()
 	handlers := b.Handlers[e.EventName()]
 	b.Lock.RUnlock()
+
 	for _, h := range handlers {
-		go func(handler event.Handler) {
-			_ = handler(e)
-		}(h)
+		fn := h
+		go func() {
+			_ = fn(e)
+		}()
 	}
 	return nil
 }

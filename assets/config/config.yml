@@ -46,3 +46,12 @@ storage:
     access-key-id: access-key-id
     access-key-secret: access-key-secret
     bucket-name: linyu
+
+
+event-bus:
+  #"local" 或 "rocket"
+  type: "local"
+  rocket:
+    namesrv:
+      - "192.168.166.105:9876"
+    retry-times: 2

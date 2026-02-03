@@ -40,11 +40,13 @@ func (s applyService) ApplyAddContacts(userId string, param *basicParam.ApplyAdd
 		return err
 	}
 	//发送申请消息
-	_ = eventbus.DefaultEventBus.Publish(event.WsDataEvent{
+	_ = eventbus.GlobalBus.Publish(event.WsDataEvent{
 		FromUserId: userId,
 		ToUserIds:  []string{param.PeerId},
-		Type:       constant.WsDataType.Apply,
-		Content:    apply,
+		Data: &event.WsData{
+			Type:    constant.WsDataType.Apply,
+			Content: apply,
+		},
 	})
 	return nil
 }
