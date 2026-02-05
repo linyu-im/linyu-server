@@ -7,4 +7,5 @@ use (
 	./linyu-common
 	./linyu-gateway
 	./linyu-im
+	./linyu-voip-chat
 )

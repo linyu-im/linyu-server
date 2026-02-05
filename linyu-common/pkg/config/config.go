@@ -45,6 +45,12 @@ type Config struct {
 		LocalStorage LocalStorageConfig `mapstructure:"local"`
 		OssStorage   OssStorageConfig   `mapstructure:"oss"`
 	}
+
+	Livekit struct {
+		Host   string `mapstructure:"host"`
+		Key    string `mapstructure:"key"`
+		Secret string `mapstructure:"secret"`
+	}
 }
 
 var C Config

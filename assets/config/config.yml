@@ -13,6 +13,11 @@ email:
   password: 123456
   username: 林语团队
 
+livekit:
+  host: 127.0.0.1:7880
+  key: devkey
+  secret: devsecret
+
 cache:
   type: redis
   redis:

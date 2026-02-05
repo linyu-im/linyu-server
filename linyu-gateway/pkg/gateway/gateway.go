@@ -9,6 +9,7 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
 	"github.com/linyu-im/linyu-server/linyu-gateway/pkg/middleware"
 	_ "github.com/linyu-im/linyu-server/linyu-im/pkg/api"
+	_ "github.com/linyu-im/linyu-server/linyu-voip-chat/pkg/api"
 )
 
 func Run() {

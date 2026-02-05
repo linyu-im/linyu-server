@@ -70,7 +70,7 @@ func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreatePa
 
 func (s groupService) GroupDissolve(userId string, param *basicParam.GroupDissolveParam) error {
 	// 验收是否是群主
-	if !s.isOwnerUser(param.GroupId, userId) {
+	if !s.IsOwnerUser(param.GroupId, userId) {
 		return errors.New("param.error")
 	}
 	err := db.RDB.Transaction(func(tx *gorm.DB) error {
@@ -87,7 +87,7 @@ func (s groupService) GroupDissolve(userId string, param *basicParam.GroupDissol
 	return err
 }
 
-func (s groupService) isOwnerUser(groupId string, userId string) bool {
+func (s groupService) IsOwnerUser(groupId string, userId string) bool {
 	group := basicDao.GroupDao.GetGroupById(db.RDB, groupId)
 	if group == nil || group.OwnerUserID != userId {
 		return false
@@ -95,7 +95,7 @@ func (s groupService) isOwnerUser(groupId string, userId string) bool {
 	return true
 }
 
-func (s groupService) isGroupMember(groupId string, userId string) bool {
+func (s groupService) IsGroupMember(groupId string, userId string) bool {
 	member := basicDao.GroupMemberDao.GetGroupMemberByGroupIdAndUserId(db.RDB, groupId, userId)
 	if member == nil {
 		return false
@@ -105,7 +105,7 @@ func (s groupService) isGroupMember(groupId string, userId string) bool {
 
 func (s groupService) InviteMember(userId string, param *basicParam.GroupInviteMemberParam) error {
 	// 验证是否是群成员
-	if !s.isGroupMember(param.GroupId, userId) {
+	if !s.IsGroupMember(param.GroupId, userId) {
 		return errors.New("param.error")
 	}
 	// 过滤非好友用户和已经存在的用户
@@ -114,7 +114,7 @@ func (s groupService) InviteMember(userId string, param *basicParam.GroupInviteM
 		if is := basicDao.ContactsDao.IsContactByUserAndPeer(db.RDB, userId, friendId); !is {
 			continue
 		}
-		if is := s.isGroupMember(param.GroupId, friendId); is {
+		if is := s.IsGroupMember(param.GroupId, friendId); is {
 			continue
 		}
 		friendIds = append(friendIds, friendId)
