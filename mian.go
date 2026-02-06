@@ -10,6 +10,7 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/i18n"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/logger"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/storage"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 	"github.com/linyu-im/linyu-server/linyu-gateway/pkg/gateway"
 	"os"
 	"os/signal"
@@ -29,6 +30,7 @@ func main() {
 	storage.InitStorage()          //文件存储相关初始化
 	eventbus.InitEventBus()        //事件总线初始化
 	email.InitEmail(*emailDir)     //邮件相关初始化
+	utils.InitSnowflake()          //初始化雪花id
 	i18n.InitI18n(*localesDir)     //国际化初始化
 	gateway.Run()                  //服务运行
 

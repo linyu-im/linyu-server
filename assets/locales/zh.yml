@@ -22,6 +22,7 @@ param:
 
 common:
   data-not-exist: "相关数据不存在"
+  internal-error: "内部服务错误"
 
 basic:
   contacts:

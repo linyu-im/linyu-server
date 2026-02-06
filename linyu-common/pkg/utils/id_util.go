@@ -1,56 +1,72 @@
 package utils
 
 import (
-	"fmt"
+	"github.com/bwmarrin/snowflake"
 	"github.com/google/uuid"
-	"github.com/linyu-im/linyu-server/linyu-common/pkg/logger"
-	"go.uber.org/zap"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
+	"os"
+	"regexp"
+	"strconv"
 	"sync"
-
-	"github.com/sony/sonyflake/v2"
 )
 
 var (
-	idGen *sonyflake.Sonyflake //雪花
-	once  sync.Once
+	node *snowflake.Node
+	once sync.Once
 )
 
-func init() {
+func InitSnowflake() {
 	once.Do(func() {
-		settings := sonyflake.Settings{
-			MachineID: func() (int, error) {
-				return 1, nil // 机器ID
-			},
+		var err error
+		var finalID int64
+		if config.C.Server.NodeId > 0 {
+			finalID = config.C.Server.NodeId
+		} else {
+			finalID = autoDeriveNodeID()
 		}
-		sf, err := sonyflake.New(settings)
+		node, err = snowflake.NewNode(finalID)
 		if err != nil {
-			panic("init Sonyflake error:" + err.Error())
+			panic("init snowflake node error: " + err.Error())
 		}
-		idGen = sf
 	})
 }
 
-// GenerateSfID 生成唯一ID
-func GenerateSfID() (int64, error) {
-	id, err := idGen.NextID()
+func autoDeriveNodeID() int64 {
+	hostname, err := os.Hostname()
 	if err != nil {
-		logger.Log.Error("[GenerateSfID] 生成SonyflakeID失败:", zap.Error(err))
-		return 0, err
+		return 1
 	}
-	return id, nil
+	re := regexp.MustCompile(`(\d+)$`)
+	match := re.FindStringSubmatch(hostname)
+	if len(match) > 1 {
+		id, err := strconv.ParseInt(match[1], 10, 64)
+		if err == nil {
+			return id
+		}
+	}
+	return int64(sumString(hostname) % 1024)
+}
+
+func sumString(s string) int {
+	v := 0
+	for _, r := range s {
+		v += int(r)
+	}
+	return v
+}
+
+// GenerateSfID 生成唯一ID
+func GenerateSfID() int64 {
+	return node.Generate().Int64()
 }
 
 // GenerateSfIDString 生成唯一ID字符串
 func GenerateSfIDString() string {
-	id, err := GenerateSfID()
-	if err != nil {
-		return uuid.New().String()
-	}
-	return fmt.Sprintf("%d", id)
+	return node.Generate().String()
 }
 
 func GenerateUuid() string {
-	return uuid.New().String()
+	return uuid.NewString()
 }
 
 func GenerateOnlyNumber(accountPrefix string, checkFun func(account string) bool) string {
@@ -58,8 +74,8 @@ func GenerateOnlyNumber(accountPrefix string, checkFun func(account string) bool
 	var account string
 	for i := 0; i < maxRetry; i++ {
 		account = GenerateAccount(accountPrefix)
-		if is := checkFun(account); is {
-			break
+		if checkFun(account) {
+			return account
 		}
 		if i == maxRetry-1 {
 			account = accountPrefix + GenerateSfIDString()

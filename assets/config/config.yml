@@ -1,6 +1,7 @@
 server:
   port: 9088
   route-prefix: /api
+  node-id: 1
 
 jwt:
   secret: linyu_cL8$yF6^yA

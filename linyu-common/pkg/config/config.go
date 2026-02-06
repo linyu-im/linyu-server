@@ -8,6 +8,7 @@ type Config struct {
 	Server struct {
 		Port        int    `mapstructure:"port"`
 		RoutePrefix string `mapstructure:"route-prefix"`
+		NodeId      int64  `mapstructure:"node-id"`
 	} `mapstructure:"server"`
 
 	Rdb struct {
