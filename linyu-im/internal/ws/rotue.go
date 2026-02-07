@@ -1,13 +1,13 @@
 package ws
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 )
 
-func InitRoute() {
+func init() {
 	Register("heartbeat", HeartbeatHandler)
+	Register("ack", AckHandler)
 }
 
 type RouteHandler func(client *Client, req *Request) (interface{}, error)
@@ -35,14 +35,11 @@ func ProcessData(client *Client, req *Request) {
 	if routeHandler, ok := GetHandlers(req.Route); ok {
 		data, err := routeHandler(client, req)
 		if err != nil {
-			response, _ := json.Marshal(ErrorResponse(req.Seq, req.Route, err.Error()))
-			client.SendMsg(response)
+			client.SendMsg(ErrorResponse(req.SeqId, req.Device, req.Route, err.Error()))
 		} else {
-			response, _ := json.Marshal(SucceedResponse(req.Seq, req.Route, data))
-			client.SendMsg(response)
+			client.SendMsg(SucceedResponse(req.SeqId, req.Device, req.Route, data))
 		}
 	} else {
-		response, _ := json.Marshal(ErrorResponse(req.Seq, req.Route, "The route does not exist."))
-		client.SendMsg(response)
+		client.SendMsg(ErrorResponse(req.SeqId, req.Device, req.Route, "The route does not exist."))
 	}
 }

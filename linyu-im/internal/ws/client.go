@@ -13,20 +13,20 @@ type Client struct {
 	UserId        string
 	IP            string
 	Conn          *websocket.Conn
-	Send          chan []byte
-	DeviceId      string
+	send          chan []byte
+	Device        string
 	HeartbeatTime uint64
 	ConnectTime   uint64
 }
 
-func NewClient(conn *websocket.Conn, userId string, deviceId string) (client *Client) {
+func NewClient(conn *websocket.Conn, userId string, device string) (client *Client) {
 	currentTime := uint64(time.Now().Unix())
 	client = &Client{
 		UserId:        userId,
-		DeviceId:      deviceId,
+		Device:        device,
 		IP:            conn.RemoteAddr().String(),
 		Conn:          conn,
-		Send:          make(chan []byte, 100),
+		send:          make(chan []byte, 100),
 		HeartbeatTime: currentTime,
 		ConnectTime:   currentTime,
 	}
@@ -40,7 +40,7 @@ func (c *Client) Read() {
 		}
 	}()
 	defer func() {
-		close(c.Send)
+		close(c.send)
 	}()
 	for {
 		_, message, err := c.Conn.ReadMessage()
@@ -49,8 +49,7 @@ func (c *Client) Read() {
 		}
 		request := &Request{}
 		if err := json.Unmarshal(message, request); err != nil {
-			response, _ := json.Marshal(ErrorResponse("", "", "Data formatting error"))
-			c.SendMsg(response)
+			c.SendMsg(ErrorResponse("", "", "", "Data formatting error"))
 			continue
 		}
 		ProcessData(c, request)
@@ -64,11 +63,11 @@ func (c *Client) Write() {
 		}
 	}()
 	defer func() {
-		Manager.Leave(c.UserId, c.DeviceId)
+		Manager.Leave(c.UserId, c.Device)
 	}()
 	for {
 		select {
-		case message, ok := <-c.Send:
+		case message, ok := <-c.send:
 			if !ok {
 				return
 			}
@@ -86,5 +85,5 @@ func (c *Client) SendMsg(msg []byte) {
 			logger.Log.Info("SendMsg :", zap.String("message", string(debug.Stack())))
 		}
 	}()
-	c.Send <- msg
+	c.send <- msg
 }

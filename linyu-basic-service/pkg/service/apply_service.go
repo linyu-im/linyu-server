@@ -44,6 +44,7 @@ func (s applyService) ApplyAddContacts(userId string, param *basicParam.ApplyAdd
 		FromUserId: userId,
 		ToUserIds:  []string{param.PeerId},
 		Data: &event.WsData{
+			SeqId:   apply.ID,
 			Type:    constant.WsDataType.Apply,
 			Content: apply,
 		},

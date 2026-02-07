@@ -41,6 +41,7 @@ func (s messageService) SendMessage(userId string, param *basicParam.SendMessage
 		FromUserId: userId,
 		ToUserIds:  []string{param.ToUserId},
 		Data: &event.WsData{
+			SeqId:   message.ID,
 			Type:    constant.WsDataType.Message,
 			Content: message,
 		},
