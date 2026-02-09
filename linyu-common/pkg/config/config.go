@@ -45,13 +45,17 @@ type Config struct {
 		Type         StorageType        `mapstructure:"type"`
 		LocalStorage LocalStorageConfig `mapstructure:"local"`
 		OssStorage   OssStorageConfig   `mapstructure:"oss"`
-	}
+	} `mapstructure:"storage"`
 
 	Livekit struct {
 		Host   string `mapstructure:"host"`
 		Key    string `mapstructure:"key"`
 		Secret string `mapstructure:"secret"`
-	}
+	} `mapstructure:"livekit"`
+
+	Auth struct {
+		Ldap LdapConfig `mapstructure:"ldap"`
+	} `mapstructure:"auth"`
 }
 
 var C Config

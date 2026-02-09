@@ -8,4 +8,5 @@ use (
 	./linyu-gateway
 	./linyu-im
 	./linyu-voip-chat
+	./linyu-auth
 )

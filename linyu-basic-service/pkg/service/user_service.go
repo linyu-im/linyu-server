@@ -8,6 +8,7 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	emailutil "github.com/linyu-im/linyu-server/linyu-common/pkg/email"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 	"time"
 )
@@ -65,6 +66,26 @@ func (s *userService) RegisterByEmail(email string) error {
 	return nil
 }
 
+func (s *userService) CreateUserByKV(key, value string) (*basicModel.User, error) {
+	account := utils.GenerateOnlyNumber("linyu_", func(account string) bool {
+		user := basicDao.UserDao.GetUserByAccount(db.RDB, account)
+		return user == nil
+	})
+	userMap := map[string]interface{}{
+		"id":         utils.GenerateSfIDString(),
+		"username":   utils.RandUsername("林语"),
+		"account":    account,
+		"created_at": localtime.Now(),
+		"updated_at": localtime.Now(),
+		key:          value,
+	}
+	err := basicDao.UserDao.CreateByMap(db.RDB, userMap)
+	if err != nil {
+		return nil, err
+	}
+	return basicDao.UserDao.GetUserByAccount(db.RDB, account), nil
+}
+
 // GenerateCode 生成验证码
 func (s *userService) GenerateCode(tag string) (string, error) {
 	//60s内，只能发送一次
@@ -84,4 +105,8 @@ func (s *userService) GenerateCode(tag string) (string, error) {
 		return "", err
 	}
 	return code, nil
+}
+
+func (s *userService) GetUserByKV(key string, value string) (*basicModel.User, error) {
+	return basicDao.UserDao.GetUserByKV(db.RDB, key, value), nil
 }

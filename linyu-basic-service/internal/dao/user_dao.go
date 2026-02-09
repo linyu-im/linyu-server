@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"fmt"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	"gorm.io/gorm"
 )
@@ -35,4 +36,21 @@ func (r userDao) Create(db *gorm.DB, user *basicModel.User) error {
 		return err
 	}
 	return nil
+}
+
+func (r userDao) CreateByMap(db *gorm.DB, userMap map[string]interface{}) error {
+	if err := db.Model(&basicModel.User{}).Create(userMap).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r userDao) GetUserByKV(db *gorm.DB, key string, value string) *basicModel.User {
+	result := &basicModel.User{}
+	err := db.Where(fmt.Sprintf("%s = ?", key), value).
+		First(result).Error
+	if err != nil {
+		return nil
+	}
+	return result
 }

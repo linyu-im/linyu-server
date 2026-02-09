@@ -56,8 +56,23 @@ storage:
 
 event-bus:
   #"local" 或 "rocket"
-  type: "local"
+  type: local
   rocket:
     namesrv:
-      - "192.168.166.105:9876"
+      - 192.168.166.105:9876
     retry-times: 2
+
+auth:
+  ldap:
+    enabled: true
+    host: ldap://127.0.0.1:389
+    bind-dn: cn=admin,dc=example,dc=com
+    bind-password: admin
+    base-dn: dc=example,dc=com
+    #ldap查询条件（用于登录名称和密码校验）
+    user-filter: (cn=%s)
+
+    #ldap和本地库唯一映射关系
+    unique:
+      ldap-field: "mobile" #ldap对应的字段key
+      local-field: "phone" #本地库对应的字段key（phone,email,id,account）
