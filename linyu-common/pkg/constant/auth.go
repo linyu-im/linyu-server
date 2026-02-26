@@ -1,5 +1,6 @@
 package constant
 
+// ------------------login相关------------------
 type device struct {
 	Web     string // 网页端
 	Desktop string // 桌面端（Electron、Tauri）

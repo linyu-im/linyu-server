@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/linyu-im/linyu-server/linyu-auth/pkg/api"
 	_ "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/api"
+	_ "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/api"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
 	"github.com/linyu-im/linyu-server/linyu-gateway/pkg/middleware"

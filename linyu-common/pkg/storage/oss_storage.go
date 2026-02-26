@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 
@@ -122,4 +123,43 @@ func (s *OssStorage) GetURL(fileKey string, expire int64) (string, error) {
 	}
 
 	return fmt.Sprintf("https://%s.%s/%s", s.BucketName, s.Endpoint, fileKey), nil
+}
+
+func (s *OssStorage) Merge(fileKey string, chunkDir string, totalChunks int) (string, error) {
+	bucket, err := s.getBucket()
+	if err != nil {
+		return "", err
+	}
+	//初始化
+	imur, err := bucket.InitiateMultipartUpload(fileKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to initiate multipart upload: %v", err)
+	}
+	var parts []oss.UploadPart
+	//逐个上传
+	for i := 1; i <= totalChunks; i++ {
+		partPath := fmt.Sprintf("%s/%d.part", chunkDir, i)
+
+		fileInfo, err := os.Stat(partPath)
+		if err != nil {
+			bucket.AbortMultipartUpload(imur)
+			return "", fmt.Errorf("failed to stat part %d: %v", i, err)
+		}
+		partSize := fileInfo.Size()
+
+		part, err := bucket.UploadPartFromFile(imur, partPath, 0, partSize, i)
+		if err != nil {
+			bucket.AbortMultipartUpload(imur)
+			return "", fmt.Errorf("failed to upload part %d: %v", i, err)
+		}
+		parts = append(parts, part)
+	}
+
+	_, err = bucket.CompleteMultipartUpload(imur, parts)
+	if err != nil {
+		bucket.AbortMultipartUpload(imur)
+		return "", fmt.Errorf("failed to complete multipart upload: %v", err)
+	}
+
+	return s.GetURL(fileKey, 0)
 }

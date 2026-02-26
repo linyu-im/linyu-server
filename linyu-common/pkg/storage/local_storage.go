@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 	"io"
@@ -129,4 +130,36 @@ func (s *LocalStorage) GetURL(fileKey string, expire int64) (string, error) {
 	}
 
 	return u.String(), nil
+}
+
+func (s *LocalStorage) Merge(fileKey string, chunkDir string, totalChunks int) (string, error) {
+	fullPath, err := utils.ResolvePath(s.FilePath, fileKey)
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+		return "", err
+	}
+
+	targetFile, err := os.OpenFile(fullPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return "", err
+	}
+	defer targetFile.Close()
+
+	for i := 1; i <= totalChunks; i++ {
+		partPath := fmt.Sprintf("%s/%d.part", chunkDir, i)
+		partData, err := os.Open(partPath)
+		if err != nil {
+			return "", err
+		}
+		_, err = io.Copy(targetFile, partData)
+		partData.Close()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return s.GetURL(fileKey, 0)
 }

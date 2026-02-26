@@ -9,4 +9,5 @@ use (
 	./linyu-im
 	./linyu-voip-chat
 	./linyu-auth
+	./linyu-cloud-drive
 )

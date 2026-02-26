@@ -20,7 +20,7 @@ livekit:
   secret: devsecret
 
 cache:
-  type: redis
+  type: otter
   redis:
     addr: 127.0.0.1:6379
     password: ""
@@ -42,7 +42,7 @@ rdb:
     db-name: linyu
 
 storage:
-  type: oss
+  type: local
   local:
     base-url: http://localhost:9088
     file-path: ./linyu/storage
@@ -71,7 +71,6 @@ auth:
     base-dn: dc=example,dc=com
     #ldap查询条件（用于登录名称和密码校验）
     user-filter: (cn=%s)
-
     #ldap和本地库唯一映射关系
     unique:
       ldap-field: "mobile" #ldap对应的字段key

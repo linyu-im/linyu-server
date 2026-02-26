@@ -11,6 +11,7 @@ type Storage interface {
 	Upload(fileKey string, reader io.Reader) (string, error)
 	Download(fileKey string, writer io.Writer) error
 	Delete(fileKey string) error
+	Merge(fileKey string, chunkDir string, totalChunks int) (string, error)
 }
 
 func InitStorage() {

@@ -8,8 +8,12 @@ import (
 type Cache interface {
 	Set(key string, value interface{}, expiration time.Duration) error
 	Get(key string) (string, error)
+	SetObject(key string, value interface{}, expiration time.Duration) error
+	GetObject(key string, dest interface{}) error
 	Del(key string) error
 	Exists(key string) (bool, error)
+	SAdd(key string, expiration time.Duration, members ...interface{}) error
+	SMembers(key string) ([]string, error)
 }
 
 func InitCache() Cache {
