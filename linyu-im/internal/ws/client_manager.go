@@ -107,6 +107,9 @@ func (m *ClientManager) GetRetryMessageKey(device string, seqId string) string {
 
 func (m *ClientManager) AddRetryMessage(seqId, userId, device string, data any) {
 	key := m.GetRetryMessageKey(device, seqId)
+	if _, loaded := m.RetryMessages.Load(key); loaded {
+		return
+	}
 	retryMsg := &RetryMessage{
 		Key:        key,
 		SeqId:      seqId,

@@ -23,7 +23,7 @@ func (s *chatService) ChatList(userId string) ([]*basicModel.Chat, error) {
 	return list, err
 }
 
-func (s *chatService) UpdateUserChat(userId, peerId, chatType string, message *basicModel.Message) error {
+func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId string, message *basicModel.Message) error {
 	chat, err := basicDao.ChatDao.GetChatByUserAndPeer(db.RDB, userId, peerId)
 	if err != nil {
 		return err
@@ -34,11 +34,30 @@ func (s *chatService) UpdateUserChat(userId, peerId, chatType string, message *b
 			UserID:         userId,
 			PeerID:         peerId,
 			LastMsgContent: message,
-			Type:           chatType,
+			Type:           constant.ChatType.User,
+			UnreadNum:      1,
 		})
 	}
 	chat.LastMsgContent = message
 	chat.UnreadNum = chat.UnreadNum + 1
+	return basicDao.ChatDao.Update(db.RDB, chat)
+}
+
+func (s *chatService) SaveOrUpdate(userId, peerId string, message *basicModel.Message) error {
+	chat, err := basicDao.ChatDao.GetChatByUserAndPeer(db.RDB, userId, peerId)
+	if err != nil {
+		return err
+	}
+	if chat == nil {
+		return basicDao.ChatDao.Create(db.RDB, &basicModel.Chat{
+			ID:             utils.GenerateSfIDString(),
+			UserID:         userId,
+			PeerID:         peerId,
+			LastMsgContent: message,
+			Type:           constant.ChatType.User,
+		})
+	}
+	chat.LastMsgContent = message
 	return basicDao.ChatDao.Update(db.RDB, chat)
 }
 

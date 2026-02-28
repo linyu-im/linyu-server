@@ -25,13 +25,6 @@ func (d *chatDao) ChatList(db *gorm.DB, userId string) ([]*basicModel.Chat, erro
 	return chatList, nil
 }
 
-func (d *chatDao) create(db *gorm.DB, chat *basicModel.Chat) error {
-	if err := db.Create(chat).Error; err != nil {
-		return err
-	}
-	return nil
-}
-
 func (d *chatDao) GetChatByUserAndPeer(db *gorm.DB, userId string, peerId string) (*basicModel.Chat, error) {
 	result := &basicModel.Chat{}
 	if err := db.First(result, "user_id = ? AND peer_id = ?", userId, peerId).Error; err != nil {

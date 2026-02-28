@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"github.com/google/uuid"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
@@ -82,4 +83,11 @@ func GenerateOnlyNumber(accountPrefix string, checkFun func(account string) bool
 		}
 	}
 	return account
+}
+
+func Generate1v1SessionID(id1, id2 string) string {
+	if id1 < id2 {
+		return fmt.Sprintf("%s_%s", id1, id2)
+	}
+	return fmt.Sprintf("%s_%s", id2, id1)
 }

@@ -171,3 +171,11 @@ func (s groupService) isGroupRole(groupId string, userId string, role string) bo
 	}
 	return member.MemberRole == role
 }
+
+func (s groupService) GetMemberUserIdsByGroupId(groupId string) []string {
+	members, err := basicDao.GroupMemberDao.GetMemberUserIdsByGroupId(db.RDB, groupId)
+	if err != nil {
+		return []string{}
+	}
+	return members
+}

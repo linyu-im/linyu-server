@@ -19,27 +19,68 @@ func newMessageService() *messageService {
 
 type messageService struct{}
 
-func (s messageService) SendMessage(userId string, param *basicParam.SendMessageParam) error {
+func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) error {
 	//创建消息
 	message := &model.Message{
-		ID:      utils.GenerateSfIDString(),
-		FromID:  userId,
-		ToID:    param.ToUserId,
-		Source:  constant.MessageSource.User,
-		Content: param.Content,
-		Status:  constant.MessageStatus.Unread,
-		Type:    constant.MessageType.Text,
+		ID:        utils.GenerateSfIDString(),
+		SessionID: utils.Generate1v1SessionID(userId, param.ToUserId),
+		FromID:    userId,
+		ToID:      param.ToUserId,
+		Source:    constant.MessageSource.User,
+		Content:   param.Content,
+		Type:      constant.MessageType.Text,
 	}
 	err := dao.MessageDao.Create(db.RDB, message)
 	if err != nil {
 		return err
 	}
-	//更新对方的聊天会话
-	_ = ChatService.UpdateUserChat(param.ToUserId, userId, constant.ChatType.User, message)
+	//更新对方的聊天会话（增加未读数）
+	if param.ToUserId != userId {
+		_ = ChatService.SaveOrUpdateIncUnreadNum(param.ToUserId, userId, message)
+	}
+	//更新自己的会话
+	_ = ChatService.SaveOrUpdate(userId, param.ToUserId, message)
 	//发送消息
 	_ = eventbus.GlobalBus.Publish(event.WsDataEvent{
 		FromUserId: userId,
 		ToUserIds:  []string{param.ToUserId},
+		Data: &event.WsData{
+			SeqId:   message.ID,
+			Type:    constant.WsDataType.Message,
+			Content: message,
+		},
+	})
+	return nil
+}
+
+func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) error {
+	//创建消息
+	message := &model.Message{
+		ID:        utils.GenerateSfIDString(),
+		SessionID: param.ToGroupId,
+		FromID:    userId,
+		ToID:      param.ToGroupId,
+		Source:    constant.MessageSource.User,
+		Content:   param.Content,
+		Type:      constant.MessageType.Text,
+	}
+	err := dao.MessageDao.Create(db.RDB, message)
+	if err != nil {
+		return err
+	}
+	memberIds := GroupService.GetMemberUserIdsByGroupId(param.ToGroupId)
+	//更新群成员的会话
+	for _, id := range memberIds {
+		if id != userId {
+			_ = ChatService.SaveOrUpdateIncUnreadNum(id, param.ToGroupId, message)
+		}
+	}
+	//更新自己的会话
+	_ = ChatService.SaveOrUpdate(userId, param.ToGroupId, message)
+	//发送消息
+	_ = eventbus.GlobalBus.Publish(event.WsDataEvent{
+		FromUserId: userId,
+		ToUserIds:  memberIds,
 		Data: &event.WsData{
 			SeqId:   message.ID,
 			Type:    constant.WsDataType.Message,

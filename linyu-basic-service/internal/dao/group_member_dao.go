@@ -37,3 +37,23 @@ func (d *groupMemberDao) UnscopedRemoveMember(db *gorm.DB, groupId string, userI
 	err := db.Unscoped().Where("group_id = ? AND user_id = ?", groupId, userId).Delete(&basicModel.GroupMember{}).Error
 	return err
 }
+
+func (d *groupMemberDao) GetMembersByGroupId(db *gorm.DB, groupId string) ([]*basicModel.GroupMember, error) {
+	var members []*basicModel.GroupMember
+	if err := db.Where("group_id = ?", groupId).Find(&members).Error; err != nil {
+		return nil, err
+	}
+	return members, nil
+}
+
+func (d *groupMemberDao) GetMemberUserIdsByGroupId(db *gorm.DB, groupId string) ([]string, error) {
+	var userIds []string
+	err := db.Model(&basicModel.GroupMember{}).
+		Where("group_id = ?", groupId).
+		Pluck("user_id", &userIds).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return userIds, nil
+}

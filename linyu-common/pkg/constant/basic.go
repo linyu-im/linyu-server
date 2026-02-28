@@ -109,15 +109,10 @@ var MessageSource = messageSource{
 }
 
 type messageStatus struct {
-	Read   string //已读
-	Unread string //未读
 }
 
 // MessageStatus 消息状态
-var MessageStatus = messageStatus{
-	Read:   "read",
-	Unread: "unread",
-}
+var MessageStatus = messageStatus{}
 
 type messageType struct {
 	Text  string //文本

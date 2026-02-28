@@ -10,17 +10,33 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/message/send", SendMessageHandler)
+	route.Register("POST", "/basic/v1/message/send/user", SendMessageToUserHandler)
+	route.Register("POST", "/basic/v1/message/send/group", SendMessageToGroupHandler)
 }
 
-// SendMessageHandler 发送消息
-func SendMessageHandler(c *gin.Context) {
-	param := &basicParam.SendMessageParam{}
+// SendMessageToUserHandler 发送消息(用户)
+func SendMessageToUserHandler(c *gin.Context) {
+	param := &basicParam.SendMessageToUserParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
 		return
 	}
 	currentUserId := c.GetString("userId")
-	err := basicService.MessageService.SendMessage(currentUserId, param)
+	err := basicService.MessageService.SendMessageToUser(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// SendMessageToGroupHandler 发送消息(群聊)
+func SendMessageToGroupHandler(c *gin.Context) {
+	param := &basicParam.SendMessageToGroupParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.MessageService.SendMessageToGroup(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
