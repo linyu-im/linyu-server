@@ -17,13 +17,14 @@ type User struct {
 	Password  string              `gorm:"size:255;comment:密码" json:"-"`
 	Phone     *string             `gorm:"size:11;uniqueIndex:uniq_phone_deleted_at;comment:手机号" json:"phone"`
 	Email     *string             `gorm:"size:255;uniqueIndex:uniq_email_deleted_at;comment:邮箱" json:"email"`
+	Gitee     *string             `gorm:"size:255;uniqueIndex:uniq_gitee_deleted_at;comment:gitee" json:"gitee"`
 	Gender    string              `gorm:"size:10;comment:性别" json:"gender"`
 	Avatar    string              `gorm:"size:512;comment:头像URL" json:"avatar"`
 	Birthday  localtime.LocalTime `gorm:"comment:生日" json:"birthday"`
 	Status    string              `gorm:"size:64;default:'active';comment:用户状态" json:"status"`
 	CreatedAt localtime.LocalTime `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt localtime.LocalTime `gorm:"autoUpdateTime" json:"updatedAt"`
-	DeletedAt gorm.DeletedAt      `gorm:"uniqueIndex:uniq_phone_deleted_at;uniqueIndex:uniq_email_deleted_at;index" json:"deletedAt"`
+	DeletedAt gorm.DeletedAt      `gorm:"uniqueIndex:uniq_phone_deleted_at;uniqueIndex:uniq_email_deleted_at;uniqueIndex:uniq_gitee_deleted_at;index" json:"deletedAt"`
 }
 
 func (User) TableName() string {

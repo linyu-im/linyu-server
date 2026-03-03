@@ -54,3 +54,11 @@ func (r userDao) GetUserByKV(db *gorm.DB, key string, value string) *basicModel.
 	}
 	return result
 }
+
+func (r userDao) GetUserByGitee(db *gorm.DB, gitee string) *basicModel.User {
+	result := &basicModel.User{}
+	if err := db.First(result, "gitee = ?", gitee).Error; err != nil {
+		return nil
+	}
+	return result
+}

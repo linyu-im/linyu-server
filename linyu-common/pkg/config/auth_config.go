@@ -12,3 +12,9 @@ type LdapConfig struct {
 		LocalField string `mapstructure:"local-field"`
 	} `mapstructure:"unique"`
 }
+
+type GiteeConfig struct {
+	ClientID     string `mapstructure:"client-id"`
+	ClientSecret string `mapstructure:"client-secret"`
+	RedirectURL  string `mapstructure:"redirect-url"`
+}

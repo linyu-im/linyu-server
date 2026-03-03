@@ -75,3 +75,8 @@ auth:
     unique:
       ldap-field: "mobile" #ldap对应的字段key
       local-field: "phone" #本地库对应的字段key（phone,email,id,account）
+  gitee:
+    client-id: xxx
+    client-secret: xxx
+    # 桌面端监听地址
+    redirect-url: http://localhost:11120

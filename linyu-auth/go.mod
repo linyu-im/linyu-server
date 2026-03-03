@@ -8,4 +8,5 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.12 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/oauth2 v0.35.0 // indirect
 )

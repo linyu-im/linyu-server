@@ -13,6 +13,7 @@ import (
 func init() {
 	route.RegisterWhite("POST", "/auth/v1/login/pwd", PwdLoginHandler)
 	route.RegisterWhite("POST", "/auth/v1/login/ldap", LdapLoginHandler)
+	route.RegisterWhite("POST", "/auth/v1/login/oauth2", Oauth2LoginHandler)
 	route.RegisterWhite("POST", "/auth/v1/login/enable/ldap", EnableLdapHandler)
 }
 
@@ -23,6 +24,21 @@ func PwdLoginHandler(c *gin.Context) {
 		return
 	}
 	userInfo, err := authService.LoginService.PasswordLogin(pwdLoginParam.Account, pwdLoginParam.Password,
+		c.GetString("device"))
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, userInfo)
+}
+
+// Oauth2LoginHandler Oauth2登录
+func Oauth2LoginHandler(c *gin.Context) {
+	loginParam := &param.Oauth2LoginParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, loginParam) {
+		return
+	}
+	userInfo, err := authService.LoginService.Oauth2Login(loginParam.Type, loginParam.Code,
 		c.GetString("device"))
 	if err != nil {
 		response.Fail(c, err.Error())

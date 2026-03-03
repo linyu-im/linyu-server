@@ -54,7 +54,8 @@ type Config struct {
 	} `mapstructure:"livekit"`
 
 	Auth struct {
-		Ldap LdapConfig `mapstructure:"ldap"`
+		Ldap  LdapConfig  `mapstructure:"ldap"`
+		Gitee GiteeConfig `mapstructure:"gitee"`
 	} `mapstructure:"auth"`
 }
 

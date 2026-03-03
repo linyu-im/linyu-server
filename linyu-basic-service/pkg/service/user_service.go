@@ -66,23 +66,42 @@ func (s *userService) RegisterByEmail(email string) error {
 	return nil
 }
 
-func (s *userService) CreateUserByKV(key, value string) (*basicModel.User, error) {
+func (s *userService) CreateUserByKV(kvs ...interface{}) (*basicModel.User, error) {
+	if len(kvs)%2 != 0 {
+		return nil, fmt.Errorf("invalid number of key-value pairs: must be even, got %d", len(kvs))
+	}
+
+	// 生成唯一账号
 	account := utils.GenerateOnlyNumber("linyu_", func(account string) bool {
 		user := basicDao.UserDao.GetUserByAccount(db.RDB, account)
 		return user == nil
 	})
+
+	//构建基础用户信息map
 	userMap := map[string]interface{}{
 		"id":         utils.GenerateSfIDString(),
 		"username":   utils.RandUsername("林语"),
 		"account":    account,
 		"created_at": localtime.Now(),
 		"updated_at": localtime.Now(),
-		key:          value,
 	}
+
+	// 遍历传入的所有key-value并添加到map中
+	for i := 0; i < len(kvs); i += 2 {
+		key, ok := kvs[i].(string)
+		if !ok {
+			return nil, fmt.Errorf("key at position %d is not a string", i)
+		}
+		value := kvs[i+1]
+		userMap[key] = value
+	}
+
+	//创建用户
 	err := basicDao.UserDao.CreateByMap(db.RDB, userMap)
 	if err != nil {
 		return nil, err
 	}
+
 	return basicDao.UserDao.GetUserByAccount(db.RDB, account), nil
 }
 
@@ -109,4 +128,9 @@ func (s *userService) GenerateCode(tag string) (string, error) {
 
 func (s *userService) GetUserByKV(key string, value string) (*basicModel.User, error) {
 	return basicDao.UserDao.GetUserByKV(db.RDB, key, value), nil
+}
+
+func (s *userService) GetUserByGitee(gitee string) *basicModel.User {
+	user := basicDao.UserDao.GetUserByGitee(db.RDB, gitee)
+	return user
 }
