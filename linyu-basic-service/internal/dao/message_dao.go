@@ -19,3 +19,15 @@ func (r messageDao) Create(db *gorm.DB, message *model.Message) error {
 	}
 	return nil
 }
+
+func (r messageDao) GetLatestMessagesBySessionID(db *gorm.DB, sessionID string, limit int) []*model.Message {
+	var messages []*model.Message
+	result := db.Where("session_id = ?", sessionID).Order("created_at DESC").
+		Limit(limit).Find(&messages)
+
+	if result.Error != nil {
+		return []*model.Message{}
+	}
+
+	return messages
+}

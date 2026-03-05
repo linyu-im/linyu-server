@@ -97,13 +97,13 @@ var MemberRole = memberRole{
 }
 
 // ------------------message相关------------------
-type messageSource struct {
+type messageScene struct {
 	User  string //用户
 	Group string //群
 }
 
-// MessageSource 消息源
-var MessageSource = messageSource{
+// MessageScene 消息场景
+var MessageScene = messageScene{
 	User:  "user",
 	Group: "group",
 }
@@ -125,4 +125,15 @@ var MessageType = messageType{
 	Text:  "text",
 	Image: "image",
 	File:  "file",
+}
+
+type messageFromType struct {
+	User string //用户
+	Bot  string //机器人
+}
+
+// MessageFromType 消息发送放类型
+var MessageFromType = messageFromType{
+	User: "user",
+	Bot:  "bot",
 }

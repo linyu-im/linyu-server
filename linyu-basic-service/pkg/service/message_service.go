@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
-	"github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
+	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
@@ -21,16 +21,16 @@ type messageService struct{}
 
 func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) error {
 	//创建消息
-	message := &model.Message{
+	message := &basicModel.Message{
 		ID:        utils.GenerateSfIDString(),
 		SessionID: utils.Generate1v1SessionID(userId, param.ToUserId),
 		FromID:    userId,
 		ToID:      param.ToUserId,
-		Source:    constant.MessageSource.User,
+		MsgScene:  constant.MessageScene.User,
 		Content:   param.Content,
-		Type:      constant.MessageType.Text,
+		MsgType:   constant.MessageType.Text,
 	}
-	err := dao.MessageDao.Create(db.RDB, message)
+	err := basicDao.MessageDao.Create(db.RDB, message)
 	if err != nil {
 		return err
 	}
@@ -55,16 +55,16 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 
 func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) error {
 	//创建消息
-	message := &model.Message{
+	message := &basicModel.Message{
 		ID:        utils.GenerateSfIDString(),
 		SessionID: param.ToGroupId,
 		FromID:    userId,
 		ToID:      param.ToGroupId,
-		Source:    constant.MessageSource.User,
+		MsgScene:  constant.MessageScene.User,
 		Content:   param.Content,
-		Type:      constant.MessageType.Text,
+		MsgType:   constant.MessageType.Text,
 	}
-	err := dao.MessageDao.Create(db.RDB, message)
+	err := basicDao.MessageDao.Create(db.RDB, message)
 	if err != nil {
 		return err
 	}
@@ -88,4 +88,8 @@ func (s messageService) SendMessageToGroup(userId string, param *basicParam.Send
 		},
 	})
 	return nil
+}
+
+func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basicModel.Message {
+	return basicDao.MessageDao.GetLatestMessagesBySessionID(db.RDB, sessionId, num)
 }
