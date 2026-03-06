@@ -19,6 +19,7 @@ livekit:
   key: devkey
   secret: devsecret
 
+#缓存
 cache:
   type: otter
   redis:
@@ -28,6 +29,7 @@ cache:
   otter:
     capacity: 10000
 
+#关系型数据库
 rdb:
   type: mysql
   mysql:
@@ -41,6 +43,7 @@ rdb:
     db-path: ./linyu/db
     db-name: linyu
 
+#对象存储
 storage:
   type: local
   local:
@@ -53,7 +56,7 @@ storage:
     access-key-secret: access-key-secret
     bucket-name: linyu
 
-
+#事件总线
 event-bus:
   #"local" 或 "rocket"
   type: local
@@ -61,6 +64,13 @@ event-bus:
     namesrv:
       - 192.168.166.105:9876
     retry-times: 2
+
+#向量库
+vector:
+  type: chromem
+  chromem:
+    #向量文件存储位置
+    path: ./linyu/chromem
 
 auth:
   ldap:
@@ -80,3 +90,11 @@ auth:
     client-secret: xxx
     # 桌面端监听地址
     redirect-url: http://localhost:11120
+
+ai:
+  # openai方式调用
+  embedding:
+    base-url: xxx
+    api-key: xxx
+    model: text-embedding-3-large
+    dimensions: 1024

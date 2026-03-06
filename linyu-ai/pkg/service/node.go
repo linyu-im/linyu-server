@@ -1,26 +1,31 @@
-package schedule
+package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/cloudwego/eino/components/prompt"
 	"github.com/cloudwego/eino/schema"
 )
 
 func RobotPromptNode(ctx context.Context, input map[string]any) ([]*schema.Message, error) {
-	//短期记忆
-	messages, ok := input["shortMemory"].([]*schema.Message)
-	if !ok {
-		messages = []*schema.Message{}
-	}
+	var messages []*schema.Message
+	// 系统提示词
 	template := prompt.FromMessages(schema.FString,
-		// 系统消息模板
 		schema.SystemMessage(input["prompt"].(string)),
-		// 用户消息模板
-		schema.UserMessage("问题:{question}"),
 	)
 	msg, _ := template.Format(context.Background(), map[string]any{
 		"question": input["question"],
 	})
 	messages = append(messages, msg...)
+	//长期记忆
+	if longMemory, ok := input["longMemory"].(*schema.Message); ok {
+		messages = append(messages, longMemory)
+	}
+	//短期记忆
+	if shortMemory, ok := input["shortMemory"].([]*schema.Message); ok {
+		messages = append(messages, shortMemory...)
+	}
+	// 用户消息
+	messages = append(messages, schema.UserMessage(fmt.Sprintf("问题:%v", input["question"])))
 	return messages, nil
 }

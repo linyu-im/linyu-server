@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	aiParam "github.com/linyu-im/linyu-server/linyu-ai/pkg/param"
-	"github.com/linyu-im/linyu-server/linyu-ai/pkg/schedule"
 	aiService "github.com/linyu-im/linyu-server/linyu-ai/pkg/service"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
@@ -22,6 +21,8 @@ func RobotAnswersHandler(c *gin.Context) {
 		return
 	}
 
+	// 获取长期记忆
+	longMemory, _ := aiService.AiMemoryService.GetLongTermMemory(param.SessionId, param.Question)
 	// 获取短期记忆
 	shortMemory := aiService.AiMemoryService.GetShortTermMemory(param.SessionId)
 	// 模型输入
@@ -30,9 +31,10 @@ func RobotAnswersHandler(c *gin.Context) {
 		"robotId":     param.RobotId,
 		"sessionId":   param.SessionId,
 		"shortMemory": shortMemory,
+		"longMemory":  longMemory,
 	}
 	// 获取机器人处理流
-	graph, err := schedule.GetRobotGraph(param.RobotId)
+	graph, err := aiService.GetRobotGraph(param.RobotId)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return

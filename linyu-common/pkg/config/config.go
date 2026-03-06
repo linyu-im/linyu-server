@@ -28,6 +28,11 @@ type Config struct {
 		OtterCache OtterConfig      `mapstructure:"otter"`
 	} `mapstructure:"cache"`
 
+	Vector struct {
+		Type          VectorType          `mapstructure:"type"`
+		ChromemVector ChromemVectorConfig `mapstructure:"chromem"`
+	} `mapstructure:"vector"`
+
 	Jwt struct {
 		Secret      string `mapstructure:"secret"`
 		ExpireHours int    `mapstructure:"expire-hours"`
@@ -57,6 +62,10 @@ type Config struct {
 		Ldap  LdapConfig  `mapstructure:"ldap"`
 		Gitee GiteeConfig `mapstructure:"gitee"`
 	} `mapstructure:"auth"`
+
+	AI struct {
+		Embedding EmbeddingConfig `mapstructure:"embedding"`
+	} `mapstructure:"ai"`
 }
 
 var C Config

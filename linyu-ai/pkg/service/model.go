@@ -1,10 +1,9 @@
-package schedule
+package service
 
 import (
 	"context"
 	"fmt"
 	"github.com/cloudwego/eino-ext/components/model/openai"
-	aiService "github.com/linyu-im/linyu-server/linyu-ai/pkg/service"
 	"sync"
 )
 
@@ -15,7 +14,7 @@ func GetLLModel(modelId string) (*openai.ChatModel, error) {
 		return m.(*openai.ChatModel), nil
 	}
 	//获取模型信息
-	modelInfo := aiService.AiModelService.GetAiModel(modelId)
+	modelInfo := AiModelService.GetAiModel(modelId)
 	if modelInfo == nil {
 		return nil, fmt.Errorf("model not found")
 	}

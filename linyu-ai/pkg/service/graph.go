@@ -1,11 +1,10 @@
-package schedule
+package service
 
 import (
 	"context"
 	"errors"
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
-	aiService "github.com/linyu-im/linyu-server/linyu-ai/pkg/service"
 	"sync"
 )
 
@@ -16,7 +15,7 @@ func GetRobotGraph(robotId string) (compose.Runnable[map[string]any, *schema.Mes
 		return g.(compose.Runnable[map[string]any, *schema.Message]), nil
 	}
 	//获取机器人信息
-	robotInfo := aiService.AiRobotService.GetAiRobot(robotId)
+	robotInfo := AiRobotService.GetAiRobot(robotId)
 	if robotInfo == nil {
 		return nil, errors.New("robot not found")
 	}
