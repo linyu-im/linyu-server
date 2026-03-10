@@ -24,7 +24,7 @@ func InitRdb(models []interface{}) *gorm.DB {
 			panic("sqlite db migrate error: " + err.Error())
 		}
 	default:
-		panic("storage type not supported: " + config.C.Storage.Type)
+		panic("db type not supported: " + config.C.Rdb.Type)
 	}
 	return rdb
 }

@@ -67,10 +67,13 @@ event-bus:
 
 #向量库
 vector:
-  type: chromem
+  type: weaviate
   chromem:
     #向量文件存储位置
     path: ./linyu/chromem
+  weaviate:
+    scheme: http
+    host: localhost:8080
 
 auth:
   ldap:

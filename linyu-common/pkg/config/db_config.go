@@ -47,9 +47,15 @@ type OtterConfig struct {
 type VectorType string
 
 const (
-	ChromemVectorType VectorType = "chromem" //本地向量
+	ChromemVectorType  VectorType = "chromem" //本地向量
+	WeaviateVectorType VectorType = "weaviate"
 )
 
 type ChromemVectorConfig struct {
 	Path string `mapstructure:"path"`
+}
+
+type WeaviateVectorConfig struct {
+	Scheme string `mapstructure:"scheme"`
+	Host   string `mapstructure:"host"`
 }

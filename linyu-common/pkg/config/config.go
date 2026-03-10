@@ -29,8 +29,9 @@ type Config struct {
 	} `mapstructure:"cache"`
 
 	Vector struct {
-		Type          VectorType          `mapstructure:"type"`
-		ChromemVector ChromemVectorConfig `mapstructure:"chromem"`
+		Type           VectorType           `mapstructure:"type"`
+		ChromemVector  ChromemVectorConfig  `mapstructure:"chromem"`
+		WeaviateVector WeaviateVectorConfig `mapstructure:"weaviate"`
 	} `mapstructure:"vector"`
 
 	Jwt struct {

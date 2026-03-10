@@ -19,7 +19,7 @@ func NewChromemClient() *ChromemClient {
 	}
 }
 
-func (c *ChromemClient) CreateCollection(collectionName string) {
+func (c *ChromemClient) CreateLtmCollection(collectionName string) {
 	_, err := c.client.GetOrCreateCollection(collectionName, nil, nil)
 	if err != nil {
 		log.Fatal(err)
