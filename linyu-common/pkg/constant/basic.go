@@ -137,3 +137,29 @@ var MessageFromType = messageFromType{
 	User: "user",
 	Bot:  "bot",
 }
+
+// ------------------moment相关------------------
+
+// momentVisibleType 过往可见类型
+type momentVisibleType struct {
+	All     string //所有人可见
+	Include string //指定人可见
+	Exclude string //指定人不可见
+	Private string //仅自己可见
+}
+
+var MomentVisibleType = momentVisibleType{
+	All:     "all",
+	Include: "include",
+	Exclude: "exclude",
+	Private: "private",
+}
+
+func (m momentVisibleType) Validate(v string) bool {
+	switch v {
+	case m.All, m.Include, m.Exclude, m.Private:
+		return true
+	default:
+		return false
+	}
+}
