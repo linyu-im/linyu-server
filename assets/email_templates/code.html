@@ -1,13 +1,141 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>邮箱验证</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>林语 安全验证</title>
+    <style>
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+            background-color: #121212;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper {
+            width: 100%;
+            background-color: #121212;
+            padding: 40px 0;
+        }
+        .container {
+            max-width: 520px;
+            margin: 0 auto;
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        .header {
+            background-color: #1a1a1a;
+            padding: 25px;
+            text-align: left;
+            border-bottom: 2px solid #4C9BFF;
+        }
+        .header h1 {
+            color: #4C9BFF;
+            font-size: 20px;
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #dddddd;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+        .greeting {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border-left: 3px solid #4C9BFF;
+            padding-left: 10px;
+        }
+        .code-area {
+            background-color: #000000;
+            border-radius: 4px;
+            text-align: center;
+            padding: 25px;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .code-area::after {
+            content: '';
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            width: 8px;
+            height: 15px;
+            background-color: #4C9BFF;
+            animation: blink 1s infinite;
+        }
+        .code {
+            color: #4C9BFF;
+            font-size: 40px;
+            font-weight: 800;
+            letter-spacing: 12px;
+            margin: 0;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            text-shadow: 0 0 10px rgba(76, 155, 255, 0.5);
+        }
+        .info-block {
+            margin: 20px 0;
+            color: #aaaaaa;
+            font-size: 13px;
+        }
+        .info-block strong {
+            color: #4C9BFF;
+        }
+        .footer {
+            padding: 20px 30px;
+            background-color: #1a1a1a;
+            border-top: 1px solid #333333;
+            font-size: 12px;
+            color: #666666;
+            text-align: left;
+        }
+        .brand {
+            color: #4C9BFF;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
 </head>
 <body>
-<h2>您好</h2>
-<p>您的验证码是：<strong>{{.code}}</strong></p>
-<p>验证码有效期为 10 分钟，请尽快使用。</p>
-<p>—— 来自 林语团队</p>
+<div class="wrapper">
+    <div class="container">
+        <div class="header">
+            <h1>Linyu::Email-Auth-Service</h1>
+        </div>
+
+        <div class="content">
+            <div class="greeting">> initializing_request... [OK]</div>
+            <p>您正在进行安全验证。请使用下方的一次性验证码 (OTP) 完成操作：</p>
+
+            <div class="code-area">
+                <p class="code">{{ .code }}</p>
+            </div>
+
+            <div class="info-block">
+                <p>验证码状态: <strong style="color: #4C9BFF;">active</strong></p>
+                <p>剩余有效期: <strong>10 MINUTES</strong></p>
+            </div>
+
+            <p style="color: #777777;">如果您未请求此代码，请忽略此邮件，您的账户是安全的。</p>
+        </div>
+
+        <div class="footer">
+            <p>>> system_origin: Linyu-Team </p>
+            <p>© 2026 <a href="#" class="brand">Linyu Team</a> | 致力于构建工业级即时通讯系统</p>
+        </div>
+    </div>
+</div>
 </body>
 </html>
