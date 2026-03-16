@@ -23,6 +23,8 @@ func InitStorage() {
 		S = NewLocalStorage(config.C.Storage.LocalStorage)
 	case config.OssStorageType:
 		S = NewOssStorage(config.C.Storage.OssStorage)
+	case config.S3StorageType:
+		S = NewS3Storage(config.C.Storage.S3Storage)
 	default:
 		panic("storage type not supported: " + config.C.Storage.Type)
 	}

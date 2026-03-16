@@ -5,6 +5,7 @@ type StorageType string
 const (
 	LocalStorageType StorageType = "local"
 	OssStorageType   StorageType = "oss"
+	S3StorageType    StorageType = "s3"
 )
 
 type LocalStorageConfig struct {
@@ -18,4 +19,13 @@ type OssStorageConfig struct {
 	AccessKeyID     string `mapstructure:"access-key-id" `
 	AccessKeySecret string `mapstructure:"access-key-secret"`
 	BucketName      string `mapstructure:"bucket-name"`
+}
+
+type S3StorageConfig struct {
+	BaseURL         string `mapstructure:"base-url"`
+	Endpoint        string `mapstructure:"endpoint"`
+	AccessKeyID     string `mapstructure:"access-key-id" `
+	AccessKeySecret string `mapstructure:"access-key-secret"`
+	BucketName      string `mapstructure:"bucket-name"`
+	Region          string `mapstructure:"region"`
 }

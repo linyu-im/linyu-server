@@ -51,6 +51,7 @@ type Config struct {
 		Type         StorageType        `mapstructure:"type"`
 		LocalStorage LocalStorageConfig `mapstructure:"local"`
 		OssStorage   OssStorageConfig   `mapstructure:"oss"`
+		S3Storage    S3StorageConfig    `mapstructure:"s3"`
 	} `mapstructure:"storage"`
 
 	Livekit struct {

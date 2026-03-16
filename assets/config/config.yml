@@ -45,7 +45,7 @@ rdb:
 
 #对象存储
 storage:
-  type: local
+  type: s3
   local:
     base-url: http://localhost:9088
     file-path: ./linyu/storage
@@ -55,6 +55,12 @@ storage:
     access-key-id: access-key-id
     access-key-secret: access-key-secret
     bucket-name: linyu
+  s3:
+    endpoint: http://127.0.0.1:9000
+    access-key-id: WGAJPuUzsmqpky9LxFVR
+    access-key-secret: gtMqzFIK2ihbXQkmfnUOyJZEGx90WrDj7AsBTVNc
+    bucket-name: linyu
+    region: region
 
 #事件总线
 event-bus:
