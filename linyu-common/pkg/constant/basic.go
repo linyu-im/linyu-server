@@ -118,6 +118,9 @@ type messageType struct {
 	Text  string //文本
 	Image string //图片
 	File  string //文件
+	Video string //视频
+	Voice string //语音
+	ECard string //电子名片
 }
 
 // MessageType 消息类型
@@ -125,6 +128,9 @@ var MessageType = messageType{
 	Text:  "text",
 	Image: "image",
 	File:  "file",
+	Video: "video",
+	Voice: "voice",
+	ECard: "ecard",
 }
 
 type messageFromType struct {

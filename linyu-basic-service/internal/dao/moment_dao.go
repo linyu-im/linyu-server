@@ -23,7 +23,7 @@ func (d momentDao) Create(db *gorm.DB, moment *basicModel.Moment) error {
 
 func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId string) *gorm.DB {
 
-	tx := db.Debug().Model(&basicModel.Moment{}).
+	tx := db.Model(&basicModel.Moment{}).
 		Joins("LEFT JOIN t_moment_setting ms ON ms.user_id = t_moment.user_id").
 		Where("t_moment.deleted_at IS NULL")
 

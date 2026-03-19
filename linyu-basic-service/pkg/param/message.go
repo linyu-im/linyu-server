@@ -1,11 +1,17 @@
 package param
 
+import (
+	"encoding/json"
+)
+
 type SendMessageToUserParam struct {
-	ToUserId string `json:"toUserId" binding:"required"`
-	Content  string `json:"content" binding:"required"`
+	ToUserId string          `json:"toUserId" binding:"required"`
+	MsgType  string          `json:"msgType" binding:"required"`
+	Content  json.RawMessage `json:"content" binding:"required"`
 }
 
 type SendMessageToGroupParam struct {
-	ToGroupId string `json:"toGroupId" binding:"required"`
-	Content   string `json:"content" binding:"required"`
+	ToGroupId string          `json:"toGroupId" binding:"required"`
+	MsgType   string          `json:"msgType" binding:"required"`
+	Content   json.RawMessage `json:"content" binding:"required"`
 }

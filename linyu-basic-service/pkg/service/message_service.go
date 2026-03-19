@@ -1,6 +1,8 @@
 package service
 
 import (
+	"encoding/json"
+	"fmt"
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
@@ -19,7 +21,21 @@ func newMessageService() *messageService {
 
 type messageService struct{}
 
+var msgContentFactory = map[string]func() basicModel.MsgContent{
+	constant.MessageType.Text:  func() basicModel.MsgContent { return &basicModel.TextContent{} },
+	constant.MessageType.Image: func() basicModel.MsgContent { return &basicModel.ImageContent{} },
+	constant.MessageType.Video: func() basicModel.MsgContent { return &basicModel.VideoContent{} },
+	constant.MessageType.File:  func() basicModel.MsgContent { return &basicModel.FileContent{} },
+	constant.MessageType.ECard: func() basicModel.MsgContent { return &basicModel.ECardContent{} },
+	constant.MessageType.Voice: func() basicModel.MsgContent { return &basicModel.VoiceContent{} },
+}
+
 func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) error {
+	//消息解析
+	content, err := s.ParseMsgContent(param.MsgType, param.Content)
+	if err != nil {
+		return err
+	}
 	//创建消息
 	message := &basicModel.Message{
 		ID:        utils.GenerateSfIDString(),
@@ -27,10 +43,10 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 		FromID:    userId,
 		ToID:      param.ToUserId,
 		MsgScene:  constant.MessageScene.User,
-		Content:   param.Content,
-		MsgType:   constant.MessageType.Text,
+		Content:   content,
+		MsgType:   param.MsgType,
 	}
-	err := basicDao.MessageDao.Create(db.RDB, message)
+	err = basicDao.MessageDao.Create(db.RDB, message)
 	if err != nil {
 		return err
 	}
@@ -54,6 +70,11 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 }
 
 func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) error {
+	//消息解析
+	content, err := s.ParseMsgContent(param.MsgType, param.Content)
+	if err != nil {
+		return err
+	}
 	//创建消息
 	message := &basicModel.Message{
 		ID:        utils.GenerateSfIDString(),
@@ -61,10 +82,10 @@ func (s messageService) SendMessageToGroup(userId string, param *basicParam.Send
 		FromID:    userId,
 		ToID:      param.ToGroupId,
 		MsgScene:  constant.MessageScene.User,
-		Content:   param.Content,
+		Content:   content,
 		MsgType:   constant.MessageType.Text,
 	}
-	err := basicDao.MessageDao.Create(db.RDB, message)
+	err = basicDao.MessageDao.Create(db.RDB, message)
 	if err != nil {
 		return err
 	}
@@ -92,4 +113,16 @@ func (s messageService) SendMessageToGroup(userId string, param *basicParam.Send
 
 func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basicModel.Message {
 	return basicDao.MessageDao.GetLatestMessagesBySessionID(db.RDB, sessionId, num)
+}
+
+func (s messageService) ParseMsgContent(msgType string, raw json.RawMessage) (basicModel.MsgContent, error) {
+	factory, ok := msgContentFactory[msgType]
+	if !ok {
+		return nil, fmt.Errorf("unsupported msgType: %s", msgType)
+	}
+	content := factory()
+	if err := json.Unmarshal(raw, content); err != nil {
+		return nil, err
+	}
+	return content, nil
 }

@@ -30,11 +30,11 @@ func (s *aiMemoryService) GetShortTermMemory(sessionId string) []*schema.Message
 		var msg *schema.Message
 		switch m.FromType {
 		case constant.MessageFromType.User:
-			msg = schema.UserMessage(m.Content)
+			msg = schema.UserMessage(m.Content.ToString())
 		case constant.MessageFromType.Bot:
-			msg = schema.AssistantMessage(m.Content, nil)
+			msg = schema.AssistantMessage(m.Content.ToString(), nil)
 		default:
-			msg = schema.UserMessage(m.Content)
+			msg = schema.UserMessage(m.Content.ToString())
 		}
 		result = append(result, msg)
 	}
