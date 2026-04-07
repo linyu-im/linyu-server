@@ -82,6 +82,14 @@ func (s *loginService) Oauth2Login(t string, code string, device string) (*authR
 	return s.Login(user, device)
 }
 
+func (s *loginService) TokenReset(userId string, device string) (*authResult.UserLoginInfoResult, error) {
+	user := basicService.UserService.GetUserById(userId)
+	if user == nil {
+		return nil, errors.New("param.error")
+	}
+	return s.Login(user, device)
+}
+
 // LdapAuthenticate ldap验证
 func LdapAuthenticate(username, password string) (string, error) {
 	if !config.C.Auth.Ldap.Enabled {

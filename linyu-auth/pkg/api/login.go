@@ -15,6 +15,7 @@ func init() {
 	route.RegisterWhite("POST", "/auth/v1/login/ldap", LdapLoginHandler)
 	route.RegisterWhite("POST", "/auth/v1/login/oauth2", Oauth2LoginHandler)
 	route.RegisterWhite("POST", "/auth/v1/login/enable/ldap", EnableLdapHandler)
+	route.Register("POST", "/auth/v1/login/token/reset", TokenResetHandler)
 }
 
 // PwdLoginHandler 密码登录
@@ -65,4 +66,15 @@ func LdapLoginHandler(c *gin.Context) {
 // EnableLdapHandler 是否允许ldap登录
 func EnableLdapHandler(c *gin.Context) {
 	response.Ok(c, config.C.Auth.Ldap.Enabled)
+}
+
+// TokenResetHandler token重置
+func TokenResetHandler(c *gin.Context) {
+	userId := c.GetString("userId")
+	userInfo, err := authService.LoginService.TokenReset(userId, c.GetString("device"))
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, userInfo)
 }

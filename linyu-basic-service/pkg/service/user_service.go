@@ -134,3 +134,8 @@ func (s *userService) GetUserByGitee(gitee string) *basicModel.User {
 	user := basicDao.UserDao.GetUserByGitee(db.RDB, gitee)
 	return user
 }
+
+func (s *userService) GetUserById(userId string) *basicModel.User {
+	user := basicDao.UserDao.GetUserById(db.RDB, userId)
+	return user
+}

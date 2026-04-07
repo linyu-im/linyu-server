@@ -54,7 +54,7 @@ func Auth() gin.HandlerFunc {
 
 		ctx.Set("userId", userInfo.UserID)
 		ctx.Set("roleId", userInfo.RoleID)
-
+		ctx.Set("token", tokenString)
 		ctx.Next()
 	}
 }

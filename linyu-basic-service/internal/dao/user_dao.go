@@ -62,3 +62,11 @@ func (r userDao) GetUserByGitee(db *gorm.DB, gitee string) *basicModel.User {
 	}
 	return result
 }
+
+func (r userDao) GetUserById(db *gorm.DB, userId string) *basicModel.User {
+	result := &basicModel.User{}
+	if err := db.First(result, "id = ?", userId).Error; err != nil {
+		return nil
+	}
+	return result
+}
