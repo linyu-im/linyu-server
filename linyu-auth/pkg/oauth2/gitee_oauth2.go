@@ -39,8 +39,9 @@ func NewGiteeOauth2() Oauth2 {
 	}
 }
 
-func (o *GiteeOauth2) GetAuthURL() string {
-	return o.oauth.AuthCodeURL(config.C.Auth.Gitee.RedirectURL)
+func (o *GiteeOauth2) GetAuthURL() (string, string) {
+	redirectUrl := config.C.Auth.Gitee.RedirectURL
+	return o.oauth.AuthCodeURL(redirectUrl), redirectUrl
 }
 
 func (o *GiteeOauth2) GetUserInfo(code string) (*basicModel.User, error) {

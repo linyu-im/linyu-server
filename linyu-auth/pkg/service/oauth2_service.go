@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"github.com/linyu-im/linyu-server/linyu-auth/pkg/oauth2"
+	"github.com/linyu-im/linyu-server/linyu-auth/pkg/result"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 )
 
@@ -25,12 +26,16 @@ func (s *oauth2Service) GetOauth2Service(oauth2Type string) oauth2.Oauth2 {
 	return s.oauth2s[oauth2Type]
 }
 
-func (s *oauth2Service) GetAuthURL(oauth2Type string) (string, error) {
+func (s *oauth2Service) GetAuthURL(oauth2Type string) (*result.Oauth2UrlResult, error) {
 	auth := s.GetOauth2Service(oauth2Type)
 	if auth == nil {
-		return "", errors.New("param.error")
+		return nil, errors.New("param.error")
 	}
-	return auth.GetAuthURL(), nil
+	authURL, redirectUrl := auth.GetAuthURL()
+	return &result.Oauth2UrlResult{
+		AuthUrl:     authURL,
+		RedirectUrl: redirectUrl,
+	}, nil
 }
 
 func (s *oauth2Service) GetUserInfo(t string, code string) (*basicModel.User, error) {

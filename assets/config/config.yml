@@ -98,7 +98,7 @@ auth:
     client-id: xxx
     client-secret: xxx
     # 桌面端监听地址
-    redirect-url: http://localhost:11120
+    redirect-url: http://127.0.0.1:21120
 
 ai:
   # openai方式调用
