@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&AiRobot{})
+	db.AddMigrateTable(&AiRobot{})
 }
 
 // AiRobot AI机器人表

@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&MomentSetting{})
+	db.AddMigrateTable(&MomentSetting{})
 }
 
 // MomentSetting 过往设置表

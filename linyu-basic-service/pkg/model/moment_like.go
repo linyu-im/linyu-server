@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&MomentLike{})
+	db.AddMigrateTable(&MomentLike{})
 }
 
 // MomentLike 过往点赞表

@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&Message{})
+	db.AddMigrateTable(&Message{})
 }
 
 // Message 消息表

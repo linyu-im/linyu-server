@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&Chat{})
+	db.AddMigrateTable(&Chat{})
 }
 
 type Chat struct {

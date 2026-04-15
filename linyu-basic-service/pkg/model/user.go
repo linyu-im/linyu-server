@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&User{})
+	db.AddMigrateTable(&User{})
 }
 
 type User struct {
@@ -21,6 +21,7 @@ type User struct {
 	Gender    string              `gorm:"size:10;comment:性别" json:"gender"`
 	Avatar    string              `gorm:"size:512;comment:头像URL" json:"avatar"`
 	Birthday  localtime.LocalTime `gorm:"comment:生日" json:"birthday"`
+	EmotionId string              `gorm:"size:64;comment:心情Id" json:"emotionId"`
 	Status    string              `gorm:"size:64;default:'active';comment:用户状态" json:"status"`
 	CreatedAt localtime.LocalTime `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt localtime.LocalTime `gorm:"autoUpdateTime" json:"updatedAt"`

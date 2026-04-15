@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&Moment{})
+	db.AddMigrateTable(&Moment{})
 }
 
 type MediaContent struct {

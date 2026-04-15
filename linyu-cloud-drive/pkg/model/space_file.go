@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&SpaceFile{})
+	db.AddMigrateTable(&SpaceFile{})
 }
 
 type SpaceFile struct {

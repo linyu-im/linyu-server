@@ -3,6 +3,8 @@ package rdb
 import (
 	"fmt"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
+	logger2 "github.com/linyu-im/linyu-server/linyu-common/pkg/logger"
+	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -29,6 +31,12 @@ func MysqlMigrate(MysqlDB *gorm.DB, models []interface{}) error {
 		}
 		if err := MysqlDB.Set("gorm:table_options", "COMMENT='"+comment+"'").AutoMigrate(m); err != nil {
 			return err
+		}
+		if tc, ok := m.(interface{ TableInit(db *gorm.DB) error }); ok {
+			err := tc.TableInit(MysqlDB)
+			if err != nil {
+				logger2.Log.Error("[MysqlMigrate] 数据初始化失败:", zap.Error(err))
+			}
 		}
 	}
 	return nil

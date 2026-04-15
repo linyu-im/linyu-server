@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&Apply{})
+	db.AddMigrateTable(&Apply{})
 }
 
 // Apply 申请相关表

@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&MomentVisible{})
+	db.AddMigrateTable(&MomentVisible{})
 }
 
 // MomentVisible 过往可见权限表

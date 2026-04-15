@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&Contacts{})
+	db.AddMigrateTable(&Contacts{})
 }
 
 // Contacts 通讯录

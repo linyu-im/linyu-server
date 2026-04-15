@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&GroupMember{})
+	db.AddMigrateTable(&GroupMember{})
 }
 
 // GroupMember 聊天群成员表

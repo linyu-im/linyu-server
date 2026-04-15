@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&PhysicalFile{})
+	db.AddMigrateTable(&PhysicalFile{})
 }
 
 type PhysicalFile struct {

@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&MomentComment{})
+	db.AddMigrateTable(&MomentComment{})
 }
 
 // MomentComment 过往评论表

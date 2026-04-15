@@ -12,13 +12,13 @@ var CacheDB cache.Cache  //缓存
 var Vector vector.Vector //向量
 
 func InitDB() {
-	RDB = rdb.InitRdb(mysqlModels)
+	RDB = rdb.InitRdb(models)
 	CacheDB = cache.InitCache()
 	Vector = vector.InitVector()
 }
 
-var mysqlModels []interface{}
+var models []interface{}
 
-func MysqlAddMigrateTable(model interface{}) {
-	mysqlModels = append(mysqlModels, model)
+func AddMigrateTable(model interface{}) {
+	models = append(models, model)
 }

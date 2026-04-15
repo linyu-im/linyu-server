@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	db.MysqlAddMigrateTable(&AiModel{})
+	db.AddMigrateTable(&AiModel{})
 }
 
 // AiModel AI模型表
