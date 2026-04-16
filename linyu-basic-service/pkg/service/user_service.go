@@ -139,3 +139,7 @@ func (s *userService) GetUserById(userId string) *basicModel.User {
 	user := basicDao.UserDao.GetUserById(db.RDB, userId)
 	return user
 }
+
+func (s *userService) UserInfoById(userId string) (*basicModel.User, error) {
+	return basicDao.UserDao.UserInfoById(db.RDB, userId)
+}

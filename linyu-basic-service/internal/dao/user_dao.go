@@ -70,3 +70,17 @@ func (r userDao) GetUserById(db *gorm.DB, userId string) *basicModel.User {
 	}
 	return result
 }
+
+func (r userDao) UserInfoById(db *gorm.DB, userId string) (*basicModel.User, error) {
+	var user basicModel.User
+	err := db.
+		Table("t_user u").
+		Select("u.*, e.id as emotion_id, e.emotion_name, e.url as emotion_url, e.type").
+		Joins("LEFT JOIN t_emotion e ON u.emotion_id = e.id").
+		Where("u.id = ?", userId).
+		Scan(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
