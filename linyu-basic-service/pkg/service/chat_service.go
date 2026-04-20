@@ -19,7 +19,7 @@ func newChatService() *chatService {
 type chatService struct{}
 
 func (s *chatService) ChatList(userId string) ([]*basicModel.Chat, error) {
-	list, err := basicDao.ChatDao.ChatList(db.RDB, userId)
+	list, err := basicDao.ChatDao.ContactsChatList(db.RDB, userId)
 	return list, err
 }
 

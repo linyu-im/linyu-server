@@ -4,6 +4,7 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func init() {
@@ -65,8 +66,10 @@ func (Emotion) TableInit(db *gorm.DB) error {
 		{ID: "31", EmotionName: "我只是一种草", Url: "/emotion/grass.png"},
 	}
 	for _, item := range datas {
-		var existing Emotion
-		err := db.Where("id = ?", item.ID).FirstOrCreate(&existing, item).Error
+		err := db.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}},
+			DoNothing: true,
+		}).Create(&item).Error
 		if err != nil {
 			return err
 		}

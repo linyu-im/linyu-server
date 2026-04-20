@@ -16,8 +16,10 @@ type Contacts struct {
 	UserID    string              `gorm:"size:64;index;not null;comment:用户id" json:"userId"`
 	PeerId    string              `gorm:"size:64;index;not null;comment:对方的id" json:"peerId"`
 	Remark    string              `gorm:"size:64;comment:备注" json:"remark"`
-	IsBack    bool                `gorm:"comment:是否拉黑;default:0" json:"isBack"`
-	IsConcern bool                `gorm:"comment:是否关心;default:0" json:"isConcern"`
+	IsBack    bool                `gorm:"default:0;comment:是否拉黑" json:"isBack"`
+	IsTop     bool                `gorm:"default:0;comment:是否置顶" json:"isTop"`
+	IsConcern bool                `gorm:"default:0;comment:是否关心" json:"isConcern"`
+	IsMute    bool                `gorm:"default:0;comment:是否免打扰" json:"isMute"`
 	Type      string              `gorm:"size:64;comment:类型" json:"type"`
 	Status    string              `gorm:"size:64;comment:状态" json:"status"`
 	CreatedAt localtime.LocalTime `gorm:"type:timestamp(3);not null;autoCreateTime;comment:创建时间" json:"createdAt"`
