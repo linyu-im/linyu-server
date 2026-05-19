@@ -12,7 +12,7 @@ import (
 func init() {
 	route.Register("POST", "/basic/v1/user/current/info", CurrentUserInfoHandler)
 	route.Register("POST", "/basic/v1/user/emotion/set", UserEmotionSetHandler)
-
+	route.Register("POST", "/basic/v1/user/avatar/get", GetUserAvatarHandler)
 }
 
 func CurrentUserInfoHandler(c *gin.Context) {
@@ -37,4 +37,13 @@ func UserEmotionSetHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c)
+}
+
+func GetUserAvatarHandler(c *gin.Context) {
+	param := &basicParam.GetUserAvatarParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	url := basicService.UserService.GetAvatar(param.UserId)
+	response.Ok(c, url)
 }

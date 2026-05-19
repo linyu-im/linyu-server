@@ -84,3 +84,16 @@ func (r userDao) UserInfoById(db *gorm.DB, userId string) (*basicModel.User, err
 	}
 	return &user, nil
 }
+
+func (r userDao) UserAvatarById(rdb *gorm.DB, userId string) string {
+	var avatarUrl string
+	err := rdb.
+		Table("t_user u").
+		Select("avatar").
+		Where("id = ?", userId).
+		Scan(&avatarUrl).Error
+	if err != nil {
+		return ""
+	}
+	return avatarUrl
+}
