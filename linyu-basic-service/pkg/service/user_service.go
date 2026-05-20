@@ -140,8 +140,12 @@ func (s *userService) GetUserById(userId string) *basicModel.User {
 	return user
 }
 
-func (s *userService) UserInfoById(userId string) (*basicModel.User, error) {
-	return basicDao.UserDao.UserInfoById(db.RDB, userId)
+func (s *userService) CurrentUserInfoById(userId string) (*basicModel.User, error) {
+	return basicDao.UserDao.CurrentUserInfoById(db.RDB, userId)
+}
+
+func (s *userService) UserInfoById(userId string, currentUserId string) (*basicModel.User, error) {
+	return basicDao.UserDao.UserInfoById(db.RDB, userId, currentUserId)
 }
 
 func (s *userService) GetAvatar(userId string) string {

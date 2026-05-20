@@ -7,3 +7,7 @@ type UserEmotionSetParam struct {
 type GetUserAvatarParam struct {
 	UserId string `json:"userId"`
 }
+
+type UserInfoParam struct {
+	UserId string `json:"userId"`
+}

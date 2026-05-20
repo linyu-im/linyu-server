@@ -27,8 +27,9 @@ type User struct {
 	UpdatedAt localtime.LocalTime `gorm:"autoUpdateTime" json:"updatedAt"`
 	DeletedAt gorm.DeletedAt      `gorm:"uniqueIndex:uniq_phone_deleted_at;uniqueIndex:uniq_email_deleted_at;uniqueIndex:uniq_gitee_deleted_at;index" json:"deletedAt"`
 
-	EmotionName string `gorm:"-:migration" json:"emotionName"`
-	EmotionUrl  string `gorm:"-:migration" json:"emotionUrl"`
+	EmotionName string `gorm:"->" json:"emotionName"`
+	EmotionUrl  string `gorm:"->" json:"emotionUrl"`
+	Remark      string `gorm:"->" json:"remark"`
 }
 
 func (User) TableName() string {

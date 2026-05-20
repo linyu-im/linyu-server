@@ -10,6 +10,7 @@ import (
 )
 
 func init() {
+	route.Register("POST", "/basic/v1/user/info", UserInfoHandler)
 	route.Register("POST", "/basic/v1/user/current/info", CurrentUserInfoHandler)
 	route.Register("POST", "/basic/v1/user/emotion/set", UserEmotionSetHandler)
 	route.Register("POST", "/basic/v1/user/avatar/get", GetUserAvatarHandler)
@@ -17,7 +18,21 @@ func init() {
 
 func CurrentUserInfoHandler(c *gin.Context) {
 	currentUserId := c.GetString("userId")
-	info, err := basicService.UserService.UserInfoById(currentUserId)
+	info, err := basicService.UserService.CurrentUserInfoById(currentUserId)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, info)
+}
+
+func UserInfoHandler(c *gin.Context) {
+	param := &basicParam.UserInfoParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	info, err := basicService.UserService.UserInfoById(param.UserId, currentUserId)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return

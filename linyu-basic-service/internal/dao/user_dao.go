@@ -2,6 +2,7 @@ package dao
 
 import (
 	"fmt"
+
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	"gorm.io/gorm"
 )
@@ -71,7 +72,7 @@ func (r userDao) GetUserById(db *gorm.DB, userId string) *basicModel.User {
 	return result
 }
 
-func (r userDao) UserInfoById(db *gorm.DB, userId string) (*basicModel.User, error) {
+func (r userDao) CurrentUserInfoById(db *gorm.DB, userId string) (*basicModel.User, error) {
 	var user basicModel.User
 	err := db.
 		Table("t_user u").
@@ -96,4 +97,19 @@ func (r userDao) UserAvatarById(rdb *gorm.DB, userId string) string {
 		return ""
 	}
 	return avatarUrl
+}
+
+func (r userDao) UserInfoById(db *gorm.DB, userId string, currentUserId string) (*basicModel.User, error) {
+	var user basicModel.User
+	err := db.
+		Table("t_user u").
+		Select("u.*, e.id as emotion_id, e.emotion_name, e.url as emotion_url, e.type, c.remark").
+		Joins("LEFT JOIN t_emotion e ON u.emotion_id = e.id").
+		Joins("LEFT JOIN t_contacts c ON c.user_id = ? AND c.peer_id = u.id", currentUserId).
+		Where("u.id = ?", userId).
+		Scan(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
