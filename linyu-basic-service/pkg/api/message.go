@@ -12,6 +12,7 @@ import (
 func init() {
 	route.Register("POST", "/basic/v1/message/send/user", SendMessageToUserHandler)
 	route.Register("POST", "/basic/v1/message/send/group", SendMessageToGroupHandler)
+	route.Register("POST", "/basic/v1/message/page", MessagePageHandler)
 }
 
 // SendMessageToUserHandler 发送消息(用户)
@@ -42,4 +43,19 @@ func SendMessageToGroupHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c)
+}
+
+// MessagePageHandler 分页获取聊天内容
+func MessagePageHandler(c *gin.Context) {
+	param := &basicParam.MessagePageParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	data, err := basicService.MessageService.MessagePage(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, data)
 }

@@ -31,3 +31,38 @@ func (r messageDao) GetLatestMessagesBySessionID(db *gorm.DB, sessionID string, 
 
 	return messages
 }
+
+func (r messageDao) PageMessagesBySessionID(db *gorm.DB, sessionID string, page int, pageSize int) ([]*model.Message, int64, error) {
+
+	var messages []*model.Message
+	var total int64
+
+	if page <= 0 {
+		page = 1
+	}
+
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	baseQuery := db.Model(&model.Message{}).
+		Where("session_id = ?", sessionID)
+
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+
+	if err := db.Model(&model.Message{}).
+		Where("session_id = ?", sessionID).
+		Order("created_at DESC").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&messages).Error; err != nil {
+
+		return nil, 0, err
+	}
+
+	return messages, total, nil
+}

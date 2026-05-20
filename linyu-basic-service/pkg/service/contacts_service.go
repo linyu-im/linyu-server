@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
@@ -21,6 +22,10 @@ type contactsService struct{}
 func (s *contactsService) ContactsList(userId string) ([]*basicModel.Contacts, error) {
 	list, err := basicDao.ContactsDao.ContactsList(db.RDB, userId)
 	return list, err
+}
+
+func (s *contactsService) IsContacts(userId string, peerId string) bool {
+	return basicDao.ContactsDao.IsContactByUserAndPeer(db.RDB, userId, peerId)
 }
 
 func (s *contactsService) ContactsRelDelete(userId string, param *basicParam.ContactsRelDeleteParam) error {

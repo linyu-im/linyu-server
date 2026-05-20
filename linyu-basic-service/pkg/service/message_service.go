@@ -1,8 +1,8 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
+
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
@@ -10,6 +10,7 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/event"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/event/eventbus"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 )
 
@@ -21,18 +22,9 @@ func newMessageService() *messageService {
 
 type messageService struct{}
 
-var msgContentFactory = map[string]func() basicModel.MsgContent{
-	constant.MessageType.Text:  func() basicModel.MsgContent { return &basicModel.TextContent{} },
-	constant.MessageType.Image: func() basicModel.MsgContent { return &basicModel.ImageContent{} },
-	constant.MessageType.Video: func() basicModel.MsgContent { return &basicModel.VideoContent{} },
-	constant.MessageType.File:  func() basicModel.MsgContent { return &basicModel.FileContent{} },
-	constant.MessageType.ECard: func() basicModel.MsgContent { return &basicModel.ECardContent{} },
-	constant.MessageType.Voice: func() basicModel.MsgContent { return &basicModel.VoiceContent{} },
-}
-
 func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) error {
 	//消息解析
-	content, err := s.ParseMsgContent(param.MsgType, param.Content)
+	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
 	if err != nil {
 		return err
 	}
@@ -71,7 +63,7 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 
 func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) error {
 	//消息解析
-	content, err := s.ParseMsgContent(param.MsgType, param.Content)
+	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
 	if err != nil {
 		return err
 	}
@@ -115,14 +107,35 @@ func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basi
 	return basicDao.MessageDao.GetLatestMessagesBySessionID(db.RDB, sessionId, num)
 }
 
-func (s messageService) ParseMsgContent(msgType string, raw json.RawMessage) (basicModel.MsgContent, error) {
-	factory, ok := msgContentFactory[msgType]
-	if !ok {
-		return nil, fmt.Errorf("unsupported msgType: %s", msgType)
+func (s messageService) MessagePage(userId string, param *basicParam.MessagePageParam) (*response.PageResult[*basicModel.Message], error) {
+	var sessionId string
+	if ContactsService.IsContacts(userId, param.ToId) {
+		sessionId = utils.Generate1v1SessionID(userId, param.ToId)
+	} else if GroupService.IsGroupMember(param.ToId, userId) {
+		sessionId = param.ToId
+	} else {
+		return nil, fmt.Errorf("param.error")
 	}
-	content := factory()
-	if err := json.Unmarshal(raw, content); err != nil {
+	messages, total, err := basicDao.MessageDao.PageMessagesBySessionID(db.RDB, sessionId, param.Page, param.PageSize)
+	if err != nil {
 		return nil, err
 	}
-	return content, nil
+	if param.Page <= 0 {
+		param.Page = 1
+	}
+	if param.PageSize <= 0 {
+		param.PageSize = 10
+	}
+	totalPage := int(total) / param.PageSize
+	if int(total)%param.PageSize > 0 {
+		totalPage++
+	}
+	result := &response.PageResult[*basicModel.Message]{
+		Records:   messages,
+		Total:     total,
+		Page:      param.Page,
+		PageSize:  param.PageSize,
+		TotalPage: totalPage,
+	}
+	return result, nil
 }
