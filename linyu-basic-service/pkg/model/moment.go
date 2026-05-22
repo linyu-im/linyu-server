@@ -28,6 +28,9 @@ type Moment struct {
 	CreatedAt     localtime.LocalTime `gorm:"type:timestamp(3);not null;autoCreateTime;index:idx_moment_user_deleted_time,sort:desc;comment:创建时间" json:"createdAt"`
 	UpdatedAt     localtime.LocalTime `gorm:"type:timestamp(3);not null;autoUpdateTime;comment:更新时间" json:"updatedAt"`
 	DeletedAt     gorm.DeletedAt      `gorm:"index:idx_moment_user_deleted_time;comment:删除时间" json:"deletedAt"`
+
+	Username  string `gorm:"->;-:migration" json:"username"`
+	UserLevel int    `gorm:"->;-:migration" json:"userLevel"`
 }
 
 func (Moment) TableName() string {

@@ -22,11 +22,11 @@ type Chat struct {
 	UpdatedAt      localtime.LocalTime `gorm:"type:timestamp(3);not null;autoUpdateTime;comment:更新时间" json:"updatedAt"`
 	DeletedAt      gorm.DeletedAt      `gorm:"index" json:"deletedAt"`
 
-	PeerName   string `gorm:"->" json:"peerName"`
-	PeerAvatar string `gorm:"->" json:"peerAvatar"`
-	PeerRemark string `gorm:"->" json:"peerRemark"`
-	PeerIsTop  bool   `gorm:"->" json:"peerIsTop"`
-	PeerIsMute bool   `gorm:"->" json:"peerIsMute"`
+	PeerName   string `gorm:"->;-:migration" json:"peerName"`
+	PeerAvatar string `gorm:"->;-:migration" json:"peerAvatar"`
+	PeerRemark string `gorm:"->;-:migration" json:"peerRemark"`
+	PeerIsTop  bool   `gorm:"->;-:migration" json:"peerIsTop"`
+	PeerIsMute bool   `gorm:"->;-:migration" json:"peerIsMute"`
 }
 
 func (Chat) TableName() string {

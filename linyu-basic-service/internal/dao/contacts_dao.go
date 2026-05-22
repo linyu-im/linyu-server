@@ -16,7 +16,11 @@ type contactsDao struct{}
 func (d *contactsDao) IsContactByUserAndPeer(db *gorm.DB, userId string, peerId string) bool {
 	var count int64
 	err := db.Model(&basicModel.Contacts{}).
-		Where("user_id = ? AND peer_id = ?", userId, peerId).
+		Where(
+			"(user_id = ? AND peer_id = ?) OR (user_id = ? AND peer_id = ?)",
+			userId, peerId,
+			peerId, userId,
+		).
 		Count(&count).
 		Error
 	if err != nil {

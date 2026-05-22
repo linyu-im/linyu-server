@@ -90,3 +90,64 @@ func (s momentService) PageMoment(
 	}
 	return result, nil
 }
+
+func (s momentService) MomentLikeAdd(userId string, momentId string) (*basicModel.MomentLike, error) {
+	moment := basicDao.MomentDao.GetMomentById(db.RDB, momentId)
+	if moment == nil {
+		return nil, errors.New("param.error")
+	}
+	if !ContactsService.IsContacts(moment.UserID, userId) {
+		return nil, errors.New("basic.contacts.rel-no-exists")
+	}
+	like := basicDao.MomentLikeDao.GetByUserIdAndMomentId(db.RDB, userId, momentId)
+	if like != nil {
+		return like, nil
+	}
+	like = &basicModel.MomentLike{
+		ID:       utils.GenerateSfIDString(),
+		MomentID: momentId,
+		UserID:   userId,
+	}
+	return like, basicDao.MomentLikeDao.Create(db.RDB, like)
+}
+
+func (s momentService) MomentLikeCancel(userId string, momentId string) error {
+	return basicDao.MomentLikeDao.DeleteByUserIdAndMomentId(db.RDB, userId, momentId)
+}
+
+func (s momentService) MomentCommentAdd(userId string, p *param.MomentCommentAddParam) (*basicModel.MomentComment, error) {
+	moment := basicDao.MomentDao.GetMomentById(db.RDB, p.MomentId)
+	if moment == nil {
+		return nil, errors.New("param.error")
+	}
+	if !ContactsService.IsContacts(moment.UserID, userId) {
+		return nil, errors.New("basic.contacts.rel-no-exists")
+	}
+	comment := &basicModel.MomentComment{
+		ID:       utils.GenerateSfIDString(),
+		MomentID: moment.ID,
+		UserID:   userId,
+		Content:  p.Content,
+	}
+	if p.ParentID != "" {
+		parentComment := basicDao.MomentCommentDao.GetById(db.RDB, p.ParentID)
+		if parentComment != nil {
+			comment.ReplyUserID = parentComment.UserID
+			comment.ParentID = parentComment.ID
+			user := basicDao.UserDao.GetUserById(db.RDB, comment.ReplyUserID)
+			if user != nil {
+				comment.ReplyUsername = user.Username
+			}
+		}
+	}
+	err := basicDao.MomentCommentDao.Create(db.RDB, comment)
+	if err != nil {
+		return nil, err
+	}
+	return basicDao.MomentCommentDao.GetById(db.RDB, comment.ID), nil
+}
+
+func (s momentService) MomentCommentDel(userId string, commentId string) error {
+	return basicDao.MomentCommentDao.DeleteByUserIdAndMomentId(db.RDB, userId, commentId)
+
+}

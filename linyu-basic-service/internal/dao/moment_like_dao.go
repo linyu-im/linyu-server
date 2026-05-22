@@ -13,6 +13,13 @@ func newMomentLikeDao() *momentLikeDao {
 
 type momentLikeDao struct{}
 
+func (d momentLikeDao) Create(db *gorm.DB, like *basicModel.MomentLike) error {
+	if err := db.Create(like).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d momentLikeDao) ListByMomentId(db *gorm.DB, momentId string) []*basicModel.MomentLike {
 	var list []*basicModel.MomentLike
 	db.Table("t_moment_like l").
@@ -26,4 +33,16 @@ func (d momentLikeDao) ListByMomentId(db *gorm.DB, momentId string) []*basicMode
 		Order("l.created_at ASC").
 		Scan(&list)
 	return list
+}
+
+func (d momentLikeDao) DeleteByUserIdAndMomentId(db *gorm.DB, userId string, momentId string) error {
+	return db.Delete(&basicModel.MomentLike{}, "user_id = ? AND moment_id = ?", userId, momentId).Error
+}
+
+func (d momentLikeDao) GetByUserIdAndMomentId(db *gorm.DB, userId string, momentId string) *basicModel.MomentLike {
+	result := &basicModel.MomentLike{}
+	if err := db.First(result, "user_id = ? AND moment_id = ?", userId, momentId).Error; err != nil {
+		return nil
+	}
+	return result
 }

@@ -16,8 +16,7 @@ type MomentLike struct {
 	UserID    string              `gorm:"size:64;index;comment:用户id" json:"userId"`
 	CreatedAt localtime.LocalTime `gorm:"type:timestamp(3);not null;autoCreateTime;comment:创建时间" json:"createdAt"`
 
-	Username   string `gorm:"-:migration" json:"username"`
-	UserAvatar string `gorm:"-:migration" json:"userAvatar"`
+	Username string `gorm:"->;-:migration" json:"username"`
 }
 
 func (MomentLike) TableName() string {

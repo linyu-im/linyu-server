@@ -21,10 +21,20 @@ func (d momentDao) Create(db *gorm.DB, moment *basicModel.Moment) error {
 	return nil
 }
 
+func (d momentDao) GetMomentById(db *gorm.DB, momentId string) *basicModel.Moment {
+	result := &basicModel.Moment{}
+	if err := db.First(result, "id = ?", momentId).Error; err != nil {
+		return nil
+	}
+	return result
+}
+
 func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId string) *gorm.DB {
 
-	tx := db.Model(&basicModel.Moment{}).
+	tx := db.Table("t_moment").
+		Select("t_moment.*, u.username AS username, u.user_level AS userLevel").
 		Joins("LEFT JOIN t_moment_setting ms ON ms.user_id = t_moment.user_id").
+		Joins("LEFT JOIN t_user u ON u.id = t_moment.user_id AND u.deleted_at IS NULL").
 		Where("t_moment.deleted_at IS NULL")
 
 	// 查看自己
