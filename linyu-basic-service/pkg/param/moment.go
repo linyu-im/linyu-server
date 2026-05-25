@@ -35,3 +35,7 @@ type MomentCommentAddParam struct {
 type MomentCommentDelParam struct {
 	CommentId string `json:"commentId" binding:"required"`
 }
+
+type MomentDeleteParam struct {
+	MomentId string `json:"momentId" binding:"required"`
+}

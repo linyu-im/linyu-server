@@ -21,6 +21,7 @@ param:
   type-not-exist: "相关类型不存在"
   error: "参数错误"
   type-error: "类型错误"
+  file-not-found: "文件不存在"
 
 common:
   data-not-exist: "相关数据不存在"

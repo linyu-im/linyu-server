@@ -2,6 +2,11 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
@@ -9,10 +14,6 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/storage"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
-	"net/http"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 func init() {
@@ -48,9 +49,16 @@ func StorageDeleteHandler(c *gin.Context) {
 func StorageUploadHandler(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		response.Fail(c, "file-not-found")
+		response.Fail(c, "param.file-not-found")
 		return
 	}
+
+	const maxFileSize = 200 * 1024 * 1024
+	if file.Size > maxFileSize {
+		response.Fail(c, "file too large, max 200MB")
+		return
+	}
+
 	currentUserId := c.GetString("userId")
 	ext := filepath.Ext(file.Filename)
 	datePrefix := time.Now().Format("2006-01-02")

@@ -102,3 +102,7 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 
 	return tx.Order("t_moment.created_at DESC")
 }
+
+func (d momentDao) DeleteByUserIdAndMomentId(db *gorm.DB, userId string, momentId string) error {
+	return db.Delete(&basicModel.Moment{}, "user_id = ? AND id = ?", userId, momentId).Error
+}

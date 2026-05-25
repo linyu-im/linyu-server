@@ -38,7 +38,11 @@ func (d *contactsDao) Create(db *gorm.DB, contacts *basicModel.Contacts) error {
 
 func (d *contactsDao) ContactsList(db *gorm.DB, userId string) ([]*basicModel.Contacts, error) {
 	var list []*basicModel.Contacts
-	if err := db.Where("user_id = ?", userId).Find(&list).Error; err != nil {
+	if err := db.Table("t_contacts AS c").
+		Select("c.*, u.username AS username, u.user_level AS user_level, e.emotion_name AS emotion_name, e.url AS emotion_url ").
+		Joins("LEFT JOIN t_user u ON u.id = c.peer_id").
+		Joins("LEFT JOIN t_emotion e ON u.emotion_id = e.id").
+		Where("user_id = ?", userId).Find(&list).Error; err != nil {
 		return nil, err
 	}
 	return list, nil

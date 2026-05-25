@@ -25,6 +25,11 @@ type Contacts struct {
 	CreatedAt localtime.LocalTime `gorm:"type:timestamp(3);not null;autoCreateTime;comment:创建时间" json:"createdAt"`
 	UpdatedAt localtime.LocalTime `gorm:"type:timestamp(3);not null;autoUpdateTime;comment:更新时间" json:"updatedAt"`
 	DeletedAt gorm.DeletedAt      `gorm:"index" json:"deletedAt"`
+
+	Username    string `gorm:"->;-:migration" json:"username"`
+	UserLevel   int    `gorm:"->;-:migration" json:"userLevel"`
+	EmotionName string `gorm:"->;-:migration" json:"emotionName"`
+	EmotionUrl  string `gorm:"->;-:migration" json:"emotionUrl"`
 }
 
 func (Contacts) TableName() string {

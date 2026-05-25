@@ -151,3 +151,7 @@ func (s momentService) MomentCommentDel(userId string, commentId string) error {
 	return basicDao.MomentCommentDao.DeleteByUserIdAndMomentId(db.RDB, userId, commentId)
 
 }
+
+func (s momentService) MomentDelete(userId string, momentId string) error {
+	return basicDao.MomentDao.DeleteByUserIdAndMomentId(db.RDB, userId, momentId)
+}

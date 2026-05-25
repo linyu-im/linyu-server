@@ -12,6 +12,7 @@ import (
 func init() {
 	route.Register("POST", "/basic/v1/moment/create", MomentCreateHandler)
 	route.Register("POST", "/basic/v1/moment/page", MomentPageHandler)
+	route.Register("POST", "/basic/v1/moment/delete", MomentDeleteHandler)
 	route.Register("POST", "/basic/v1/moment/like/add", MomentLikeAddHandler)
 	route.Register("POST", "/basic/v1/moment/like/cancel", MomentLikeCancelHandler)
 	route.Register("POST", "/basic/v1/moment/comment/add", MomentCommentAddHandler)
@@ -25,6 +26,20 @@ func MomentCreateHandler(c *gin.Context) {
 	}
 	currentUserId := c.GetString("userId")
 	err := basicService.MomentService.CreateMoment(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+func MomentDeleteHandler(c *gin.Context) {
+	param := &basicParam.MomentDeleteParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.MomentService.MomentDelete(currentUserId, param.MomentId)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
