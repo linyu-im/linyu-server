@@ -46,13 +46,13 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 
 	// 过期规则
 	now := time.Now()
-	tx = tx.Where(`
+	tx = tx.Where(`(
 			ms.expire_days IS NULL
 			OR ms.expire_days = 0
 			OR (
 				ms.expire_days > 0
 				AND t_moment.created_at >= DATE_SUB(?, INTERVAL ms.expire_days DAY)
-			)
+			))
 		`, now)
 
 	// 查看指定好友
@@ -62,20 +62,24 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 
 	} else {
 
-		// 查看所有好友朋友圈
-		tx = tx.Where(`
+		// 查看所有好友朋友圈和自己的
+		tx = tx.Where(`(
+			t_moment.user_id = ?
+            OR
 			t_moment.user_id IN (
 				SELECT peer_id
 				FROM t_contacts
 				WHERE user_id = ?
-			)
-		`, userId)
+			))
+		`, userId, userId)
 
 	}
 
 	// 可见性规则
 	tx = tx.Where(`
 		(
+			t_moment.user_id = ?
+			OR
 			t_moment.visible_type = 'all'
 			OR
 			(
@@ -98,7 +102,7 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 				)
 			)
 		)
-	`, userId, userId)
+	`, userId, userId, userId)
 
 	return tx.Order("t_moment.created_at DESC")
 }

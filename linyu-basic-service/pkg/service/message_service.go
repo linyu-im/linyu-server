@@ -22,11 +22,11 @@ func newMessageService() *messageService {
 
 type messageService struct{}
 
-func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) error {
+func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) (*basicModel.Message, error) {
 	//消息解析
 	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//创建消息
 	message := &basicModel.Message{
@@ -40,7 +40,7 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 	}
 	err = basicDao.MessageDao.Create(db.RDB, message)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//更新对方的聊天会话（增加未读数）
 	if param.ToUserId != userId {
@@ -58,14 +58,14 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 			Content: message,
 		},
 	})
-	return nil
+	return message, nil
 }
 
-func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) error {
+func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) (*basicModel.Message, error) {
 	//消息解析
 	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//创建消息
 	message := &basicModel.Message{
@@ -79,7 +79,7 @@ func (s messageService) SendMessageToGroup(userId string, param *basicParam.Send
 	}
 	err = basicDao.MessageDao.Create(db.RDB, message)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	memberIds := GroupService.GetMemberUserIdsByGroupId(param.ToGroupId)
 	//更新群成员的会话
@@ -100,7 +100,7 @@ func (s messageService) SendMessageToGroup(userId string, param *basicParam.Send
 			Content: message,
 		},
 	})
-	return nil
+	return message, nil
 }
 
 func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basicModel.Message {

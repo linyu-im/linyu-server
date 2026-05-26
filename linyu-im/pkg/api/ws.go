@@ -23,7 +23,7 @@ var upgrader = websocket.Upgrader{
 
 func WsGinApiHandler(c *gin.Context) {
 	userId := c.GetString("userId")
-	device := c.GetString("device")
+	device := c.GetHeader("device")
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return

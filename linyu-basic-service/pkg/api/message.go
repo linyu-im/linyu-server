@@ -22,12 +22,12 @@ func SendMessageToUserHandler(c *gin.Context) {
 		return
 	}
 	currentUserId := c.GetString("userId")
-	err := basicService.MessageService.SendMessageToUser(currentUserId, param)
+	msg, err := basicService.MessageService.SendMessageToUser(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
 	}
-	response.Ok(c)
+	response.Ok(c, msg)
 }
 
 // SendMessageToGroupHandler 发送消息(群聊)
@@ -37,12 +37,12 @@ func SendMessageToGroupHandler(c *gin.Context) {
 		return
 	}
 	currentUserId := c.GetString("userId")
-	err := basicService.MessageService.SendMessageToGroup(currentUserId, param)
+	msg, err := basicService.MessageService.SendMessageToGroup(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
 	}
-	response.Ok(c)
+	response.Ok(c, msg)
 }
 
 // MessagePageHandler 分页获取聊天内容
