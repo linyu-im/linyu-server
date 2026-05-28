@@ -161,7 +161,7 @@ func (s *S3Storage) Merge(fileKey string, chunkDir string, totalChunks int) (str
 
 	var completedParts []types.CompletedPart
 
-	for i := 1; i <= totalChunks; i++ {
+	for i := 0; i < totalChunks; i++ {
 
 		partPath := fmt.Sprintf("%s/%d.part", chunkDir, i)
 

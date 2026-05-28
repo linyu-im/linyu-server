@@ -29,3 +29,10 @@ type MessagePageParam struct {
 	Page     int    `json:"page"`
 	PageSize int    `json:"pageSize"`
 }
+
+type UploadMsgFileInfoParam struct {
+	FileHash   string `json:"fileHash" binding:"required"`
+	FileSize   int64  `json:"fileSize" binding:"required"`
+	FileName   string `json:"fileName" binding:"required"`
+	TotalChunk int    `json:"totalChunk" binding:"required"`
+}

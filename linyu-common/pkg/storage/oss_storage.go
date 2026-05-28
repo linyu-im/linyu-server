@@ -137,7 +137,7 @@ func (s *OssStorage) Merge(fileKey string, chunkDir string, totalChunks int) (st
 	}
 	var parts []oss.UploadPart
 	//逐个上传
-	for i := 1; i <= totalChunks; i++ {
+	for i := 0; i < totalChunks; i++ {
 		partPath := fmt.Sprintf("%s/%d.part", chunkDir, i)
 
 		fileInfo, err := os.Stat(partPath)

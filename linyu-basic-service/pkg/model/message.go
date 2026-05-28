@@ -103,7 +103,7 @@ type ImageContent struct {
 	ImgUrl      string `json:"imgUrl"`
 	ImgThumbUrl string `json:"imgThumbUrl"`
 	ImgName     string `json:"imgName"`
-	ImgSize     string `json:"imgSize"`
+	ImgSize     int64  `json:"imgSize"`
 }
 
 func (c ImageContent) ToString() string {
@@ -114,7 +114,7 @@ type VideoContent struct {
 	VideoUrl      string `json:"videoUrl"`
 	VideoThumbUrl string `json:"VideoThumbUrl"`
 	VideoName     string `json:"videoName"`
-	VideoSize     string `json:"videoSize"`
+	VideoSize     int64  `json:"videoSize"`
 }
 
 func (c VideoContent) ToString() string {
@@ -125,7 +125,7 @@ type FileContent struct {
 	FileUrl  string `json:"fileUrl"`
 	FileType string `json:"fileType"`
 	FileName string `json:"fileName"`
-	FileSize string `json:"fileSize"`
+	FileSize int64  `json:"fileSize"`
 }
 
 func (c FileContent) ToString() string {
