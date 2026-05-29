@@ -179,3 +179,11 @@ func (s groupService) GetMemberUserIdsByGroupId(groupId string) []string {
 	}
 	return members
 }
+
+func (s groupService) GetGroupAvatar(groupId string) interface{} {
+	group := basicDao.GroupDao.GetGroupById(db.RDB, groupId)
+	if group == nil {
+		return ""
+	}
+	return group.Avatar
+}

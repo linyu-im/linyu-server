@@ -71,17 +71,17 @@ func (c chatType) Validate(v string) bool {
 }
 
 // ------------------contacts相关------------------
-type contactsType struct {
-	User  string //用户
-	Group string //群
-	Bot   string //机器人
+type contactsPeerType struct {
+	Friend string //好友
+	Group  string //群
+	Bot    string //机器人
 }
 
-// ContactsType 通讯录数据类型
-var ContactsType = contactsType{
-	User:  "user",
-	Group: "group",
-	Bot:   "bot",
+// ContactsPeerType 通讯录对方的类型
+var ContactsPeerType = contactsPeerType{
+	Friend: "friend",
+	Group:  "group",
+	Bot:    "bot",
 }
 
 // ------------------group-member相关------------------

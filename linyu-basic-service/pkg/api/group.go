@@ -12,6 +12,7 @@ import (
 func init() {
 	route.Register("POST", "/basic/v1/group/create", GroupCreateHandler)
 	route.Register("POST", "/basic/v1/group/dissolve", GroupDissolveHandler)
+	route.Register("POST", "/basic/v1/group/avatar/get", GetGroupAvatarHandler)
 	route.Register("POST", "/basic/v1/group/invite-member", GroupInviteMemberHandler)
 	route.Register("POST", "/basic/v1/group/remove-member", GroupRemoveMemberHandler)
 }
@@ -74,4 +75,13 @@ func GroupRemoveMemberHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c)
+}
+
+func GetGroupAvatarHandler(c *gin.Context) {
+	param := &basicParam.GetGroupAvatarParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	url := basicService.GroupService.GetGroupAvatar(param.GroupId)
+	response.Ok(c, url)
 }

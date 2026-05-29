@@ -118,10 +118,10 @@ func (s applyService) ApplyList(userId string) ([]*basicModel.Apply, error) {
 func createContactIfNotExist(tx *gorm.DB, userID, peerID string) error {
 	if !basicDao.ContactsDao.IsContactByUserAndPeer(tx, userID, peerID) {
 		return basicDao.ContactsDao.Create(tx, &basicModel.Contacts{
-			ID:     utils.GenerateSfIDString(),
-			UserID: userID,
-			PeerId: peerID,
-			Type:   constant.ContactsType.User,
+			ID:       utils.GenerateSfIDString(),
+			UserID:   userID,
+			PeerId:   peerID,
+			PeerType: constant.ContactsPeerType.Friend,
 		})
 	}
 	return nil

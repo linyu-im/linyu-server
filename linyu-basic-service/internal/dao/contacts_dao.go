@@ -2,6 +2,7 @@ package dao
 
 import (
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"gorm.io/gorm"
 )
 
@@ -36,13 +37,26 @@ func (d *contactsDao) Create(db *gorm.DB, contacts *basicModel.Contacts) error {
 	return nil
 }
 
-func (d *contactsDao) ContactsList(db *gorm.DB, userId string) ([]*basicModel.Contacts, error) {
+func (d *contactsDao) ContactsFriendList(db *gorm.DB, userId string) ([]*basicModel.Contacts, error) {
 	var list []*basicModel.Contacts
 	if err := db.Table("t_contacts AS c").
 		Select("c.*, u.username AS username, u.user_level AS user_level, e.emotion_name AS emotion_name, e.url AS emotion_url ").
 		Joins("LEFT JOIN t_user u ON u.id = c.peer_id").
 		Joins("LEFT JOIN t_emotion e ON u.emotion_id = e.id").
-		Where("user_id = ?", userId).Find(&list).Error; err != nil {
+		Where("user_id = ? AND peer_type = ?", userId, constant.ContactsPeerType.Friend).
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (d *contactsDao) ContactsGroupList(db *gorm.DB, userId string) ([]*basicModel.Contacts, error) {
+	var list []*basicModel.Contacts
+	if err := db.Table("t_contacts AS c").
+		Select("c.*, g.name AS group_name, g.member_num AS member_num").
+		Joins("LEFT JOIN t_group g ON g.id = c.peer_id").
+		Where("user_id = ? AND peer_type = ?", userId, constant.ContactsPeerType.Group).
+		Find(&list).Error; err != nil {
 		return nil, err
 	}
 	return list, nil
