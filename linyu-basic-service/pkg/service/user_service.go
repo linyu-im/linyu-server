@@ -9,6 +9,8 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	emailutil "github.com/linyu-im/linyu-server/linyu-common/pkg/email"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/request"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 	"time"
 )
@@ -145,7 +147,16 @@ func (s *userService) CurrentUserInfoById(userId string) (*basicModel.User, erro
 }
 
 func (s *userService) UserInfoById(userId string, currentUserId string) (*basicModel.User, error) {
-	return basicDao.UserDao.UserInfoById(db.RDB, userId, currentUserId)
+	user, err := basicDao.UserDao.UserInfoById(db.RDB, userId, currentUserId)
+	if err != nil {
+		return nil, err
+	}
+	tx := basicDao.MomentDao.BuildMomentQuery(db.RDB, userId, userId)
+	pages, err := response.Paginate[*basicModel.Moment](tx, request.PageQuery{Page: 1, PageSize: 1})
+	if err == nil && len(pages.Records) > 0 {
+		user.Moment = pages.Records[0]
+	}
+	return user, nil
 }
 
 func (s *userService) GetAvatar(userId string) string {

@@ -16,6 +16,7 @@ type Contacts struct {
 	UserID    string              `gorm:"size:64;index;not null;comment:用户id" json:"userId"`
 	PeerId    string              `gorm:"size:64;index;not null;comment:对方的id" json:"peerId"`
 	Remark    string              `gorm:"size:64;comment:备注" json:"remark"`
+	Tag       string              `gorm:"type:text;comment:标签" json:"tag"`
 	IsBack    bool                `gorm:"default:0;comment:是否拉黑" json:"isBack"`
 	IsTop     bool                `gorm:"default:0;comment:是否置顶" json:"isTop"`
 	IsConcern bool                `gorm:"default:0;comment:是否关心" json:"isConcern"`

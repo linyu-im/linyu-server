@@ -22,6 +22,7 @@ type User struct {
 	Avatar      string              `gorm:"size:512;comment:头像URL" json:"avatar"`
 	UserLevel   int                 `gorm:"type:int;default:0;comment:用户等级" json:"userLevel"`
 	Signature   string              `gorm:"text;comment:签名" json:"signature"`
+	Location    string              `gorm:"size:512;comment:位置" json:"location"`
 	MomentBgUrl string              `gorm:"size:512;comment:过往背景URL" json:"momentBgUrl"`
 	Birthday    localtime.LocalTime `gorm:"comment:生日" json:"birthday"`
 	EmotionId   string              `gorm:"size:64;comment:心情Id" json:"emotionId"`
@@ -30,9 +31,11 @@ type User struct {
 	UpdatedAt   localtime.LocalTime `gorm:"autoUpdateTime" json:"updatedAt"`
 	DeletedAt   gorm.DeletedAt      `gorm:"uniqueIndex:uniq_phone_deleted_at;uniqueIndex:uniq_email_deleted_at;uniqueIndex:uniq_gitee_deleted_at;index" json:"deletedAt"`
 
-	EmotionName string `gorm:"->;-:migration" json:"emotionName"`
-	EmotionUrl  string `gorm:"->;-:migration" json:"emotionUrl"`
-	Remark      string `gorm:"->;-:migration" json:"remark"`
+	EmotionName string  `gorm:"->;-:migration" json:"emotionName"`
+	EmotionUrl  string  `gorm:"->;-:migration" json:"emotionUrl"`
+	Remark      string  `gorm:"->;-:migration" json:"remark"`
+	Tag         string  `gorm:"->;-:migration" json:"tag"`
+	Moment      *Moment `gorm:"->;-:migration" json:"moment"`
 }
 
 func (User) TableName() string {

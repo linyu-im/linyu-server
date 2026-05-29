@@ -103,7 +103,7 @@ func (r userDao) UserInfoById(db *gorm.DB, userId string, currentUserId string) 
 	var user basicModel.User
 	err := db.
 		Table("t_user u").
-		Select("u.*, e.id as emotion_id, e.emotion_name, e.url as emotion_url, e.type, c.remark").
+		Select("u.*, e.id as emotion_id, e.emotion_name, e.url as emotion_url, e.type, c.remark, c.tag").
 		Joins("LEFT JOIN t_emotion e ON u.emotion_id = e.id").
 		Joins("LEFT JOIN t_contacts c ON c.user_id = ? AND c.peer_id = u.id", currentUserId).
 		Where("u.id = ?", userId).
