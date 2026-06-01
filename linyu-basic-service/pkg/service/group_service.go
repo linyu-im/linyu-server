@@ -5,8 +5,11 @@ import (
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
+	"github.com/linyu-im/linyu-server/linyu-basic-service/pkg/result"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/request"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 	"gorm.io/gorm"
 )
@@ -186,4 +189,23 @@ func (s groupService) GetGroupAvatar(groupId string) interface{} {
 		return ""
 	}
 	return group.Avatar
+}
+
+func (s groupService) GroupInfo(userId string, groupId string) *result.GroupInfoResult {
+	group := basicDao.GroupDao.GroupInfoById(db.RDB, userId, groupId)
+	//获取top6群成员
+	tx := basicDao.GroupMemberDao.BuildGroupMemberQuery(db.RDB, groupId)
+	pages, err := response.Paginate[*basicModel.GroupMember](tx, request.PageQuery{
+		Page:      1,
+		PageSize:  6,
+		SortBy:    "group_user_level",
+		SortOrder: "desc",
+	})
+	if err != nil {
+		return nil
+	}
+	return &result.GroupInfoResult{
+		Info: group,
+		Tops: pages.Records,
+	}
 }

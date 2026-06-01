@@ -22,3 +22,7 @@ type GroupRemoveMemberParam struct {
 type GetGroupAvatarParam struct {
 	GroupId string `json:"groupId" binding:"required"`
 }
+
+type GroupInfoParam struct {
+	GroupId string `json:"groupId" binding:"required"`
+}

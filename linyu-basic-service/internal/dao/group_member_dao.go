@@ -57,3 +57,11 @@ func (d *groupMemberDao) GetMemberUserIdsByGroupId(db *gorm.DB, groupId string) 
 	}
 	return userIds, nil
 }
+
+func (d *groupMemberDao) BuildGroupMemberQuery(db *gorm.DB, id string) *gorm.DB {
+	return db.Table("t_group_member AS gm").
+		Select("gm.*, u.username, e.emotion_name AS emotion_name, e.url AS emotion_url").
+		Joins("LEFT JOIN t_user AS u ON gm.user_id = u.id").
+		Joins("LEFT JOIN t_emotion AS e ON u.emotion_id = e.id").
+		Where("group_id = ?", id)
+}

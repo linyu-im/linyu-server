@@ -15,6 +15,7 @@ func init() {
 	route.Register("POST", "/basic/v1/group/avatar/get", GetGroupAvatarHandler)
 	route.Register("POST", "/basic/v1/group/invite-member", GroupInviteMemberHandler)
 	route.Register("POST", "/basic/v1/group/remove-member", GroupRemoveMemberHandler)
+	route.Register("POST", "/basic/v1/group/info", GroupInfoHandler)
 }
 
 // GroupCreateHandler 群聊创建
@@ -84,4 +85,14 @@ func GetGroupAvatarHandler(c *gin.Context) {
 	}
 	url := basicService.GroupService.GetGroupAvatar(param.GroupId)
 	response.Ok(c, url)
+}
+
+func GroupInfoHandler(c *gin.Context) {
+	param := &basicParam.GroupInfoParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	group := basicService.GroupService.GroupInfo(currentUserId, param.GroupId)
+	response.Ok(c, group)
 }

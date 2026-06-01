@@ -55,3 +55,18 @@ func (d *groupDao) UpdateMemberNum(db *gorm.DB, groupId string) error {
 	}
 	return nil
 }
+
+func (d *groupDao) GroupInfoById(db *gorm.DB, userId string, groupId string) *basicModel.Group {
+	result := &basicModel.Group{}
+	if err := db.Table("t_group AS g").
+		Select("g.*, gm.group_nick_name, gm.group_remark, gm.group_user_level").
+		Joins(
+			"LEFT JOIN t_group_member AS gm ON gm.group_id = g.id AND gm.user_id = ?",
+			userId,
+		).
+		Where("g.id = ?", groupId).
+		First(result).Error; err != nil {
+		return nil
+	}
+	return result
+}
