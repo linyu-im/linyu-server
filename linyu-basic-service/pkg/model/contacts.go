@@ -34,8 +34,12 @@ type Contacts struct {
 	EmotionUrl  string `gorm:"->;-:migration" json:"emotionUrl"`
 
 	//群相关
-	GroupName string `gorm:"->;-:migration" json:"groupName"`
-	MemberNum int    `gorm:"->;-:migration" json:"memberNum"`
+	GroupName      string `gorm:"->;-:migration" json:"groupName"`
+	GroupMemberNum int    `gorm:"->;-:migration" json:"groupMemberNum"`
+
+	// 企业相关
+	EnterpriseName      string `gorm:"->;-:migration" json:"enterpriseName"`
+	EnterpriseMemberNum int    `gorm:"->;-:migration" json:"enterpriseMemberNum"`
 }
 
 func (Contacts) TableName() string {

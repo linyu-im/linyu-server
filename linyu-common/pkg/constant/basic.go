@@ -72,16 +72,18 @@ func (c chatType) Validate(v string) bool {
 
 // ------------------contacts相关------------------
 type contactsPeerType struct {
-	Friend string //好友
-	Group  string //群
-	Bot    string //机器人
+	Friend     string //好友
+	Group      string //群
+	Bot        string //机器人
+	Enterprise string //企业
 }
 
 // ContactsPeerType 通讯录对方的类型
 var ContactsPeerType = contactsPeerType{
-	Friend: "friend",
-	Group:  "group",
-	Bot:    "bot",
+	Friend:     "friend",
+	Group:      "group",
+	Bot:        "bot",
+	Enterprise: "enterprise",
 }
 
 // ------------------group-member相关------------------
@@ -164,6 +166,33 @@ var MomentVisibleType = momentVisibleType{
 func (m momentVisibleType) Validate(v string) bool {
 	switch v {
 	case m.All, m.Include, m.Exclude, m.Private:
+		return true
+	default:
+		return false
+	}
+}
+
+// ------------------enterprise-member相关------------------
+type enterpriseMemberRole struct {
+	Owner    string // 企业主
+	Admin    string // 管理员
+	SubAdmin string // 子管理员
+	Leader   string // 部门负责人
+	Member   string // 普通成员
+}
+
+// EnterpriseMemberRole 企业成员身份（Roles 字段可存多个，逗号分隔）
+var EnterpriseMemberRole = enterpriseMemberRole{
+	Owner:    "owner",
+	Admin:    "admin",
+	SubAdmin: "subAdmin",
+	Leader:   "leader",
+	Member:   "member",
+}
+
+func (c enterpriseMemberRole) Validate(v string) bool {
+	switch v {
+	case c.Owner, c.Admin, c.SubAdmin, c.Leader, c.Member:
 		return true
 	default:
 		return false

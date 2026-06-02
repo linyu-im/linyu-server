@@ -53,9 +53,22 @@ func (d *contactsDao) ContactsFriendList(db *gorm.DB, userId string) ([]*basicMo
 func (d *contactsDao) ContactsGroupList(db *gorm.DB, userId string) ([]*basicModel.Contacts, error) {
 	var list []*basicModel.Contacts
 	if err := db.Table("t_contacts AS c").
-		Select("c.*, g.name AS group_name, g.member_num AS member_num").
+		Select("c.*, g.name AS group_name, g.member_num AS group_member_num").
 		Joins("LEFT JOIN t_group g ON g.id = c.peer_id").
 		Where("user_id = ? AND peer_type = ?", userId, constant.ContactsPeerType.Group).
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (d *contactsDao) ContactsEnterpriseList(db *gorm.DB, userId string) ([]*basicModel.Contacts, error) {
+	var list []*basicModel.Contacts
+	if err := db.Table("t_contacts AS c").
+		Select("c.*, e.name AS enterprise_name, e.member_num AS enterprise_member_num").
+		Joins("LEFT JOIN t_enterprise e ON e.id = c.peer_id").
+		Where("c.user_id = ? AND c.peer_type = ?", userId, constant.ContactsPeerType.Enterprise).
+		Order("c.created_at DESC").
 		Find(&list).Error; err != nil {
 		return nil, err
 	}

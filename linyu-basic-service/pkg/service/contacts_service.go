@@ -29,6 +29,11 @@ func (s *contactsService) ContactsGroupList(userId string) ([]*basicModel.Contac
 	return list, err
 }
 
+func (s *contactsService) ContactsEnterpriseList(userId string) ([]*basicModel.Contacts, error) {
+	list, err := basicDao.ContactsDao.ContactsEnterpriseList(db.RDB, userId)
+	return list, err
+}
+
 func (s *contactsService) IsContacts(userId string, peerId string) bool {
 	return basicDao.ContactsDao.IsContactByUserAndPeer(db.RDB, userId, peerId)
 }

@@ -12,6 +12,7 @@ import (
 func init() {
 	route.Register("POST", "/basic/v1/contacts/friend/list", ContactsFriendListHandler)
 	route.Register("POST", "/basic/v1/contacts/group/list", ContactsGroupListHandler)
+	route.Register("POST", "/basic/v1/contacts/enterprise/list", ContactsEnterpriseListHandler)
 	route.Register("POST", "/basic/v1/contacts/rel/delete", ContactsRelDelHandler)
 }
 
@@ -30,6 +31,17 @@ func ContactsFriendListHandler(c *gin.Context) {
 func ContactsGroupListHandler(c *gin.Context) {
 	currentUserId := c.GetString("userId")
 	list, err := basicService.ContactsService.ContactsGroupList(currentUserId)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, list)
+}
+
+// ContactsEnterpriseListHandler 通讯录企业列表
+func ContactsEnterpriseListHandler(c *gin.Context) {
+	currentUserId := c.GetString("userId")
+	list, err := basicService.ContactsService.ContactsEnterpriseList(currentUserId)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
