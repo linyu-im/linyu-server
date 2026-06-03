@@ -15,12 +15,24 @@ func init() {
 	route.Register("POST", "/basic/v1/apply/reject", ApplyRejectHandler)
 	route.Register("POST", "/basic/v1/apply/cancel", ApplyCancelHandler)
 	route.Register("POST", "/basic/v1/apply/list/friend", ApplyFriendListHandler)
+	route.Register("POST", "/basic/v1/apply/list/group", ApplyGroupListHandler)
 }
 
 // ApplyFriendListHandler 好友申请友列表
 func ApplyFriendListHandler(c *gin.Context) {
 	currentUserId := c.GetString("userId")
 	applyList, err := basicService.ApplyService.ApplyFriendList(currentUserId)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, applyList)
+}
+
+// ApplyGroupListHandler 群聊申请列表
+func ApplyGroupListHandler(c *gin.Context) {
+	currentUserId := c.GetString("userId")
+	applyList, err := basicService.ApplyService.ApplyGroupList(currentUserId)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return

@@ -48,9 +48,9 @@ func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreatePa
 		// 群成员关系新建
 		for _, id := range friendIds {
 			// 判断角色
-			memberRole := constant.MemberRole.General
+			memberRole := constant.MemberRole.Member
 			if userId == id {
-				memberRole = constant.MemberRole.Administrator
+				memberRole = constant.MemberRole.Admin
 			}
 			member := &basicModel.GroupMember{
 				ID:         utils.GenerateSfIDString(),
@@ -129,7 +129,7 @@ func (s groupService) InviteMember(userId string, param *basicParam.GroupInviteM
 				ID:         utils.GenerateSfIDString(),
 				GroupID:    param.GroupId,
 				UserID:     id,
-				MemberRole: constant.MemberRole.General,
+				MemberRole: constant.MemberRole.Member,
 			})
 			if err != nil {
 				return err
@@ -146,13 +146,13 @@ func (s groupService) InviteMember(userId string, param *basicParam.GroupInviteM
 
 func (s groupService) RemoveMember(userId string, param *basicParam.GroupRemoveMemberParam) error {
 	// 验证是否是群管理
-	if !s.isGroupRole(param.GroupId, userId, constant.MemberRole.Administrator) {
+	if !s.isGroupRole(param.GroupId, userId, constant.MemberRole.Admin) {
 		return errors.New("param.error")
 	}
 	err := db.RDB.Transaction(func(tx *gorm.DB) error {
 		for _, id := range param.GroupMemberList {
 			// 移除普通成员
-			if s.isGroupRole(param.GroupId, id, constant.MemberRole.General) {
+			if s.isGroupRole(param.GroupId, id, constant.MemberRole.Member) {
 				if err := basicDao.GroupMemberDao.UnscopedRemoveMember(tx, param.GroupId, id); err != nil {
 					return err
 				}

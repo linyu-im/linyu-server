@@ -116,7 +116,11 @@ func (s applyService) ApplyCancel(userId string, param *basicParam.ApplyCancelPa
 }
 
 func (s applyService) ApplyFriendList(userId string) ([]*basicModel.Apply, error) {
-	return basicDao.ApplyDao.ApplyListAndPeer(db.RDB, userId, constant.ApplyType.Friend)
+	return basicDao.ApplyDao.ApplyFriendList(db.RDB, userId)
+}
+
+func (s applyService) ApplyGroupList(userId string) ([]*basicModel.Apply, error) {
+	return basicDao.ApplyDao.ApplyGroupList(db.RDB, userId)
 }
 
 func createContactIfNotExist(tx *gorm.DB, userID, peerID string) error {

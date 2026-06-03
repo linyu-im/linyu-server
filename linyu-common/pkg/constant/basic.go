@@ -112,14 +112,14 @@ var ContactsPeerType = contactsPeerType{
 
 // ------------------group-member相关------------------
 type memberRole struct {
-	General       string
-	Administrator string
+	Member string // 普通成员
+	Admin  string // 管理员
 }
 
 // MemberRole 群成员角色
 var MemberRole = memberRole{
-	General:       "general",
-	Administrator: "administrator",
+	Member: "member",
+	Admin:  "admin",
 }
 
 // ------------------message相关------------------
