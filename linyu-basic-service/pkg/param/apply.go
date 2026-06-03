@@ -1,11 +1,12 @@
 package param
 
-type ApplyAddContactsParam struct {
-	PeerId   string `json:"peerId" binding:"required"`
-	Describe string `json:"describe"`
+type ApplyAddFriendParam struct {
+	PeerId      string `json:"peerId" binding:"required"`
+	ApplySource string `json:"applySource" binding:"required"`
+	Describe    string `json:"describe"`
 }
 
-type ApplyAgreeContactsParam struct {
+type ApplyAgreeFriendParam struct {
 	ApplyId string `json:"applyId" binding:"required"`
 }
 

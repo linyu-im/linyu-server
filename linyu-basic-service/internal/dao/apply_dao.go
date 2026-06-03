@@ -35,9 +35,13 @@ func (d *applyDao) Update(db *gorm.DB, apply *basicModel.Apply) error {
 	return nil
 }
 
-func (d *applyDao) ApplyListAndPeer(db *gorm.DB, userId string) ([]*basicModel.Apply, error) {
+func (d *applyDao) ApplyListAndPeer(db *gorm.DB, userId string, applyType string) ([]*basicModel.Apply, error) {
 	var applyList []*basicModel.Apply
-	if err := db.Where("user_id = ? OR peer_id = ?", userId, userId).Find(&applyList).Error; err != nil {
+	if err := db.Table("t_apply").
+		Select("t_apply.*, t_user.username AS peer_name").
+		Joins("LEFT JOIN t_user ON t_apply.peer_id = t_user.id").
+		Where("(user_id = ? OR peer_id = ?) AND type = ?", userId, userId, applyType).
+		Find(&applyList).Error; err != nil {
 		return nil, err
 	}
 	return applyList, nil

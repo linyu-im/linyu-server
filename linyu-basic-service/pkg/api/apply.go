@@ -10,17 +10,17 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/apply/add/contacts", ApplyAddContactsHandler)
-	route.Register("POST", "/basic/v1/apply/agree/contacts", ApplyAgreeContactsHandler)
+	route.Register("POST", "/basic/v1/apply/add/friend", ApplyAddFriendHandler)
+	route.Register("POST", "/basic/v1/apply/agree/friend", ApplyAgreeFriendHandler)
 	route.Register("POST", "/basic/v1/apply/reject", ApplyRejectHandler)
 	route.Register("POST", "/basic/v1/apply/cancel", ApplyCancelHandler)
-	route.Register("POST", "/basic/v1/apply/list", ApplyListHandler)
+	route.Register("POST", "/basic/v1/apply/list/friend", ApplyFriendListHandler)
 }
 
-// ApplyListHandler 申请列表
-func ApplyListHandler(c *gin.Context) {
+// ApplyFriendListHandler 好友申请友列表
+func ApplyFriendListHandler(c *gin.Context) {
 	currentUserId := c.GetString("userId")
-	applyList, err := basicService.ApplyService.ApplyList(currentUserId)
+	applyList, err := basicService.ApplyService.ApplyFriendList(currentUserId)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
@@ -28,14 +28,14 @@ func ApplyListHandler(c *gin.Context) {
 	response.Ok(c, applyList)
 }
 
-// ApplyAddContactsHandler 申请添加联系人
-func ApplyAddContactsHandler(c *gin.Context) {
-	param := &basicParam.ApplyAddContactsParam{}
+// ApplyAddFriendHandler 申请添加好友
+func ApplyAddFriendHandler(c *gin.Context) {
+	param := &basicParam.ApplyAddFriendParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
 		return
 	}
 	currentUserId := c.GetString("userId")
-	err := basicService.ApplyService.ApplyAddContacts(currentUserId, param)
+	err := basicService.ApplyService.ApplyAddFriend(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
@@ -43,14 +43,14 @@ func ApplyAddContactsHandler(c *gin.Context) {
 	response.Ok(c)
 }
 
-// ApplyAgreeContactsHandler 申请同意添加联系人
-func ApplyAgreeContactsHandler(c *gin.Context) {
-	param := &basicParam.ApplyAgreeContactsParam{}
+// ApplyAgreeFriendHandler 申请同意添加好友
+func ApplyAgreeFriendHandler(c *gin.Context) {
+	param := &basicParam.ApplyAgreeFriendParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
 		return
 	}
 	currentUserId := c.GetString("userId")
-	err := basicService.ApplyService.ApplyAgreeContacts(currentUserId, param)
+	err := basicService.ApplyService.ApplyAgreeFriend(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return

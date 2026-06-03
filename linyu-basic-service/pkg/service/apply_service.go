@@ -21,19 +21,23 @@ func newApplyService() *applyService {
 
 type applyService struct{}
 
-func (s applyService) ApplyAddContacts(userId string, param *basicParam.ApplyAddContactsParam) error {
+func (s applyService) ApplyAddFriend(userId string, param *basicParam.ApplyAddFriendParam) error {
+	if !constant.ApplySource.Validate(param.ApplySource) {
+		return errors.New("param.error")
+	}
 	//验证是否已经添加
 	is := basicDao.ContactsDao.IsContactByUserAndPeer(db.RDB, userId, param.PeerId)
 	if is {
 		return errors.New("basic.contacts.rel-already-exists")
 	}
 	apply := &basicModel.Apply{
-		ID:       utils.GenerateSfIDString(),
-		UserID:   userId,
-		PeerID:   param.PeerId,
-		Describe: param.Describe,
-		Type:     constant.ApplyType.AddContacts,
-		Status:   constant.ApplyStatus.Wait,
+		ID:          utils.GenerateSfIDString(),
+		UserID:      userId,
+		PeerID:      param.PeerId,
+		Describe:    param.Describe,
+		ApplySource: param.ApplySource,
+		Type:        constant.ApplyType.Friend,
+		Status:      constant.ApplyStatus.Wait,
 	}
 	err := basicDao.ApplyDao.Create(db.RDB, apply)
 	if err != nil {
@@ -52,7 +56,7 @@ func (s applyService) ApplyAddContacts(userId string, param *basicParam.ApplyAdd
 	return nil
 }
 
-func (s applyService) ApplyAgreeContacts(userId string, param *basicParam.ApplyAgreeContactsParam) error {
+func (s applyService) ApplyAgreeFriend(userId string, param *basicParam.ApplyAgreeFriendParam) error {
 	apply := basicDao.ApplyDao.GetById(db.RDB, param.ApplyId)
 	if apply == nil {
 		return errors.New("common.data-not-exist")
@@ -111,8 +115,8 @@ func (s applyService) ApplyCancel(userId string, param *basicParam.ApplyCancelPa
 	return nil
 }
 
-func (s applyService) ApplyList(userId string) ([]*basicModel.Apply, error) {
-	return basicDao.ApplyDao.ApplyListAndPeer(db.RDB, userId)
+func (s applyService) ApplyFriendList(userId string) ([]*basicModel.Apply, error) {
+	return basicDao.ApplyDao.ApplyListAndPeer(db.RDB, userId, constant.ApplyType.Friend)
 }
 
 func createContactIfNotExist(tx *gorm.DB, userID, peerID string) error {

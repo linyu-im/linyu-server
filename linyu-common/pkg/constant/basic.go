@@ -13,19 +13,43 @@ var UserStatus = userStatus{
 
 // ------------------apply相关------------------
 type applyType struct {
-	AddContacts string // 添加联系人申请
-	JoinGroup   string // 进群申请
+	Friend string // 好友申请
+	Group  string // 进群申请
 }
 
 // ApplyType 申请类型
 var ApplyType = applyType{
-	AddContacts: "addContacts",
-	JoinGroup:   "joinGroup",
+	Friend: "friend",
+	Group:  "group",
 }
 
 func (c applyType) Validate(v string) bool {
 	switch v {
-	case c.AddContacts, c.JoinGroup:
+	case c.Friend, c.Group:
+		return true
+	default:
+		return false
+	}
+}
+
+type applySource struct {
+	Account string // 账号申请
+	ECard   string // 名片申请
+	Phone   string // 手机号申请
+	Qrcode  string // 二维码申请
+}
+
+// ApplySource 申请来源
+var ApplySource = applySource{
+	Account: "account",
+	ECard:   "ecard",
+	Phone:   "phone",
+	Qrcode:  "qrcode",
+}
+
+func (c applySource) Validate(v string) bool {
+	switch v {
+	case c.Account, c.ECard, c.Phone, c.Qrcode:
 		return true
 	default:
 		return false
