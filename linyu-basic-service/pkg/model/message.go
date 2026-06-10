@@ -67,12 +67,13 @@ func (m *Message) AfterFind(_ *gorm.DB) error {
 }
 
 var msgContentFactory = map[string]func() MsgContent{
-	constant.MessageType.Text:  func() MsgContent { return &TextContent{} },
-	constant.MessageType.Image: func() MsgContent { return &ImageContent{} },
-	constant.MessageType.Video: func() MsgContent { return &VideoContent{} },
-	constant.MessageType.File:  func() MsgContent { return &FileContent{} },
-	constant.MessageType.ECard: func() MsgContent { return &ECardContent{} },
-	constant.MessageType.Voice: func() MsgContent { return &VoiceContent{} },
+	constant.MessageType.Text:    func() MsgContent { return &TextContent{} },
+	constant.MessageType.Image:   func() MsgContent { return &ImageContent{} },
+	constant.MessageType.Video:   func() MsgContent { return &VideoContent{} },
+	constant.MessageType.File:    func() MsgContent { return &FileContent{} },
+	constant.MessageType.ECard:   func() MsgContent { return &ECardContent{} },
+	constant.MessageType.Voice:   func() MsgContent { return &VoiceContent{} },
+	constant.MessageType.Sticker: func() MsgContent { return &StickerContent{} },
 }
 
 func ParseMsgContent(msgType string, raw json.RawMessage) (MsgContent, error) {
@@ -149,4 +150,13 @@ type VoiceContent struct {
 
 func (c VoiceContent) ToString() string {
 	return "[Voice URL]:" + c.VoiceUrl
+}
+
+type StickerContent struct {
+	StickerUrl  string `json:"stickerUrl"`
+	StickerName string `json:"stickerName"`
+}
+
+func (c StickerContent) ToString() string {
+	return "[Sticker URL]:" + c.StickerUrl
 }

@@ -24,7 +24,6 @@ type Apply struct {
 	DeletedAt   gorm.DeletedAt      `gorm:"index" json:"deletedAt"`
 
 	PeerName string `gorm:"->;-:migration" json:"peerName"`
-	UserName string `gorm:"->;-:migration" json:"userName"`
 }
 
 func (Apply) TableName() string {
