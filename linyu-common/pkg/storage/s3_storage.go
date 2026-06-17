@@ -170,11 +170,13 @@ func (s *S3Storage) Merge(fileKey string, chunkDir string, totalChunks int) (str
 			return "", err
 		}
 
+		partNumber := int32(i + 1)
+
 		resp, err := s.Client.UploadPart(ctx, &s3.UploadPartInput{
 			Bucket:     aws.String(s.BucketName),
 			Key:        aws.String(fileKey),
 			UploadId:   aws.String(uploadID),
-			PartNumber: utils.Int32Ptr(int32(i)),
+			PartNumber: utils.Int32Ptr(partNumber),
 			Body:       file,
 		})
 
@@ -186,7 +188,7 @@ func (s *S3Storage) Merge(fileKey string, chunkDir string, totalChunks int) (str
 
 		completedParts = append(completedParts, types.CompletedPart{
 			ETag:       resp.ETag,
-			PartNumber: utils.Int32Ptr(int32(i)),
+			PartNumber: utils.Int32Ptr(partNumber),
 		})
 	}
 

@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -48,7 +49,11 @@ func UploadChunk(chunkFile *multipart.FileHeader, chunkIndex string, fileHash st
 // MergeChunk 切片合并
 func MergeChunk(fileHash string, totalChunks int, fileName string, storagePrefix string) (error, string) {
 	chunkDir := fmt.Sprintf(tempDir, fileHash)
-	fileKey := fmt.Sprintf("%s/%s%s", storagePrefix, fileHash, filepath.Ext(fileName))
+	fileBase := fileHash
+	if strings.HasPrefix(storagePrefix, "msgfile/") {
+		fileBase = fmt.Sprintf("%s-%d", fileHash, time.Now().UnixNano())
+	}
+	fileKey := fmt.Sprintf("%s/%s%s", storagePrefix, fileBase, filepath.Ext(fileName))
 
 	storagePath, err := S.Merge(fileKey, chunkDir, totalChunks)
 	if err != nil {

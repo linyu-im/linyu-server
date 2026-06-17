@@ -148,7 +148,7 @@ func (s *LocalStorage) Merge(fileKey string, chunkDir string, totalChunks int) (
 	}
 	defer targetFile.Close()
 
-	for i := 0; i <= totalChunks; i++ {
+	for i := 0; i < totalChunks; i++ {
 		partPath := fmt.Sprintf("%s/%d.part", chunkDir, i)
 		partData, err := os.Open(partPath)
 		if err != nil {

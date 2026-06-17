@@ -147,7 +147,8 @@ func (s *OssStorage) Merge(fileKey string, chunkDir string, totalChunks int) (st
 		}
 		partSize := fileInfo.Size()
 
-		part, err := bucket.UploadPartFromFile(imur, partPath, 0, partSize, i)
+		partNumber := i + 1
+		part, err := bucket.UploadPartFromFile(imur, partPath, 0, partSize, partNumber)
 		if err != nil {
 			bucket.AbortMultipartUpload(imur)
 			return "", fmt.Errorf("failed to upload part %d: %v", i, err)
