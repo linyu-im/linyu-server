@@ -20,3 +20,11 @@ func (d *aiRobotDao) GetById(db *gorm.DB, id string) *aiModel.AiRobot {
 	}
 	return result
 }
+
+func (d *aiRobotDao) List(db *gorm.DB) ([]*aiModel.AiRobot, error) {
+	var list []*aiModel.AiRobot
+	if err := db.Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}

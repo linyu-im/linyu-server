@@ -18,11 +18,11 @@ func RobotPromptNode(ctx context.Context, input map[string]any) ([]*schema.Messa
 	})
 	messages = append(messages, msg...)
 	//长期记忆
-	if longMemory, ok := input["longMemory"].(*schema.Message); ok {
+	if longMemory, ok := input["longMemory"].(*schema.Message); ok && longMemory != nil {
 		messages = append(messages, longMemory)
 	}
 	//短期记忆
-	if shortMemory, ok := input["shortMemory"].([]*schema.Message); ok {
+	if shortMemory, ok := input["shortMemory"].([]*schema.Message); ok && len(shortMemory) > 0 {
 		messages = append(messages, shortMemory...)
 	}
 	// 用户消息

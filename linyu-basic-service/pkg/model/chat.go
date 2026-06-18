@@ -14,6 +14,7 @@ type Chat struct {
 	ID             string              `gorm:"size:64;primaryKey;autoIncrement:false;comment:id" json:"id"`
 	UserID         string              `gorm:"size:64;index;not null;comment:用户id" json:"userId"`
 	PeerID         string              `gorm:"size:64;index;not null;comment:会话对方id" json:"peerId"`
+	SessionID      string              `gorm:"size:256;index;not null;comment:会话id" json:"sessionId"`
 	UnreadNum      int                 `gorm:"type:int;default:0;comment:未读消息数量" json:"unreadNum"`
 	LastMsgContent any                 `gorm:"type:text;serializer:json;comment:最后消息内容" json:"lastMsgContent"`
 	Type           string              `gorm:"size:64;comment:类型" json:"type"`

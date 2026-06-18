@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
+	"sync"
+
 	"github.com/cloudwego/eino-ext/components/embedding/openai"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
-	"sync"
 )
 
 var EmbedderPool sync.Map
@@ -20,6 +21,9 @@ func GetEmbedder() (*openai.Embedder, error) {
 		Dimensions: &config.C.AI.Embedding.Dimensions,
 		Timeout:    0,
 	})
+	if err != nil {
+		return nil, err
+	}
 	EmbedderPool.Store("default", embedder)
-	return embedder, err
+	return embedder, nil
 }

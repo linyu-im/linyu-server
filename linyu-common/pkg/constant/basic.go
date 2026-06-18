@@ -75,19 +75,19 @@ var ApplyStatus = applyStatus{
 type chatType struct {
 	User  string // 用户
 	Group string // 群
-	Bot   string // 机器人
+	Robot string // 机器人
 }
 
 // ChatType 聊天会话类型
 var ChatType = chatType{
 	User:  "user",
 	Group: "group",
-	Bot:   "bot",
+	Robot: "robot",
 }
 
 func (c chatType) Validate(v string) bool {
 	switch v {
-	case c.User, c.Group, c.Bot:
+	case c.User, c.Group, c.Robot:
 		return true
 	default:
 		return false
@@ -98,7 +98,7 @@ func (c chatType) Validate(v string) bool {
 type contactsPeerType struct {
 	Friend     string //好友
 	Group      string //群
-	Bot        string //机器人
+	Robot      string //机器人
 	Enterprise string //企业
 }
 
@@ -106,7 +106,7 @@ type contactsPeerType struct {
 var ContactsPeerType = contactsPeerType{
 	Friend:     "friend",
 	Group:      "group",
-	Bot:        "bot",
+	Robot:      "robot",
 	Enterprise: "enterprise",
 }
 
@@ -162,14 +162,14 @@ var MessageType = messageType{
 }
 
 type messageFromType struct {
-	User string //用户
-	Bot  string //机器人
+	User  string //用户
+	Robot string //机器人
 }
 
 // MessageFromType 消息发送放类型
 var MessageFromType = messageFromType{
-	User: "user",
-	Bot:  "bot",
+	User:  "user",
+	Robot: "robot",
 }
 
 // ------------------moment相关------------------

@@ -22,36 +22,22 @@ func newMessageService() *messageService {
 
 type messageService struct{}
 
-func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) (*basicModel.Message, error) {
-	//消息解析
-	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
+func (s messageService) SendMessageToSession(currentUserId string, sessionId string, msgScene string, message *basicModel.Message) (*basicModel.Message, error) {
+	var toUserIds []string
+	switch msgScene {
+	case constant.MessageScene.User:
+		toUserIds, _ = ChatService.SaveOrUpdateUserIncUnreadNum(currentUserId, sessionId, message)
+	case constant.MessageScene.Group:
+		toUserIds, _ = ChatService.SaveOrUpdateGroupIncUnreadNum(currentUserId, sessionId, message)
+	}
+	err := basicDao.MessageDao.Create(db.RDB, message)
 	if err != nil {
 		return nil, err
 	}
-	//创建消息
-	message := &basicModel.Message{
-		ID:        utils.GenerateSfIDString(),
-		SessionID: utils.Generate1v1SessionID(userId, param.ToUserId),
-		FromID:    userId,
-		ToID:      param.ToUserId,
-		MsgScene:  constant.MessageScene.User,
-		Content:   content,
-		MsgType:   param.MsgType,
-	}
-	err = basicDao.MessageDao.Create(db.RDB, message)
-	if err != nil {
-		return nil, err
-	}
-	//更新对方的聊天会话（增加未读数）
-	if param.ToUserId != userId {
-		_ = ChatService.SaveOrUpdateIncUnreadNum(param.ToUserId, userId, message)
-	}
-	//更新自己的会话
-	_ = ChatService.SaveOrUpdate(userId, param.ToUserId, message)
 	//发送消息
 	_ = eventbus.GlobalBus.Publish(event.WsDataEvent{
-		FromUserId: userId,
-		ToUserIds:  []string{param.ToUserId},
+		FromUserId: currentUserId,
+		ToUserIds:  toUserIds,
 		Data: &event.WsData{
 			SeqId:   message.ID,
 			Type:    constant.WsDataType.Message,
@@ -59,6 +45,28 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 		},
 	})
 	return message, nil
+}
+
+func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) (*basicModel.Message, error) {
+	//消息解析
+	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
+	if err != nil {
+		return nil, err
+	}
+	//创建消息
+	sessionId := utils.Generate1v1SessionID(userId, param.ToUserId)
+	message := &basicModel.Message{
+		ID:        utils.GenerateSfIDString(),
+		SessionID: sessionId,
+		FromID:    userId,
+		ToID:      param.ToUserId,
+		MsgScene:  constant.MessageScene.User,
+		Content:   content,
+		MsgType:   param.MsgType,
+		FromType:  constant.MessageFromType.User,
+	}
+	//分发消息
+	return s.SendMessageToSession(userId, sessionId, constant.MessageScene.User, message)
 }
 
 func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) (*basicModel.Message, error) {
@@ -73,34 +81,13 @@ func (s messageService) SendMessageToGroup(userId string, param *basicParam.Send
 		SessionID: param.ToGroupId,
 		FromID:    userId,
 		ToID:      param.ToGroupId,
-		MsgScene:  constant.MessageScene.User,
+		MsgScene:  constant.MessageScene.Group,
 		Content:   content,
 		MsgType:   constant.MessageType.Text,
+		FromType:  constant.MessageFromType.User,
 	}
-	err = basicDao.MessageDao.Create(db.RDB, message)
-	if err != nil {
-		return nil, err
-	}
-	memberIds := GroupService.GetMemberUserIdsByGroupId(param.ToGroupId)
-	//更新群成员的会话
-	for _, id := range memberIds {
-		if id != userId {
-			_ = ChatService.SaveOrUpdateIncUnreadNum(id, param.ToGroupId, message)
-		}
-	}
-	//更新自己的会话
-	_ = ChatService.SaveOrUpdate(userId, param.ToGroupId, message)
-	//发送消息
-	_ = eventbus.GlobalBus.Publish(event.WsDataEvent{
-		FromUserId: userId,
-		ToUserIds:  memberIds,
-		Data: &event.WsData{
-			SeqId:   message.ID,
-			Type:    constant.WsDataType.Message,
-			Content: message,
-		},
-	})
-	return message, nil
+	//分发消息
+	return s.SendMessageToSession(userId, param.ToGroupId, constant.MessageScene.Group, message)
 }
 
 func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basicModel.Message {

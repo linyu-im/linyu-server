@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
+	"slices"
+
 	"github.com/cloudwego/eino/schema"
 	basicService "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/service"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
-	"slices"
 )
 
 var AiMemoryService = newAiMemoryService()
@@ -31,7 +32,7 @@ func (s *aiMemoryService) GetShortTermMemory(sessionId string) []*schema.Message
 		switch m.FromType {
 		case constant.MessageFromType.User:
 			msg = schema.UserMessage(m.Content.ToString())
-		case constant.MessageFromType.Bot:
+		case constant.MessageFromType.Robot:
 			msg = schema.AssistantMessage(m.Content.ToString(), nil)
 		default:
 			msg = schema.UserMessage(m.Content.ToString())
@@ -48,6 +49,9 @@ func (s *aiMemoryService) GetLongTermMemory(sessionId string, content string) (*
 	}
 	// 获取向量
 	v, err := embedder.EmbedStrings(context.Background(), []string{content})
+	if err != nil {
+		return nil, err
+	}
 	embeddings := utils.Float64ToFloat32(v[0])
 	filter := map[string]string{"sessionId": sessionId}
 	results, err := db.Vector.Search(constant.VectorCollection.LongTermMemory, embeddings, filter, 5, 0.3)

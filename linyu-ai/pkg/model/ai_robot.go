@@ -17,7 +17,7 @@ type AiRobot struct {
 	RobotAvatar string              `gorm:"size:512;comment:机器人头像" json:"robotAvatar"`
 	RobotDesc   string              `gorm:"size:1024;comment:机器人描述" json:"robotDesc"`
 	ModelID     string              `gorm:"size:64;comment:模型id" json:"modelId"`
-	Prompt      string              `gorm:"type:longtext;comment:机器人提示词" json:"prompt"`
+	Prompt      string              `gorm:"type:longtext;comment:机器人提示词" json:"-"`
 	Status      string              `gorm:"size:64;default:'active';comment:机器人状态" json:"status"`
 	CreatedAt   localtime.LocalTime `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt   localtime.LocalTime `gorm:"autoUpdateTime" json:"updatedAt"`

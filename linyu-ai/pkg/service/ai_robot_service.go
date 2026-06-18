@@ -18,3 +18,15 @@ func (s *aiRobotService) GetAiRobot(robotId string) *aiModel.AiRobot {
 	robot := aiDao.AiRobotDao.GetById(db.RDB, robotId)
 	return robot
 }
+
+func (s *aiRobotService) List() ([]*aiModel.AiRobot, error) {
+	return aiDao.AiRobotDao.List(db.RDB)
+}
+
+func (s *aiRobotService) GetAvatar(robotId string) string {
+	robot := aiDao.AiRobotDao.GetById(db.RDB, robotId)
+	if robot == nil {
+		return ""
+	}
+	return robot.RobotAvatar
+}

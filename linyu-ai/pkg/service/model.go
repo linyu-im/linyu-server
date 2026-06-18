@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/cloudwego/eino-ext/components/model/openai"
 	"sync"
+
+	"github.com/cloudwego/eino-ext/components/model/openai"
 )
 
 var ModelPool sync.Map
@@ -26,6 +27,9 @@ func GetLLModel(modelId string) (*openai.ChatModel, error) {
 		Temperature:         modelInfo.Temperature,
 		MaxCompletionTokens: modelInfo.MaxTokens,
 	})
+	if err != nil {
+		return nil, err
+	}
 	ModelPool.Store(modelId, llm)
-	return llm, err
+	return llm, nil
 }

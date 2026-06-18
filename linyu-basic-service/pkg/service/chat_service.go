@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
@@ -23,7 +24,43 @@ func (s *chatService) ChatList(userId string) ([]*basicModel.Chat, error) {
 	return list, err
 }
 
-func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId string, message *basicModel.Message) error {
+func (s *chatService) SaveOrUpdateUserIncUnreadNum(userId, sessionId string, message *basicModel.Message) ([]string, error) {
+	userIds := utils.Split1v1SessionID(sessionId)
+	var toUserId string
+	for _, id := range userIds {
+		if id != userId {
+			toUserId = id
+			break
+		}
+	}
+	err := ChatService.SaveOrUpdateIncUnreadNum(toUserId, userId, sessionId, message)
+	if err != nil {
+		return nil, err
+	}
+	//更新自己的会话
+	err = ChatService.SaveOrUpdate(userId, toUserId, sessionId, message)
+	if err != nil {
+		return nil, err
+	}
+	return userIds, nil
+
+}
+
+func (s *chatService) SaveOrUpdateGroupIncUnreadNum(userId, sessionId string, message *basicModel.Message) ([]string, error) {
+	memberIds := GroupService.GetMemberUserIdsByGroupId(sessionId)
+	for _, id := range memberIds {
+		if id != userId {
+			_ = ChatService.SaveOrUpdateIncUnreadNum(id, sessionId, sessionId, message)
+		}
+	}
+	err := ChatService.SaveOrUpdate(userId, sessionId, sessionId, message)
+	if err != nil {
+		return nil, err
+	}
+	return memberIds, nil
+}
+
+func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId, sessionId string, message *basicModel.Message) error {
 	chat, err := basicDao.ChatDao.GetChatByUserAndPeer(db.RDB, userId, peerId)
 	if err != nil {
 		return err
@@ -33,6 +70,7 @@ func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId string, message *b
 			ID:             utils.GenerateSfIDString(),
 			UserID:         userId,
 			PeerID:         peerId,
+			SessionID:      sessionId,
 			LastMsgContent: message,
 			Type:           constant.ChatType.User,
 			UnreadNum:      1,
@@ -43,7 +81,7 @@ func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId string, message *b
 	return basicDao.ChatDao.Update(db.RDB, chat)
 }
 
-func (s *chatService) SaveOrUpdate(userId, peerId string, message *basicModel.Message) error {
+func (s *chatService) SaveOrUpdate(userId, peerId, sessionId string, message *basicModel.Message) error {
 	chat, err := basicDao.ChatDao.GetChatByUserAndPeer(db.RDB, userId, peerId)
 	if err != nil {
 		return err
@@ -53,6 +91,7 @@ func (s *chatService) SaveOrUpdate(userId, peerId string, message *basicModel.Me
 			ID:             utils.GenerateSfIDString(),
 			UserID:         userId,
 			PeerID:         peerId,
+			SessionID:      sessionId,
 			LastMsgContent: message,
 			Type:           constant.ChatType.User,
 		})

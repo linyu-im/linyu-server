@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -90,4 +91,8 @@ func Generate1v1SessionID(id1, id2 string) string {
 		return fmt.Sprintf("%s_%s", id1, id2)
 	}
 	return fmt.Sprintf("%s_%s", id2, id1)
+}
+
+func Split1v1SessionID(sessionID string) []string {
+	return strings.Split(sessionID, "_")
 }

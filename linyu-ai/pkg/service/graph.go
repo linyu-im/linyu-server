@@ -3,9 +3,10 @@ package service
 import (
 	"context"
 	"errors"
+	"sync"
+
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
-	"sync"
 )
 
 var GraphCompilePool sync.Map
@@ -41,6 +42,6 @@ func GetRobotGraph(robotId string) (compose.Runnable[map[string]any, *schema.Mes
 	if err != nil {
 		return nil, err
 	}
-	GraphCompilePool.Store(compile, graph)
+	GraphCompilePool.Store(robotId, compile)
 	return compile, nil
 }
