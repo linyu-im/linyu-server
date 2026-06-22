@@ -48,12 +48,9 @@ func (s messageService) SendMessageToSession(currentUserId string, sessionId str
 }
 
 func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) (*basicModel.Message, error) {
-	//消息解析
-	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
-	if err != nil {
+	if _, err := basicModel.ParseMsgContent(param.MsgType, param.Content); err != nil {
 		return nil, err
 	}
-	//创建消息
 	sessionId := utils.Generate1v1SessionID(userId, param.ToUserId)
 	message := &basicModel.Message{
 		ID:        utils.GenerateSfIDString(),
@@ -61,7 +58,7 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 		FromID:    userId,
 		ToID:      param.ToUserId,
 		MsgScene:  constant.MessageScene.User,
-		Content:   content,
+		Content:   param.Content,
 		MsgType:   param.MsgType,
 		FromType:  constant.MessageFromType.User,
 	}
@@ -70,19 +67,16 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 }
 
 func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) (*basicModel.Message, error) {
-	//消息解析
-	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
-	if err != nil {
+	if _, err := basicModel.ParseMsgContent(param.MsgType, param.Content); err != nil {
 		return nil, err
 	}
-	//创建消息
 	message := &basicModel.Message{
 		ID:        utils.GenerateSfIDString(),
 		SessionID: param.ToGroupId,
 		FromID:    userId,
 		ToID:      param.ToGroupId,
 		MsgScene:  constant.MessageScene.Group,
-		Content:   content,
+		Content:   param.Content,
 		MsgType:   constant.MessageType.Text,
 		FromType:  constant.MessageFromType.User,
 	}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"strings"
 
@@ -132,6 +133,10 @@ func RobotAnswersStreamHandler(c *gin.Context) {
 }
 
 func sendRobotAnswerMessage(currentUserId, sessionId string, param *aiParam.RobotAnswersParam, content string) (*basicModel.Message, error) {
+	contentRaw, err := json.Marshal(basicModel.TextContent{Text: content})
+	if err != nil {
+		return nil, err
+	}
 	message := &basicModel.Message{
 		ID:        utils.GenerateSfIDString(),
 		SessionID: sessionId,
@@ -140,7 +145,7 @@ func sendRobotAnswerMessage(currentUserId, sessionId string, param *aiParam.Robo
 		MsgScene:  param.MsgScene,
 		MsgType:   constant.MessageType.Text,
 		FromType:  constant.MessageFromType.Robot,
-		Content:   basicModel.TextContent{Text: content},
+		Content:   contentRaw,
 	}
 	return basicService.MessageService.SendMessageToSession(currentUserId, sessionId, param.MsgScene, message)
 }

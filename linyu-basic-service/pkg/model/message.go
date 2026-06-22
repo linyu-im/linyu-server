@@ -23,8 +23,7 @@ type Message struct {
 	MsgType    string              `gorm:"size:64;comment:消息类型" json:"msgType"`
 	FromType   string              `gorm:"size:64;comment:发送方类型" json:"fromType"`
 	IsShowTime bool                `gorm:"comment:是否显示时间;default:0" json:"isShowTime"`
-	Content    MsgContent          `gorm:"-" json:"content"`
-	ContentRaw json.RawMessage     `gorm:"column:content;type:text;serializer:json;comment:消息内容" json:"-"`
+	Content    json.RawMessage     `gorm:"column:content;type:text;serializer:json;comment:消息内容" json:"content"`
 	Status     string              `gorm:"size:64;comment:消息状态" json:"status"`
 	MsgScene   string              `gorm:"size:64;not null;comment:消息场景" json:"MsgScene"`
 	QuoteMsgId string              `gorm:"size:64;comment:引用消息的id" json:"quoteMsgId"`
@@ -39,31 +38,6 @@ func (Message) TableName() string {
 
 func (Message) TableComment() string {
 	return "消息表"
-}
-
-func (m *Message) BeforeSave(_ *gorm.DB) error {
-	if m.Content == nil {
-		m.ContentRaw = nil
-		return nil
-	}
-	data, err := json.Marshal(m.Content)
-	if err != nil {
-		return err
-	}
-	m.ContentRaw = data
-	return nil
-}
-
-func (m *Message) AfterFind(_ *gorm.DB) error {
-	if len(m.ContentRaw) == 0 {
-		return nil
-	}
-	content, err := ParseMsgContent(m.MsgType, m.ContentRaw)
-	if err != nil {
-		return err
-	}
-	m.Content = content
-	return nil
 }
 
 var msgContentFactory = map[string]func() MsgContent{
@@ -86,6 +60,14 @@ func ParseMsgContent(msgType string, raw json.RawMessage) (MsgContent, error) {
 		return nil, err
 	}
 	return content, nil
+}
+
+func MsgContentToString(msgType string, raw json.RawMessage) (string, error) {
+	content, err := ParseMsgContent(msgType, raw)
+	if err != nil {
+		return "", err
+	}
+	return content.ToString(), nil
 }
 
 type MsgContent interface {

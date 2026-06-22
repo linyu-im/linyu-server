@@ -5,7 +5,8 @@ import (
 	"slices"
 
 	"github.com/cloudwego/eino/schema"
-	basicService "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/service"
+	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	basicService "github.com/linyu-im/linyu-server/linyu-basic-s
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
@@ -28,14 +29,18 @@ func (s *aiMemoryService) GetShortTermMemory(sessionId string) []*schema.Message
 	slices.Reverse(messages)
 	result := make([]*schema.Message, 0, len(messages))
 	for _, m := range messages {
+		text, err := basicModel.MsgContentToString(m.MsgType, m.Content)
+		if err != nil {
+			continue
+		}
 		var msg *schema.Message
 		switch m.FromType {
 		case constant.MessageFromType.User:
-			msg = schema.UserMessage(m.Content.ToString())
+			msg = schema.UserMessage(text)
 		case constant.MessageFromType.Robot:
-			msg = schema.AssistantMessage(m.Content.ToString(), nil)
+			msg = schema.AssistantMessage(text, nil)
 		default:
-			msg = schema.UserMessage(m.Content.ToString())
+			msg = schema.UserMessage(text)
 		}
 		result = append(result, msg)
 	}
