@@ -16,6 +16,7 @@ func init() {
 	route.Register("POST", "/basic/v1/message/page", MessagePageHandler)
 	route.Register("POST", "/basic/v1/message/file/upload", UploadMsgFileChunkHandler)
 	route.Register("POST", "/basic/v1/message/file/merge", MergeMsgFileChunkHandler)
+	route.Register("POST", "/basic/v1/message/forward", ForwardMessageHandler)
 }
 
 // SendMessageToUserHandler 发送消息(用户)
@@ -31,6 +32,21 @@ func SendMessageToUserHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c, msg)
+}
+
+// ForwardMessageHandler 转发消息
+func ForwardMessageHandler(c *gin.Context) {
+	param := &basicParam.ForwardMessageParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.MessageService.ForwardMessage(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
 }
 
 // SendMessageToGroupHandler 发送消息(群聊)

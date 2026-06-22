@@ -134,13 +134,12 @@ func (c FileContent) ToString() string {
 }
 
 type ECardContent struct {
-	UserID     string `json:"userId"`
-	UserName   string `json:"userName"`
-	UserAvatar string `json:"userAvatar"`
+	UserID   string `json:"userId"`
+	UserName string `json:"userName"`
 }
 
 func (c ECardContent) ToString() string {
-	return "[E-Card]:" + c.UserName + ":" + c.UserAvatar
+	return "[E-Card]:" + c.UserName
 }
 
 type VoiceContent struct {

@@ -126,3 +126,26 @@ func (s messageService) MessagePage(userId string, param *basicParam.MessagePage
 	}
 	return result, nil
 }
+
+func (s messageService) ForwardMessage(currentUserId string, param *basicParam.ForwardMessageParam) error {
+	for _, peerInfo := range param.ToPeerInfo {
+		message := &basicModel.Message{
+			ID:       utils.GenerateSfIDString(),
+			FromID:   currentUserId,
+			ToID:     peerInfo.PeerId,
+			Content:  param.Message.Content,
+			MsgType:  param.Message.MsgType,
+			MsgScene: peerInfo.PeerMessageScene,
+			FromType: constant.MessageFromType.User,
+		}
+		if peerInfo.PeerMessageScene == constant.MessageScene.User {
+			message.SessionID = utils.Generate1v1SessionID(currentUserId, peerInfo.PeerId)
+		} else if peerInfo.PeerMessageScene == constant.MessageScene.Group {
+			message.SessionID = peerInfo.PeerId
+		} else {
+			return fmt.Errorf("param.error")
+		}
+		_, _ = s.SendMessageToSession(currentUserId, message.SessionID, peerInfo.PeerMessageScene, message)
+	}
+	return nil
+}

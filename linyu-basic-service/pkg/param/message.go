@@ -2,6 +2,7 @@ package param
 
 import (
 	"encoding/json"
+	"github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 )
 
 type SendMessageToUserParam struct {
@@ -35,4 +36,12 @@ type UploadMsgFileInfoParam struct {
 	FileSize   int64  `json:"fileSize" binding:"required"`
 	FileName   string `json:"fileName" binding:"required"`
 	TotalChunk int    `json:"totalChunk" binding:"required"`
+}
+
+type ForwardMessageParam struct {
+	ToPeerInfo []struct {
+		PeerId           string `json:"peerId"`
+		PeerMessageScene string `json:"peerMessageScene"`
+	} `json:"toPeerInfo" binding:"required"`
+	Message model.Message `json:"message" binding:"required"`
 }
