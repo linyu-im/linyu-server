@@ -26,6 +26,7 @@ func GetLLModel(modelId string) (*openai.ChatModel, error) {
 		APIKey:              modelInfo.APIKey,
 		Temperature:         modelInfo.Temperature,
 		MaxCompletionTokens: modelInfo.MaxTokens,
+		ReasoningEffort:     openai.ReasoningEffortLevel(modelInfo.ReasoningEffort),
 	})
 	if err != nil {
 		return nil, err

@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"io"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	aiParam "github.com/linyu-im/linyu-server/linyu-ai/pkg/param"
@@ -16,6 +18,7 @@ import (
 
 func init() {
 	route.Register("POST", "/ai/v1/robot/answers", RobotAnswersHandler)
+	route.Register("POST", "/ai/v1/robot/answers/stream", RobotAnswersStreamHandler)
 	route.Register("POST", "/ai/v1/robot/list", RobotListHandler)
 	route.Register("POST", "/ai/v1/robot/avatar/get", RobotAvatarHandler)
 	route.Register("POST", "/ai/v1/robot/info", RobotInfoHandler)
@@ -58,39 +61,77 @@ func RobotAnswersHandler(c *gin.Context) {
 		return
 	}
 	currentUserId := c.GetString("userId")
-	var sessionId string
-	switch param.MsgScene {
-	case constant.MessageScene.User:
-		sessionId = utils.Generate1v1SessionID(currentUserId, param.PeerId)
-	case constant.MessageScene.Group:
-		sessionId = param.PeerId
-	}
-	// 获取长期记忆
-	longMemory, _ := aiService.AiMemoryService.GetLongTermMemory(sessionId, param.Question)
-	// 获取短期记忆
-	shortMemory := aiService.AiMemoryService.GetShortTermMemory(sessionId)
-	// 模型输入
-	in := map[string]any{
-		"question":    param.Question,
-		"robotId":     param.RobotId,
-		"sessionId":   sessionId,
-		"shortMemory": shortMemory,
-		"longMemory":  longMemory,
-	}
-	// 获取机器人处理流
-	graph, err := aiService.GetRobotGraph(param.RobotId)
+	prepared, err := aiService.AiRobotService.PrepareRobotAnswers(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
 	}
 	ctx := context.Background()
-	ret, err := graph.Invoke(ctx, in)
-
+	ret, err := prepared.Graph.Invoke(ctx, prepared.Input)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
 	}
-	// 回复消息
+	msg, err := sendRobotAnswerMessage(currentUserId, prepared.SessionId, param, ret.Content)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, msg)
+}
+
+// RobotAnswersStreamHandler 机器人流式问答
+func RobotAnswersStreamHandler(c *gin.Context) {
+	param := &aiParam.RobotAnswersParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	prepared, err := aiService.AiRobotService.PrepareRobotAnswers(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	ctx := c.Request.Context()
+	stream, err := prepared.Graph.Stream(ctx, prepared.Input)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	defer stream.Close()
+
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("X-Accel-Buffering", "no")
+
+	var fullContent strings.Builder
+	for {
+		chunk, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			c.SSEvent("error", gin.H{"msg": err.Error()})
+			return
+		}
+		if chunk.Content == "" {
+			continue
+		}
+		fullContent.WriteString(chunk.Content)
+		c.SSEvent("delta", gin.H{"content": chunk.Content})
+		c.Writer.Flush()
+	}
+
+	msg, err := sendRobotAnswerMessage(currentUserId, prepared.SessionId, param, fullContent.String())
+	if err != nil {
+		c.SSEvent("error", gin.H{"msg": err.Error()})
+		return
+	}
+	c.SSEvent("done", msg)
+}
+
+func sendRobotAnswerMessage(currentUserId, sessionId string, param *aiParam.RobotAnswersParam, content string) (*basicModel.Message, error) {
 	message := &basicModel.Message{
 		ID:        utils.GenerateSfIDString(),
 		SessionID: sessionId,
@@ -99,13 +140,7 @@ func RobotAnswersHandler(c *gin.Context) {
 		MsgScene:  param.MsgScene,
 		MsgType:   constant.MessageType.Text,
 		FromType:  constant.MessageFromType.Robot,
-		Content:   basicModel.TextContent{Text: ret.Content},
+		Content:   basicModel.TextContent{Text: content},
 	}
-	// 发送消息
-	msg, err := basicService.MessageService.SendMessageToSession(currentUserId, sessionId, param.MsgScene, message)
-	if err != nil {
-		response.Fail(c, err.Error())
-		return
-	}
-	response.Ok(c, msg)
+	return basicService.MessageService.SendMessageToSession(currentUserId, sessionId, param.MsgScene, message)
 }
