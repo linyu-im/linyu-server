@@ -22,13 +22,13 @@ func newMessageService() *messageService {
 
 type messageService struct{}
 
-func (s messageService) SendMessageToSession(currentUserId string, sessionId string, msgScene string, message *basicModel.Message) (*basicModel.Message, error) {
+func (s messageService) SendMessageToSession(currentUserId string, message *basicModel.Message) (*basicModel.Message, error) {
 	var toUserIds []string
-	switch msgScene {
-	case constant.MessageScene.User:
-		toUserIds, _ = ChatService.SaveOrUpdateUserIncUnreadNum(currentUserId, sessionId, message)
-	case constant.MessageScene.Group:
-		toUserIds, _ = ChatService.SaveOrUpdateGroupIncUnreadNum(currentUserId, sessionId, message)
+	switch message.SceneType {
+	case constant.SceneType.User:
+		toUserIds, _ = ChatService.SaveOrUpdateUserIncUnreadNum(currentUserId, message)
+	case constant.SceneType.Group:
+		toUserIds, _ = ChatService.SaveOrUpdateGroupIncUnreadNum(currentUserId, message)
 	}
 	err := basicDao.MessageDao.Create(db.RDB, message)
 	if err != nil {
@@ -57,13 +57,13 @@ func (s messageService) SendMessageToUser(userId string, param *basicParam.SendM
 		SessionID: sessionId,
 		FromID:    userId,
 		ToID:      param.ToUserId,
-		MsgScene:  constant.MessageScene.User,
+		SceneType: constant.SceneType.User,
 		Content:   param.Content,
 		MsgType:   param.MsgType,
 		FromType:  constant.MessageFromType.User,
 	}
 	//分发消息
-	return s.SendMessageToSession(userId, sessionId, constant.MessageScene.User, message)
+	return s.SendMessageToSession(userId, message)
 }
 
 func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) (*basicModel.Message, error) {
@@ -75,13 +75,13 @@ func (s messageService) SendMessageToGroup(userId string, param *basicParam.Send
 		SessionID: param.ToGroupId,
 		FromID:    userId,
 		ToID:      param.ToGroupId,
-		MsgScene:  constant.MessageScene.Group,
+		SceneType: constant.SceneType.Group,
 		Content:   param.Content,
 		MsgType:   constant.MessageType.Text,
 		FromType:  constant.MessageFromType.User,
 	}
 	//分发消息
-	return s.SendMessageToSession(userId, param.ToGroupId, constant.MessageScene.Group, message)
+	return s.SendMessageToSession(userId, message)
 }
 
 func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basicModel.Message {
@@ -124,22 +124,22 @@ func (s messageService) MessagePage(userId string, param *basicParam.MessagePage
 func (s messageService) ForwardMessage(currentUserId string, param *basicParam.ForwardMessageParam) error {
 	for _, peerInfo := range param.ToPeerInfo {
 		message := &basicModel.Message{
-			ID:       utils.GenerateSfIDString(),
-			FromID:   currentUserId,
-			ToID:     peerInfo.PeerId,
-			Content:  param.Message.Content,
-			MsgType:  param.Message.MsgType,
-			MsgScene: peerInfo.PeerMessageScene,
-			FromType: constant.MessageFromType.User,
+			ID:        utils.GenerateSfIDString(),
+			FromID:    currentUserId,
+			ToID:      peerInfo.PeerId,
+			Content:   param.Message.Content,
+			MsgType:   param.Message.MsgType,
+			SceneType: peerInfo.PeerSceneType,
+			FromType:  constant.MessageFromType.User,
 		}
-		if peerInfo.PeerMessageScene == constant.MessageScene.User {
+		if peerInfo.PeerSceneType == constant.SceneType.User {
 			message.SessionID = utils.Generate1v1SessionID(currentUserId, peerInfo.PeerId)
-		} else if peerInfo.PeerMessageScene == constant.MessageScene.Group {
+		} else if peerInfo.PeerSceneType == constant.SceneType.Group {
 			message.SessionID = peerInfo.PeerId
 		} else {
 			return fmt.Errorf("param.error")
 		}
-		_, _ = s.SendMessageToSession(currentUserId, message.SessionID, peerInfo.PeerMessageScene, message)
+		_, _ = s.SendMessageToSession(currentUserId, message)
 	}
 	return nil
 }

@@ -24,8 +24,8 @@ func (s *chatService) ChatList(userId string) ([]*basicModel.Chat, error) {
 	return list, err
 }
 
-func (s *chatService) SaveOrUpdateUserIncUnreadNum(userId, sessionId string, message *basicModel.Message) ([]string, error) {
-	userIds := utils.Split1v1SessionID(sessionId)
+func (s *chatService) SaveOrUpdateUserIncUnreadNum(userId string, message *basicModel.Message) ([]string, error) {
+	userIds := utils.Split1v1SessionID(message.SessionID)
 	var toUserId string
 	for _, id := range userIds {
 		if id != userId {
@@ -33,12 +33,12 @@ func (s *chatService) SaveOrUpdateUserIncUnreadNum(userId, sessionId string, mes
 			break
 		}
 	}
-	err := ChatService.SaveOrUpdateIncUnreadNum(toUserId, userId, sessionId, message)
+	err := ChatService.SaveOrUpdateIncUnreadNum(toUserId, userId, message)
 	if err != nil {
 		return nil, err
 	}
 	//更新自己的会话
-	err = ChatService.SaveOrUpdate(userId, toUserId, sessionId, message)
+	err = ChatService.SaveOrUpdate(userId, toUserId, message)
 	if err != nil {
 		return nil, err
 	}
@@ -46,21 +46,21 @@ func (s *chatService) SaveOrUpdateUserIncUnreadNum(userId, sessionId string, mes
 
 }
 
-func (s *chatService) SaveOrUpdateGroupIncUnreadNum(userId, sessionId string, message *basicModel.Message) ([]string, error) {
-	memberIds := GroupService.GetMemberUserIdsByGroupId(sessionId)
+func (s *chatService) SaveOrUpdateGroupIncUnreadNum(userId string, message *basicModel.Message) ([]string, error) {
+	memberIds := GroupService.GetMemberUserIdsByGroupId(message.SessionID)
 	for _, id := range memberIds {
 		if id != userId {
-			_ = ChatService.SaveOrUpdateIncUnreadNum(id, sessionId, sessionId, message)
+			_ = ChatService.SaveOrUpdateIncUnreadNum(id, message.SessionID, message)
 		}
 	}
-	err := ChatService.SaveOrUpdate(userId, sessionId, sessionId, message)
+	err := ChatService.SaveOrUpdate(userId, message.SessionID, message)
 	if err != nil {
 		return nil, err
 	}
 	return memberIds, nil
 }
 
-func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId, sessionId string, message *basicModel.Message) error {
+func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId string, message *basicModel.Message) error {
 	chat, err := basicDao.ChatDao.GetChatByUserAndPeer(db.RDB, userId, peerId)
 	if err != nil {
 		return err
@@ -70,9 +70,9 @@ func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId, sessionId string,
 			ID:             utils.GenerateSfIDString(),
 			UserID:         userId,
 			PeerID:         peerId,
-			SessionID:      sessionId,
+			SessionID:      message.SessionID,
 			LastMsgContent: message,
-			Type:           constant.ChatType.User,
+			SceneType:      message.SceneType,
 			UnreadNum:      1,
 		})
 	}
@@ -81,7 +81,7 @@ func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId, sessionId string,
 	return basicDao.ChatDao.Update(db.RDB, chat)
 }
 
-func (s *chatService) SaveOrUpdate(userId, peerId, sessionId string, message *basicModel.Message) error {
+func (s *chatService) SaveOrUpdate(userId, peerId string, message *basicModel.Message) error {
 	chat, err := basicDao.ChatDao.GetChatByUserAndPeer(db.RDB, userId, peerId)
 	if err != nil {
 		return err
@@ -91,9 +91,9 @@ func (s *chatService) SaveOrUpdate(userId, peerId, sessionId string, message *ba
 			ID:             utils.GenerateSfIDString(),
 			UserID:         userId,
 			PeerID:         peerId,
-			SessionID:      sessionId,
+			SessionID:      message.SessionID,
 			LastMsgContent: message,
-			Type:           constant.ChatType.User,
+			SceneType:      message.SceneType,
 		})
 	}
 	chat.LastMsgContent = message
@@ -101,7 +101,7 @@ func (s *chatService) SaveOrUpdate(userId, peerId, sessionId string, message *ba
 }
 
 func (s *chatService) ChatCreate(userId string, param *basicParam.ChatCreateParam) (*basicModel.Chat, error) {
-	if !constant.ChatType.Validate(param.ChatType) {
+	if !constant.SceneType.Validate(param.SceneType) {
 		return nil, errors.New("param.type-not-exist")
 	}
 	chat, _ := basicDao.ChatDao.GetChatByUserAndPeer(db.RDB, userId, param.PeerId)
@@ -109,10 +109,10 @@ func (s *chatService) ChatCreate(userId string, param *basicParam.ChatCreatePara
 		return chat, nil
 	}
 	chat = &basicModel.Chat{
-		ID:     utils.GenerateSfIDString(),
-		UserID: userId,
-		PeerID: param.PeerId,
-		Type:   param.ChatType,
+		ID:        utils.GenerateSfIDString(),
+		UserID:    userId,
+		PeerID:    param.PeerId,
+		SceneType: param.SceneType,
 	}
 	err := basicDao.ChatDao.Create(db.RDB, chat)
 	if err != nil {
@@ -124,4 +124,16 @@ func (s *chatService) ChatCreate(userId string, param *basicParam.ChatCreatePara
 func (s *chatService) SetTop(userId string, param *basicParam.ChatSetTopParam) error {
 	err := basicDao.ChatDao.SetIsTopByIdAndUserId(db.RDB, param.IsTop, userId, param.ChatId)
 	return err
+}
+
+func (s *chatService) SetMute(userId string, param *basicParam.ChatMuteParam) error {
+	return basicDao.ChatDao.SetIsMuteByIdAndUserId(db.RDB, param.IsMute, userId, param.ChatId)
+}
+
+func (s *chatService) ChatDelete(userId string, param *basicParam.ChatDeleteParam) error {
+	return basicDao.ChatDao.DeleteByIdAndUserId(db.RDB, userId, param.ChatId)
+}
+
+func (s *chatService) MarkRead(userId string, param *basicParam.ChatMarkReadParam) error {
+	return basicDao.ChatDao.ClearUnreadByIdAndUserId(db.RDB, userId, param.ChatId)
 }

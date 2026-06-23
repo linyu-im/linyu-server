@@ -25,7 +25,7 @@ type Message struct {
 	IsShowTime bool                `gorm:"comment:是否显示时间;default:0" json:"isShowTime"`
 	Content    json.RawMessage     `gorm:"column:content;type:text;serializer:json;comment:消息内容" json:"content"`
 	Status     string              `gorm:"size:64;comment:消息状态" json:"status"`
-	MsgScene   string              `gorm:"size:64;not null;comment:消息场景" json:"MsgScene"`
+	SceneType  string              `gorm:"size:64;not null;comment:会话场景" json:"sceneType"`
 	QuoteMsgId string              `gorm:"size:64;comment:引用消息的id" json:"quoteMsgId"`
 	CreatedAt  localtime.LocalTime `gorm:"type:timestamp(3);not null;autoCreateTime;comment:创建时间" json:"createdAt"`
 	UpdatedAt  localtime.LocalTime `gorm:"type:timestamp(3);not null;autoUpdateTime;comment:更新时间" json:"updatedAt"`

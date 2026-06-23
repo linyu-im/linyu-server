@@ -2,7 +2,9 @@ package dao
 
 import (
 	"errors"
+
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
 	"gorm.io/gorm"
 )
 
@@ -50,6 +52,17 @@ func (d *chatDao) ContactsChatList(db *gorm.DB, userId string) ([]*basicModel.Ch
 	return chatList, nil
 }
 
+func (d *chatDao) GetChatByIdAndUserId(db *gorm.DB, userId string, chatId string) (*basicModel.Chat, error) {
+	result := &basicModel.Chat{}
+	if err := db.First(result, "id = ? AND user_id = ?", chatId, userId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return result, nil
+}
+
 func (d *chatDao) GetChatByUserAndPeer(db *gorm.DB, userId string, peerId string) (*basicModel.Chat, error) {
 	result := &basicModel.Chat{}
 	if err := db.First(result, "user_id = ? AND peer_id = ?", userId, peerId).Error; err != nil {
@@ -76,10 +89,47 @@ func (d *chatDao) Update(db *gorm.DB, chat *basicModel.Chat) error {
 }
 
 func (d *chatDao) SetIsTopByIdAndUserId(db *gorm.DB, isTop bool, userId string, chatId string) error {
-	if err := db.Model(&basicModel.Chat{}).
-		Where("id = ? AND user_id = ?", chatId, userId).
-		Update("is_top", isTop).Error; err != nil {
+	chat, err := d.GetChatByIdAndUserId(db, userId, chatId)
+	if err != nil {
 		return err
 	}
-	return nil
+	if chat == nil {
+		return errors.New("param.error")
+	}
+	if err = ContactsDao.SetIsTopByUserAndPeerId(db, isTop, userId, chat.PeerID); err != nil {
+		return err
+	}
+	return d.touchUpdatedAtByIdAndUserId(db, userId, chatId)
+}
+
+func (d *chatDao) SetIsMuteByIdAndUserId(db *gorm.DB, isMute bool, userId string, chatId string) error {
+	chat, err := d.GetChatByIdAndUserId(db, userId, chatId)
+	if err != nil {
+		return err
+	}
+	if chat == nil {
+		return errors.New("param.error")
+	}
+	if err = ContactsDao.SetIsMuteByUserAndPeerId(db, isMute, userId, chat.PeerID); err != nil {
+		return err
+	}
+	return d.touchUpdatedAtByIdAndUserId(db, userId, chatId)
+}
+
+func (d *chatDao) touchUpdatedAtByIdAndUserId(db *gorm.DB, userId string, chatId string) error {
+	return db.Model(&basicModel.Chat{}).
+		Where("id = ? AND user_id = ?", chatId, userId).
+		Updates(map[string]interface{}{
+			"updated_at": localtime.Now(),
+		}).Error
+}
+
+func (d *chatDao) DeleteByIdAndUserId(db *gorm.DB, userId string, chatId string) error {
+	return db.Delete(&basicModel.Chat{}, "user_id = ? AND id = ?", userId, chatId).Error
+}
+
+func (d *chatDao) ClearUnreadByIdAndUserId(db *gorm.DB, userId string, chatId string) error {
+	return db.Model(&basicModel.Chat{}).
+		Where("id = ? AND user_id = ?", chatId, userId).
+		UpdateColumn("unread_num", 0).Error
 }

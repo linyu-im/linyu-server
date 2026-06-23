@@ -83,6 +83,18 @@ func (d *contactsDao) GetById(db *gorm.DB, contactsId string) (*basicModel.Conta
 	return result, nil
 }
 
+func (d *contactsDao) SetIsTopByUserAndPeerId(db *gorm.DB, isTop bool, userId string, peerId string) error {
+	return db.Model(&basicModel.Contacts{}).
+		Where("user_id = ? AND peer_id = ?", userId, peerId).
+		Update("is_top", isTop).Error
+}
+
+func (d *contactsDao) SetIsMuteByUserAndPeerId(db *gorm.DB, isMute bool, userId string, peerId string) error {
+	return db.Model(&basicModel.Contacts{}).
+		Where("user_id = ? AND peer_id = ?", userId, peerId).
+		Update("is_mute", isMute).Error
+}
+
 func (d *contactsDao) UnscopedDeleteByUserAndPeerId(db *gorm.DB, userId string, peerId string) error {
 	err := db.Unscoped().Where("user_id = ? AND peer_id = ?", userId, peerId).Delete(&basicModel.Contacts{}).Error
 	return err

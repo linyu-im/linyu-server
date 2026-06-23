@@ -12,7 +12,10 @@ import (
 func init() {
 	route.Register("POST", "/basic/v1/chat/list", ChatListHandler)
 	route.Register("POST", "/basic/v1/chat/create", ChatCreateHandler)
-	route.Register("POST", "/basic/v1/chat/set/top", ChatSetTopHandler)
+	route.Register("POST", "/basic/v1/chat/top", ChatSetTopHandler)
+	route.Register("POST", "/basic/v1/chat/mute", ChatMuteHandler)
+	route.Register("POST", "/basic/v1/chat/delete", ChatDeleteHandler)
+	route.Register("POST", "/basic/v1/chat/mark-read", ChatMarkReadHandler)
 }
 
 // ChatListHandler 聊天会话列表
@@ -49,6 +52,51 @@ func ChatSetTopHandler(c *gin.Context) {
 	}
 	currentUserId := c.GetString("userId")
 	err := basicService.ChatService.SetTop(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// ChatMuteHandler 聊天会话免打扰设置
+func ChatMuteHandler(c *gin.Context) {
+	param := &basicParam.ChatMuteParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.ChatService.SetMute(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// ChatDeleteHandler 聊天会话删除
+func ChatDeleteHandler(c *gin.Context) {
+	param := &basicParam.ChatDeleteParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.ChatService.ChatDelete(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// ChatMarkReadHandler 聊天会话已读
+func ChatMarkReadHandler(c *gin.Context) {
+	param := &basicParam.ChatMarkReadParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.ChatService.MarkRead(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return

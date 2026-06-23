@@ -71,29 +71,6 @@ var ApplyStatus = applyStatus{
 	Reject: "reject",
 }
 
-// ------------------chat相关------------------
-type chatType struct {
-	User  string // 用户
-	Group string // 群
-	Robot string // 机器人
-}
-
-// ChatType 聊天会话类型
-var ChatType = chatType{
-	User:  "user",
-	Group: "group",
-	Robot: "robot",
-}
-
-func (c chatType) Validate(v string) bool {
-	switch v {
-	case c.User, c.Group, c.Robot:
-		return true
-	default:
-		return false
-	}
-}
-
 // ------------------contacts相关------------------
 type contactsPeerType struct {
 	Friend     string //好友
@@ -123,17 +100,6 @@ var MemberRole = memberRole{
 }
 
 // ------------------message相关------------------
-type messageScene struct {
-	User  string //用户
-	Group string //群
-}
-
-// MessageScene 消息场景
-var MessageScene = messageScene{
-	User:  "user",
-	Group: "group",
-}
-
 type messageStatus struct {
 }
 

@@ -142,10 +142,10 @@ func sendRobotAnswerMessage(currentUserId, sessionId string, param *aiParam.Robo
 		SessionID: sessionId,
 		FromID:    param.RobotId,
 		ToID:      currentUserId,
-		MsgScene:  param.MsgScene,
+		SceneType: param.SceneType,
 		MsgType:   constant.MessageType.Text,
 		FromType:  constant.MessageFromType.Robot,
 		Content:   contentRaw,
 	}
-	return basicService.MessageService.SendMessageToSession(currentUserId, sessionId, param.MsgScene, message)
+	return basicService.MessageService.SendMessageToSession(currentUserId, message)
 }

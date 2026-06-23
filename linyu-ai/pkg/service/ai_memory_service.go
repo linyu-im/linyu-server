@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloudwego/eino/schema"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
-	basicService "github.com/linyu-im/linyu-server/linyu-basic-s
+	basicService "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/service"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"

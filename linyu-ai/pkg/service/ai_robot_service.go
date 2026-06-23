@@ -37,10 +37,10 @@ func (s *aiRobotService) GetAvatar(robotId string) string {
 
 func (s *aiRobotService) PrepareRobotAnswers(userId string, param *aiParam.RobotAnswersParam) (*aiResult.RobotAnswersPrepareResult, error) {
 	var sessionId string
-	switch param.MsgScene {
-	case constant.MessageScene.User:
+	switch param.SceneType {
+	case constant.SceneType.User:
 		sessionId = utils.Generate1v1SessionID(userId, param.PeerId)
-	case constant.MessageScene.Group:
+	case constant.SceneType.Group:
 		sessionId = param.PeerId
 	}
 	//longMemory, _ := AiMemoryService.GetLongTermMemory(sessionId, param.Question)

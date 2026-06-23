@@ -2,6 +2,7 @@ package param
 
 import (
 	"encoding/json"
+
 	"github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 )
 
@@ -40,8 +41,8 @@ type UploadMsgFileInfoParam struct {
 
 type ForwardMessageParam struct {
 	ToPeerInfo []struct {
-		PeerId           string `json:"peerId"`
-		PeerMessageScene string `json:"peerMessageScene"`
+		PeerId        string `json:"peerId"`
+		PeerSceneType string `json:"peerSceneType"`
 	} `json:"toPeerInfo" binding:"required"`
 	Message model.Message `json:"message" binding:"required"`
 }
