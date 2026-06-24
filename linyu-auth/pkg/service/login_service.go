@@ -40,8 +40,9 @@ func (s *loginService) Login(user *basicModel.User, device string) (*authResult.
 		return nil, errors.New("auth.error")
 	}
 	result := &authResult.UserLoginInfoResult{
-		UserID: user.ID,
-		Token:  token,
+		UserID:  user.ID,
+		Token:   token,
+		Account: user.Account,
 	}
 	return result, nil
 }
