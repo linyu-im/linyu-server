@@ -32,6 +32,18 @@ func (r messageDao) GetLatestMessagesBySessionID(db *gorm.DB, sessionID string, 
 	return messages
 }
 
+func (r messageDao) ListMessagesBySessionIDSinceMsgID(db *gorm.DB, sessionID string, sinceMsgId string) ([]*model.Message, error) {
+	var messages []*model.Message
+	query := db.Where("session_id = ?", sessionID)
+	if sinceMsgId != "" {
+		query = query.Where("id > ?", sinceMsgId)
+	}
+	if err := query.Order("created_at ASC").Find(&messages).Error; err != nil {
+		return nil, err
+	}
+	return messages, nil
+}
+
 func (r messageDao) PageMessagesBySessionID(db *gorm.DB, sessionID string, page int, pageSize int) ([]*model.Message, int64, error) {
 
 	var messages []*model.Message

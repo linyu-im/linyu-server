@@ -14,6 +14,7 @@ func init() {
 	route.Register("POST", "/basic/v1/message/send/user", SendMessageToUserHandler)
 	route.Register("POST", "/basic/v1/message/send/group", SendMessageToGroupHandler)
 	route.Register("POST", "/basic/v1/message/page", MessagePageHandler)
+	route.Register("POST", "/basic/v1/message/list", MessageListHandler)
 	route.Register("POST", "/basic/v1/message/file/upload", UploadMsgFileChunkHandler)
 	route.Register("POST", "/basic/v1/message/file/merge", MergeMsgFileChunkHandler)
 	route.Register("POST", "/basic/v1/message/forward", ForwardMessageHandler)
@@ -72,6 +73,21 @@ func MessagePageHandler(c *gin.Context) {
 	}
 	currentUserId := c.GetString("userId")
 	data, err := basicService.MessageService.MessagePage(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, data)
+}
+
+// MessageListHandler 获取指定消息之后的所有消息
+func MessageListHandler(c *gin.Context) {
+	param := &basicParam.MessageListParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	data, err := basicService.MessageService.MessageList(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return

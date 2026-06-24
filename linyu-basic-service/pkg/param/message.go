@@ -32,6 +32,11 @@ type MessagePageParam struct {
 	PageSize int    `json:"pageSize"`
 }
 
+type MessageListParam struct {
+	ToId       string `json:"toId" binding:"required"`
+	SinceMsgId string `json:"sinceMsgId"`
+}
+
 type UploadMsgFileInfoParam struct {
 	FileHash   string `json:"fileHash" binding:"required"`
 	FileSize   int64  `json:"fileSize" binding:"required"`

@@ -88,6 +88,22 @@ func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basi
 	return basicDao.MessageDao.GetLatestMessagesBySessionID(db.RDB, sessionId, num)
 }
 
+func (s messageService) MessageList(userId string, param *basicParam.MessageListParam) ([]*basicModel.Message, error) {
+	var sessionId string
+	if ContactsService.IsContacts(userId, param.ToId) {
+		sessionId = utils.Generate1v1SessionID(userId, param.ToId)
+	} else if GroupService.IsGroupMember(param.ToId, userId) {
+		sessionId = param.ToId
+	} else {
+		return nil, fmt.Errorf("param.error")
+	}
+	messages, err := basicDao.MessageDao.ListMessagesBySessionIDSinceMsgID(db.RDB, sessionId, param.SinceMsgId)
+	if err != nil {
+		return nil, err
+	}
+	return messages, nil
+}
+
 func (s messageService) MessagePage(userId string, param *basicParam.MessagePageParam) (*response.PageResult[*basicModel.Message], error) {
 	var sessionId string
 	if ContactsService.IsContacts(userId, param.ToId) {
