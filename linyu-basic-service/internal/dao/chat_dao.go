@@ -36,11 +36,12 @@ func (d *chatDao) ContactsChatList(db *gorm.DB, userId string) ([]*basicModel.Ch
 			ct.remark AS peer_remark,
 			ct.is_top AS peer_is_top,
 			ct.is_mute AS peer_is_mute,
-			u.username AS peer_name,
-			u.avatar AS peer_avatar
+			CASE WHEN c.scene_type = 'user' THEN u.username ELSE g.name END AS peer_name,
+			CASE WHEN c.scene_type = 'user' THEN u.avatar ELSE g.avatar END AS peer_avatar
 		`).
 		Joins("LEFT JOIN t_contacts ct ON ct.user_id = c.user_id AND ct.peer_id = c.peer_id AND ct.deleted_at IS NULL").
 		Joins("LEFT JOIN t_user u ON u.id = c.peer_id AND u.deleted_at IS NULL").
+		Joins("LEFT JOIN t_group g ON g.id = c.peer_id AND g.deleted_at IS NULL").
 		Where("c.user_id = ? AND c.deleted_at IS NULL", userId).
 		Order("ct.is_top DESC, c.updated_at DESC").
 		Scan(&chatList).Error

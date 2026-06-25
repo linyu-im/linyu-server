@@ -26,3 +26,7 @@ type GetGroupAvatarParam struct {
 type GroupInfoParam struct {
 	GroupId string `json:"groupId" binding:"required"`
 }
+
+type GroupMemberListParam struct {
+	GroupId string `json:"groupId" binding:"required"`
+}

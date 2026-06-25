@@ -11,8 +11,7 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/basic/v1/message/send/user", SendMessageToUserHandler)
-	route.Register("POST", "/basic/v1/message/send/group", SendMessageToGroupHandler)
+	route.Register("POST", "/basic/v1/message/send", SendMessageHandler)
 	route.Register("POST", "/basic/v1/message/page", MessagePageHandler)
 	route.Register("POST", "/basic/v1/message/list", MessageListHandler)
 	route.Register("POST", "/basic/v1/message/file/upload", UploadMsgFileChunkHandler)
@@ -20,14 +19,14 @@ func init() {
 	route.Register("POST", "/basic/v1/message/forward", ForwardMessageHandler)
 }
 
-// SendMessageToUserHandler 发送消息(用户)
-func SendMessageToUserHandler(c *gin.Context) {
+// SendMessageHandler 发送消息(会话)
+func SendMessageHandler(c *gin.Context) {
 	param := &basicParam.SendMessageToUserParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
 		return
 	}
 	currentUserId := c.GetString("userId")
-	msg, err := basicService.MessageService.SendMessageToUser(currentUserId, param)
+	msg, err := basicService.MessageService.SendMessage(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
@@ -48,21 +47,6 @@ func ForwardMessageHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c)
-}
-
-// SendMessageToGroupHandler 发送消息(群聊)
-func SendMessageToGroupHandler(c *gin.Context) {
-	param := &basicParam.SendMessageToGroupParam{}
-	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
-		return
-	}
-	currentUserId := c.GetString("userId")
-	msg, err := basicService.MessageService.SendMessageToGroup(currentUserId, param)
-	if err != nil {
-		response.Fail(c, err.Error())
-		return
-	}
-	response.Ok(c, msg)
 }
 
 // MessagePageHandler 分页获取聊天内容

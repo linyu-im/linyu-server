@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"strings"
 
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
@@ -47,37 +48,22 @@ func (s messageService) SendMessageToSession(currentUserId string, message *basi
 	return message, nil
 }
 
-func (s messageService) SendMessageToUser(userId string, param *basicParam.SendMessageToUserParam) (*basicModel.Message, error) {
+func (s messageService) SendMessage(userId string, param *basicParam.SendMessageToUserParam) (*basicModel.Message, error) {
+	sceneType, toId, err := s.VerifySessionSceneType(userId, param.SessionId)
+	if err != nil {
+		return nil, err
+	}
 	if _, err := basicModel.ParseMsgContent(param.MsgType, param.Content); err != nil {
 		return nil, err
 	}
-	sessionId := utils.Generate1v1SessionID(userId, param.ToUserId)
 	message := &basicModel.Message{
 		ID:        utils.GenerateSfIDString(),
-		SessionID: sessionId,
+		SessionID: param.SessionId,
 		FromID:    userId,
-		ToID:      param.ToUserId,
-		SceneType: constant.SceneType.User,
+		ToID:      toId,
+		SceneType: sceneType,
 		Content:   param.Content,
 		MsgType:   param.MsgType,
-		FromType:  constant.MessageFromType.User,
-	}
-	//分发消息
-	return s.SendMessageToSession(userId, message)
-}
-
-func (s messageService) SendMessageToGroup(userId string, param *basicParam.SendMessageToGroupParam) (*basicModel.Message, error) {
-	if _, err := basicModel.ParseMsgContent(param.MsgType, param.Content); err != nil {
-		return nil, err
-	}
-	message := &basicModel.Message{
-		ID:        utils.GenerateSfIDString(),
-		SessionID: param.ToGroupId,
-		FromID:    userId,
-		ToID:      param.ToGroupId,
-		SceneType: constant.SceneType.Group,
-		Content:   param.Content,
-		MsgType:   constant.MessageType.Text,
 		FromType:  constant.MessageFromType.User,
 	}
 	//分发消息
@@ -88,16 +74,28 @@ func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basi
 	return basicDao.MessageDao.GetLatestMessagesBySessionID(db.RDB, sessionId, num)
 }
 
-func (s messageService) MessageList(userId string, param *basicParam.MessageListParam) ([]*basicModel.Message, error) {
-	var sessionId string
-	if ContactsService.IsContacts(userId, param.ToId) {
-		sessionId = utils.Generate1v1SessionID(userId, param.ToId)
-	} else if GroupService.IsGroupMember(param.ToId, userId) {
-		sessionId = param.ToId
-	} else {
-		return nil, fmt.Errorf("param.error")
+func (s messageService) VerifySessionSceneType(userId, session string) (string, string, error) {
+	if strings.Contains(session, userId) {
+		ids := utils.Split1v1SessionID(session)
+		if ContactsService.IsContacts(ids[0], ids[1]) {
+			toId := ids[0]
+			if toId == userId {
+				toId = ids[1]
+			}
+			return constant.SceneType.User, toId, nil
+		}
+	} else if GroupService.IsGroupMember(session, userId) {
+		return constant.SceneType.Group, session, nil
 	}
-	messages, err := basicDao.MessageDao.ListMessagesBySessionIDSinceMsgID(db.RDB, sessionId, param.SinceMsgId)
+	return "", "", fmt.Errorf("param.error")
+}
+
+func (s messageService) MessageList(userId string, param *basicParam.MessageListParam) ([]*basicModel.Message, error) {
+	_, _, err := s.VerifySessionSceneType(userId, param.SessionId)
+	if err != nil {
+		return nil, err
+	}
+	messages, err := basicDao.MessageDao.ListMessagesBySessionIDSinceMsgID(db.RDB, param.SessionId, param.SinceMsgId)
 	if err != nil {
 		return nil, err
 	}

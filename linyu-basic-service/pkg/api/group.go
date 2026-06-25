@@ -16,6 +16,7 @@ func init() {
 	route.Register("POST", "/basic/v1/group/invite-member", GroupInviteMemberHandler)
 	route.Register("POST", "/basic/v1/group/remove-member", GroupRemoveMemberHandler)
 	route.Register("POST", "/basic/v1/group/info", GroupInfoHandler)
+	route.Register("POST", "/basic/v1/group/member/list", GroupMemberListHandler)
 }
 
 // GroupCreateHandler 群聊创建
@@ -95,4 +96,19 @@ func GroupInfoHandler(c *gin.Context) {
 	currentUserId := c.GetString("userId")
 	group := basicService.GroupService.GroupInfo(currentUserId, param.GroupId)
 	response.Ok(c, group)
+}
+
+// GroupMemberListHandler 获取群成员列表
+func GroupMemberListHandler(c *gin.Context) {
+	param := &basicParam.GroupMemberListParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	data, err := basicService.GroupService.GroupMemberList(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, data)
 }

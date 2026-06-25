@@ -191,6 +191,19 @@ func (s groupService) GetGroupAvatar(groupId string) interface{} {
 	return group.Avatar
 }
 
+func (s groupService) GroupMemberList(userId string, param *basicParam.GroupMemberListParam) ([]*basicModel.GroupMember, error) {
+	if !s.IsGroupMember(param.GroupId, userId) {
+		return nil, errors.New("param.error")
+	}
+	tx := basicDao.GroupMemberDao.BuildGroupMemberQuery(db.RDB, param.GroupId)
+	tx = tx.Order("group_user_level DESC")
+	var members []*basicModel.GroupMember
+	if err := tx.Find(&members).Error; err != nil {
+		return nil, err
+	}
+	return members, nil
+}
+
 func (s groupService) GroupInfo(userId string, groupId string) *result.GroupInfoResult {
 	group := basicDao.GroupDao.GroupInfoById(db.RDB, userId, groupId)
 	//获取top6群成员

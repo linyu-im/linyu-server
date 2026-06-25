@@ -7,10 +7,10 @@ import (
 )
 
 type SendMessageToUserParam struct {
-	ToUserId string          `json:"toUserId" binding:"required"`
-	MsgType  string          `json:"msgType" binding:"required"`
-	Content  json.RawMessage `json:"content" binding:"required"`
-	Mentions []struct {
+	SessionId string          `json:"sessionId" binding:"required"`
+	MsgType   string          `json:"msgType" binding:"required"`
+	Content   json.RawMessage `json:"content" binding:"required"`
+	Mentions  []struct {
 		Id          string `json:"id"`
 		MentionType string `json:"mentionType"`
 	} `json:"mentions"`
@@ -33,7 +33,7 @@ type MessagePageParam struct {
 }
 
 type MessageListParam struct {
-	ToId       string `json:"toId" binding:"required"`
+	SessionId  string `json:"sessionId" binding:"required"`
 	SinceMsgId string `json:"sinceMsgId"`
 }
 
