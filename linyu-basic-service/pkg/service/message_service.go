@@ -77,12 +77,18 @@ func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basi
 func (s messageService) VerifySessionSceneType(userId, session string) (string, string, error) {
 	if strings.Contains(session, userId) {
 		ids := utils.Split1v1SessionID(session)
-		if ContactsService.IsContacts(ids[0], ids[1]) {
-			toId := ids[0]
-			if toId == userId {
-				toId = ids[1]
-			}
+		toId := ids[0]
+		if toId == userId {
+			toId = ids[1]
+		}
+		if toId == userId {
+			return constant.SceneType.User, userId, nil
+		}
+		// 判断自己是否是对方好友
+		if ContactsService.IsFriend(toId, userId) {
 			return constant.SceneType.User, toId, nil
+		} else {
+			return "", "", fmt.Errorf("basic.contacts.you-no-other-friend")
 		}
 	} else if GroupService.IsGroupMember(session, userId) {
 		return constant.SceneType.Group, session, nil
@@ -104,7 +110,7 @@ func (s messageService) MessageList(userId string, param *basicParam.MessageList
 
 func (s messageService) MessagePage(userId string, param *basicParam.MessagePageParam) (*response.PageResult[*basicModel.Message], error) {
 	var sessionId string
-	if ContactsService.IsContacts(userId, param.ToId) {
+	if ContactsService.IsFriendBothOr(userId, param.ToId) {
 		sessionId = utils.Generate1v1SessionID(userId, param.ToId)
 	} else if GroupService.IsGroupMember(param.ToId, userId) {
 		sessionId = param.ToId

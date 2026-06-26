@@ -14,6 +14,7 @@ func init() {
 	route.Register("POST", "/basic/v1/contacts/group/list", ContactsGroupListHandler)
 	route.Register("POST", "/basic/v1/contacts/enterprise/list", ContactsEnterpriseListHandler)
 	route.Register("POST", "/basic/v1/contacts/rel/delete", ContactsRelDelHandler)
+	route.Register("POST", "/basic/v1/contacts/friend/is", ContactsIsFriendHandler)
 }
 
 // ContactsFriendListHandler 通讯录好友列表
@@ -62,4 +63,15 @@ func ContactsRelDelHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c)
+}
+
+// ContactsIsFriendHandler 对方是否是好友
+func ContactsIsFriendHandler(c *gin.Context) {
+	param := &basicParam.ContactsIsFriendParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	b := basicService.ContactsService.IsFriend(currentUserId, param.UserId)
+	response.Ok(c, b)
 }

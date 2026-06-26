@@ -25,24 +25,19 @@ func (s *chatService) ChatList(userId string) ([]*basicModel.Chat, error) {
 }
 
 func (s *chatService) SaveOrUpdateUserIncUnreadNum(userId string, message *basicModel.Message) ([]string, error) {
-	userIds := utils.Split1v1SessionID(message.SessionID)
-	var toUserId string
-	for _, id := range userIds {
-		if id != userId {
-			toUserId = id
-			break
-		}
-	}
-	err := ChatService.SaveOrUpdateIncUnreadNum(toUserId, userId, message)
-	if err != nil {
-		return nil, err
-	}
 	//更新自己的会话
-	err = ChatService.SaveOrUpdate(userId, toUserId, message)
+	err := ChatService.SaveOrUpdate(userId, message.ToID, message)
 	if err != nil {
 		return nil, err
 	}
-	return userIds, nil
+	if userId == message.ToID {
+		return []string{userId}, nil
+	}
+	err = ChatService.SaveOrUpdateIncUnreadNum(message.ToID, userId, message)
+	if err != nil {
+		return nil, err
+	}
+	return []string{userId, message.ToID}, nil
 
 }
 

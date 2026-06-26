@@ -34,8 +34,16 @@ func (s *contactsService) ContactsEnterpriseList(userId string) ([]*basicModel.C
 	return list, err
 }
 
-func (s *contactsService) IsContacts(userId string, peerId string) bool {
-	return basicDao.ContactsDao.IsContactByUserAndPeer(db.RDB, userId, peerId)
+func (s *contactsService) IsFriend(userId string, peerId string) bool {
+	return basicDao.ContactsDao.IsFriend(db.RDB, userId, peerId)
+}
+
+func (s *contactsService) IsFriendBothOr(userId string, peerId string) bool {
+	return basicDao.ContactsDao.IsFriendBothOr(db.RDB, userId, peerId)
+}
+
+func (s *contactsService) IsFriendBothAnd(userId string, peerId string) bool {
+	return basicDao.ContactsDao.IsFriendBothAnd(db.RDB, userId, peerId)
 }
 
 func (s *contactsService) ContactsRelDelete(userId string, param *basicParam.ContactsRelDeleteParam) error {

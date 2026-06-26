@@ -96,7 +96,7 @@ func (s momentService) MomentLikeAdd(userId string, momentId string) (*basicMode
 	if moment == nil {
 		return nil, errors.New("param.error")
 	}
-	if !ContactsService.IsContacts(moment.UserID, userId) {
+	if !ContactsService.IsFriendBothAnd(moment.UserID, userId) {
 		return nil, errors.New("basic.contacts.rel-no-exists")
 	}
 	like := basicDao.MomentLikeDao.GetByUserIdAndMomentId(db.RDB, userId, momentId)
@@ -120,7 +120,7 @@ func (s momentService) MomentCommentAdd(userId string, p *param.MomentCommentAdd
 	if moment == nil {
 		return nil, errors.New("param.error")
 	}
-	if !ContactsService.IsContacts(moment.UserID, userId) {
+	if !ContactsService.IsFriendBothAnd(moment.UserID, userId) {
 		return nil, errors.New("basic.contacts.rel-no-exists")
 	}
 	comment := &basicModel.MomentComment{

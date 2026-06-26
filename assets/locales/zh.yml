@@ -31,5 +31,6 @@ basic:
   contacts:
     rel-already-exists: "关系已经存在"
     rel-no-exists: "关系不存在"
+    you-no-other-friend: "您不是对方好友"
   storage:
     local-storage-not-exist: "本地存储不存在"
