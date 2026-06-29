@@ -2,14 +2,15 @@ package utils
 
 import (
 	"fmt"
-	"github.com/bwmarrin/snowflake"
-	"github.com/google/uuid"
-	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/bwmarrin/snowflake"
+	"github.com/google/uuid"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 )
 
 var (
@@ -84,6 +85,45 @@ func GenerateOnlyNumber(accountPrefix string, checkFun func(account string) bool
 		}
 	}
 	return account
+}
+
+var groupNumberMu sync.Mutex
+
+func GenerateGroupNumber(maxNumber string, checkFun func(number string) bool) string {
+	groupNumberMu.Lock()
+	defer groupNumberMu.Unlock()
+
+	const (
+		minVal   = 10000
+		maxVal   = 99999999999
+		fallback = 1000000000000
+	)
+
+	var current int64
+	if maxNumber == "" {
+		current = minVal
+	} else {
+		n, err := strconv.ParseInt(maxNumber, 10, 64)
+		if err != nil || n < minVal {
+			current = minVal
+		} else if n >= maxVal {
+			current = maxVal
+		} else {
+			current = n + 1
+		}
+	}
+
+	for i := 0; i < 10; i++ {
+		if current > maxVal {
+			break
+		}
+		number := strconv.FormatInt(current, 10)
+		if checkFun(number) {
+			return number
+		}
+		current++
+	}
+	return fmt.Sprintf("%012d", GenerateSfID()%fallback)
 }
 
 func Generate1v1SessionID(id1, id2 string) string {

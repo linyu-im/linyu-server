@@ -5,6 +5,7 @@ import (
 	"fmt"
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	emailutil "github.com/linyu-im/linyu-server/linyu-common/pkg/email"
@@ -161,4 +162,31 @@ func (s *userService) UserInfoById(userId string, currentUserId string) (*basicM
 
 func (s *userService) GetAvatar(userId string) string {
 	return basicDao.UserDao.UserAvatarById(db.RDB, userId)
+}
+
+func (s *userService) UpdateAvatar(userId string, avatarUrl string) error {
+	return basicDao.UserDao.UpdateAvatar(db.RDB, userId, avatarUrl)
+}
+
+func (s *userService) UpdateProfile(userId string, param *basicParam.UserUpdateProfileParam) error {
+	fields := map[string]interface{}{}
+	if param.Username != "" {
+		fields["username"] = param.Username
+	}
+	if param.Gender != "" {
+		fields["gender"] = param.Gender
+	}
+	if param.Birthday != "" {
+		fields["birthday"] = param.Birthday
+	}
+	if param.Signature != "" {
+		fields["signature"] = param.Signature
+	}
+	if param.Location != "" {
+		fields["location"] = param.Location
+	}
+	if len(fields) == 0 {
+		return nil
+	}
+	return basicDao.UserDao.UpdateProfile(db.RDB, userId, fields)
 }

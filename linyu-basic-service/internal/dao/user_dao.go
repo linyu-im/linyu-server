@@ -99,6 +99,18 @@ func (r userDao) UserAvatarById(rdb *gorm.DB, userId string) string {
 	return avatarUrl
 }
 
+func (r userDao) UpdateAvatar(db *gorm.DB, userId string, avatar string) error {
+	return db.Model(&basicModel.User{}).
+		Where("id = ?", userId).
+		Update("avatar", avatar).Error
+}
+
+func (r userDao) UpdateProfile(db *gorm.DB, userId string, fields map[string]interface{}) error {
+	return db.Model(&basicModel.User{}).
+		Where("id = ?", userId).
+		Updates(fields).Error
+}
+
 func (r userDao) UserInfoById(db *gorm.DB, userId string, currentUserId string) (*basicModel.User, error) {
 	var user basicModel.User
 	err := db.

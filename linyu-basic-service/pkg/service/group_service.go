@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
@@ -30,8 +31,10 @@ func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreatePa
 			friendIds = append(friendIds, friendId)
 		}
 	}
-	// 生成唯一群号
-	number := utils.GenerateOnlyNumber("LINYU-", func(number string) bool {
+	// 查询当前最大群号
+	maxNumber, _ := basicDao.GroupDao.GetMaxGroupNumber(db.RDB)
+	// 生成纯数字唯一群号
+	number := utils.GenerateGroupNumber(maxNumber, func(number string) bool {
 		user := basicDao.GroupDao.GetGroupByGroupNumber(db.RDB, number)
 		return user == nil
 	})

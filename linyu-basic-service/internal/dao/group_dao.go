@@ -13,6 +13,17 @@ func newGroupDao() *groupDao {
 
 type groupDao struct{}
 
+func (d *groupDao) GetMaxGroupNumber(db *gorm.DB) (string, error) {
+	var maxNumber string
+	err := db.Model(&basicModel.Group{}).
+		Select("COALESCE(MAX(CAST(group_number AS UNSIGNED)), 0)").
+		Scan(&maxNumber).Error
+	if err != nil {
+		return "", err
+	}
+	return maxNumber, nil
+}
+
 func (d *groupDao) GetGroupByGroupNumber(db *gorm.DB, account string) *basicModel.Group {
 	result := &basicModel.Group{}
 	if err := db.First(result, "group_number = ?", account).Error; err != nil {
