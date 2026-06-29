@@ -96,6 +96,14 @@ func (s messageService) VerifySessionSceneType(userId, session string) (string, 
 	return "", "", fmt.Errorf("param.error")
 }
 
+func (s messageService) GetSessionIdByPeerIdAndSceneType(userId, peerId, sceneType string) string {
+	if sceneType == constant.SceneType.User {
+		return utils.Generate1v1SessionID(userId, peerId)
+	} else {
+		return peerId
+	}
+}
+
 func (s messageService) MessageList(userId string, param *basicParam.MessageListParam) ([]*basicModel.Message, error) {
 	_, _, err := s.VerifySessionSceneType(userId, param.SessionId)
 	if err != nil {

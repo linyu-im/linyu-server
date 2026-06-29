@@ -106,6 +106,7 @@ func (s *chatService) ChatCreate(userId string, param *basicParam.ChatCreatePara
 	chat = &basicModel.Chat{
 		ID:        utils.GenerateSfIDString(),
 		UserID:    userId,
+		SessionID: MessageService.GetSessionIdByPeerIdAndSceneType(userId, param.PeerId, param.SceneType),
 		PeerID:    param.PeerId,
 		SceneType: param.SceneType,
 	}
