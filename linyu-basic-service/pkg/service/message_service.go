@@ -53,18 +53,21 @@ func (s messageService) SendMessage(userId string, param *basicParam.SendMessage
 	if err != nil {
 		return nil, err
 	}
-	if _, err := basicModel.ParseMsgContent(param.MsgType, param.Content); err != nil {
+	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
+	if err != nil {
 		return nil, err
+
 	}
 	message := &basicModel.Message{
-		ID:        utils.GenerateSfIDString(),
-		SessionID: param.SessionId,
-		FromID:    userId,
-		ToID:      toId,
-		SceneType: sceneType,
-		Content:   param.Content,
-		MsgType:   param.MsgType,
-		FromType:  constant.MessageFromType.User,
+		ID:             utils.GenerateSfIDString(),
+		SessionID:      param.SessionId,
+		FromID:         userId,
+		ToID:           toId,
+		SceneType:      sceneType,
+		Content:        param.Content,
+		KeywordContent: content.GetKeywordContent(),
+		MsgType:        param.MsgType,
+		FromType:       constant.MessageFromType.User,
 	}
 	//分发消息
 	return s.SendMessageToSession(userId, message)
@@ -150,21 +153,28 @@ func (s messageService) MessagePage(userId string, param *basicParam.MessagePage
 }
 
 func (s messageService) ForwardMessage(currentUserId string, param *basicParam.ForwardMessageParam) error {
+	content, err := basicModel.ParseMsgContent(param.Message.MsgType, param.Message.Content)
+	if err != nil {
+		return err
+
+	}
 	for _, peerInfo := range param.ToPeerInfo {
 		message := &basicModel.Message{
-			ID:        utils.GenerateSfIDString(),
-			FromID:    currentUserId,
-			ToID:      peerInfo.PeerId,
-			Content:   param.Message.Content,
-			MsgType:   param.Message.MsgType,
-			SceneType: peerInfo.PeerSceneType,
-			FromType:  constant.MessageFromType.User,
+			ID:             utils.GenerateSfIDString(),
+			FromID:         currentUserId,
+			ToID:           peerInfo.PeerId,
+			Content:        param.Message.Content,
+			MsgType:        param.Message.MsgType,
+			KeywordContent: content.GetKeywordContent(),
+			SceneType:      peerInfo.PeerSceneType,
+			FromType:       constant.MessageFromType.User,
 		}
-		if peerInfo.PeerSceneType == constant.SceneType.User {
+		switch peerInfo.PeerSceneType {
+		case constant.SceneType.User:
 			message.SessionID = utils.Generate1v1SessionID(currentUserId, peerInfo.PeerId)
-		} else if peerInfo.PeerSceneType == constant.SceneType.Group {
+		case constant.SceneType.Group:
 			message.SessionID = peerInfo.PeerId
-		} else {
+		default:
 			return fmt.Errorf("param.error")
 		}
 		_, _ = s.SendMessageToSession(currentUserId, message)

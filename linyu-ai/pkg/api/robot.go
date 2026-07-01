@@ -138,14 +138,15 @@ func sendRobotAnswerMessage(currentUserId, sessionId string, param *aiParam.Robo
 		return nil, err
 	}
 	message := &basicModel.Message{
-		ID:        utils.GenerateSfIDString(),
-		SessionID: sessionId,
-		FromID:    param.RobotId,
-		ToID:      currentUserId,
-		SceneType: param.SceneType,
-		MsgType:   constant.MessageType.Text,
-		FromType:  constant.MessageFromType.Robot,
-		Content:   contentRaw,
+		ID:             utils.GenerateSfIDString(),
+		SessionID:      sessionId,
+		FromID:         param.RobotId,
+		ToID:           currentUserId,
+		SceneType:      param.SceneType,
+		MsgType:        constant.MessageType.Text,
+		KeywordContent: content,
+		FromType:       constant.MessageFromType.Robot,
+		Content:        contentRaw,
 	}
 	return basicService.MessageService.SendMessageToSession(currentUserId, message)
 }
