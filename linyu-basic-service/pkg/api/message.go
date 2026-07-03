@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
 	basicService "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/service"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/i18n"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/storage"
@@ -30,6 +31,9 @@ func SendMessageHandler(c *gin.Context) {
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
+	}
+	if msg.Status == "failed" && msg.FailReason != "" {
+		msg.FailReason = i18n.T(c, msg.FailReason, nil)
 	}
 	response.Ok(c, msg)
 }

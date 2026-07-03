@@ -28,6 +28,8 @@ type Message struct {
 	Status         string              `gorm:"size:64;comment:消息状态" json:"status"`
 	SceneType      string              `gorm:"size:64;not null;comment:会话场景" json:"sceneType"`
 	QuoteMsgId     string              `gorm:"size:64;comment:引用消息的id" json:"quoteMsgId"`
+	ClientMsgId    string              `gorm:"-" json:"clientMsgId"`
+	FailReason     string              `gorm:"-" json:"failReason"`
 	CreatedAt      localtime.LocalTime `gorm:"type:timestamp(3);not null;autoCreateTime;comment:创建时间" json:"createdAt"`
 	UpdatedAt      localtime.LocalTime `gorm:"type:timestamp(3);not null;autoUpdateTime;comment:更新时间" json:"updatedAt"`
 	DeletedAt      gorm.DeletedAt      `gorm:"index" json:"deletedAt"`

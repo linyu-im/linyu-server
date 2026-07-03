@@ -49,15 +49,11 @@ func (s messageService) SendMessageToSession(currentUserId string, message *basi
 }
 
 func (s messageService) SendMessage(userId string, param *basicParam.SendMessageToUserParam) (*basicModel.Message, error) {
-	sceneType, toId, err := s.VerifySessionSceneType(userId, param.SessionId)
-	if err != nil {
-		return nil, err
-	}
 	content, err := basicModel.ParseMsgContent(param.MsgType, param.Content)
 	if err != nil {
 		return nil, err
-
 	}
+	sceneType, toId, err := s.VerifySessionSceneType(userId, param.SessionId)
 	message := &basicModel.Message{
 		ID:             utils.GenerateSfIDString(),
 		SessionID:      param.SessionId,
@@ -68,6 +64,12 @@ func (s messageService) SendMessage(userId string, param *basicParam.SendMessage
 		KeywordContent: content.GetKeywordContent(),
 		MsgType:        param.MsgType,
 		FromType:       constant.MessageFromType.User,
+	}
+	if err != nil {
+		message.Status = "failed"
+		message.FailReason = err.Error()
+		_ = ChatService.SaveOrUpdate(userId, message.ToID, message)
+		return message, nil
 	}
 	//分发消息
 	return s.SendMessageToSession(userId, message)
@@ -91,12 +93,12 @@ func (s messageService) VerifySessionSceneType(userId, session string) (string, 
 		if ContactsService.IsFriend(toId, userId) {
 			return constant.SceneType.User, toId, nil
 		} else {
-			return "", "", fmt.Errorf("basic.contacts.you-no-other-friend")
+			return constant.SceneType.User, toId, fmt.Errorf("basic.contacts.you-no-other-friend")
 		}
 	} else if GroupService.IsGroupMember(session, userId) {
 		return constant.SceneType.Group, session, nil
 	}
-	return "", "", fmt.Errorf("param.error")
+	return constant.SceneType.Group, session, fmt.Errorf("param.error")
 }
 
 func (s messageService) GetSessionIdByPeerIdAndSceneType(userId, peerId, sceneType string) string {
