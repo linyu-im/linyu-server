@@ -168,6 +168,11 @@ func (s *userService) UpdateAvatar(userId string, avatarUrl string) error {
 	return basicDao.UserDao.UpdateAvatar(db.RDB, userId, avatarUrl)
 }
 
+func (s *userService) SearchByKeyword(param *basicParam.UserSearchParam) (*response.PageResult[*basicModel.User], error) {
+	tx := basicDao.UserDao.SearchByKeyword(db.RDB, param.Keyword)
+	return response.Paginate[*basicModel.User](tx, param.PageQuery)
+}
+
 func (s *userService) UpdateProfile(userId string, param *basicParam.UserUpdateProfileParam) error {
 	fields := map[string]interface{}{}
 	if param.Username != "" {

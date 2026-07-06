@@ -186,6 +186,11 @@ func (s groupService) GetMemberUserIdsByGroupId(groupId string) []string {
 	return members
 }
 
+func (s groupService) SearchByKeyword(param *basicParam.GroupSearchParam) (*response.PageResult[*basicModel.Group], error) {
+	tx := basicDao.GroupDao.SearchByKeyword(db.RDB, param.Keyword)
+	return response.Paginate[*basicModel.Group](tx, param.PageQuery)
+}
+
 func (s groupService) GetGroupAvatar(groupId string) interface{} {
 	group := basicDao.GroupDao.GetGroupById(db.RDB, groupId)
 	if group == nil {

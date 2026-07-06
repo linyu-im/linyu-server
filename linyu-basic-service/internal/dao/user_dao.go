@@ -111,6 +111,11 @@ func (r userDao) UpdateProfile(db *gorm.DB, userId string, fields map[string]int
 		Updates(fields).Error
 }
 
+func (r userDao) SearchByKeyword(db *gorm.DB, keyword string) *gorm.DB {
+	like := "%" + keyword + "%"
+	return db.Model(&basicModel.User{}).Where("account LIKE ?", like)
+}
+
 func (r userDao) UserInfoById(db *gorm.DB, userId string, currentUserId string) (*basicModel.User, error) {
 	var user basicModel.User
 	err := db.

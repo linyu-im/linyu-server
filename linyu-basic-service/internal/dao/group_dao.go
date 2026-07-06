@@ -67,6 +67,11 @@ func (d *groupDao) UpdateMemberNum(db *gorm.DB, groupId string) error {
 	return nil
 }
 
+func (d *groupDao) SearchByKeyword(db *gorm.DB, keyword string) *gorm.DB {
+	like := "%" + keyword + "%"
+	return db.Model(&basicModel.Group{}).Where("group_number LIKE ? OR name LIKE ?", like, like)
+}
+
 func (d *groupDao) GroupInfoById(db *gorm.DB, userId string, groupId string) *basicModel.Group {
 	result := &basicModel.Group{}
 	if err := db.Table("t_group AS g").

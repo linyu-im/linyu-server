@@ -17,6 +17,7 @@ func init() {
 	route.Register("POST", "/basic/v1/group/remove-member", GroupRemoveMemberHandler)
 	route.Register("POST", "/basic/v1/group/info", GroupInfoHandler)
 	route.Register("POST", "/basic/v1/group/member/list", GroupMemberListHandler)
+	route.Register("POST", "/basic/v1/group/search", GroupSearchHandler)
 }
 
 // GroupCreateHandler 群聊创建
@@ -111,4 +112,18 @@ func GroupMemberListHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c, data)
+}
+
+// GroupSearchHandler 模糊查询群聊列表
+func GroupSearchHandler(c *gin.Context) {
+	param := &basicParam.GroupSearchParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	result, err := basicService.GroupService.SearchByKeyword(param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, result)
 }

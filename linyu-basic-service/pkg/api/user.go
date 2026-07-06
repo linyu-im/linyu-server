@@ -20,6 +20,7 @@ func init() {
 	route.Register("POST", "/basic/v1/user/avatar/get", GetUserAvatarHandler)
 	route.Register("POST", "/basic/v1/user/avatar/upload", UploadUserAvatarHandler)
 	route.Register("POST", "/basic/v1/user/profile/update", UpdateUserProfileHandler)
+	route.Register("POST", "/basic/v1/user/search", UserSearchHandler)
 }
 
 func CurrentUserInfoHandler(c *gin.Context) {
@@ -120,4 +121,18 @@ func UpdateUserProfileHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c)
+}
+
+// UserSearchHandler 模糊查询用户列表
+func UserSearchHandler(c *gin.Context) {
+	param := &basicParam.UserSearchParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	result, err := basicService.UserService.SearchByKeyword(param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, result)
 }

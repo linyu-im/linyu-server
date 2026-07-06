@@ -1,5 +1,7 @@
 package param
 
+import "github.com/linyu-im/linyu-server/linyu-common/pkg/request"
+
 type GroupCreateParam struct {
 	GroupName       string   `json:"groupName" binding:"required"`
 	GroupMemberList []string `json:"groupMemberList"`
@@ -29,4 +31,9 @@ type GroupInfoParam struct {
 
 type GroupMemberListParam struct {
 	GroupId string `json:"groupId" binding:"required"`
+}
+
+type GroupSearchParam struct {
+	request.PageQuery
+	Keyword string `json:"keyword" binding:"required"`
 }

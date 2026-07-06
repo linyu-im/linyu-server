@@ -25,10 +25,10 @@ func (s applyService) ApplyAddFriend(userId string, param *basicParam.ApplyAddFr
 	if !constant.ApplySource.Validate(param.ApplySource) {
 		return errors.New("param.error")
 	}
-	//验证是否已经添加
-	is := basicDao.ContactsDao.IsContactByUserAndPeer(db.RDB, userId, param.PeerId)
+	//验证是否已经添加(双方)
+	is := basicDao.ContactsDao.IsFriendBothAnd(db.RDB, userId, param.PeerId)
 	if is {
-		return errors.New("basic.contacts.rel-already-exists")
+		return errors.New("basic.contacts.friend-already-exists")
 	}
 	apply := &basicModel.Apply{
 		ID:          utils.GenerateSfIDString(),
