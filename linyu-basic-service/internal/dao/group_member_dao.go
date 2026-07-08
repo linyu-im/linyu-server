@@ -2,6 +2,7 @@ package dao
 
 import (
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"gorm.io/gorm"
 )
 
@@ -56,6 +57,14 @@ func (d *groupMemberDao) GetMemberUserIdsByGroupId(db *gorm.DB, groupId string) 
 		return nil, err
 	}
 	return userIds, nil
+}
+
+func (d *groupMemberDao) GetAdminUserIdsByGroupId(db *gorm.DB, groupId string) []string {
+	var userIds []string
+	db.Model(&basicModel.GroupMember{}).
+		Where("group_id = ? AND member_role = ?", groupId, constant.MemberRole.Admin).
+		Pluck("user_id", &userIds)
+	return userIds
 }
 
 func (d *groupMemberDao) BuildGroupMemberQuery(db *gorm.DB, id string) *gorm.DB {

@@ -1,4 +1,5 @@
 auth:
+  user-not-exist: "User does not exist"
   error: "Login failed"
   password-error: "Incorrect password"
   already-logged-in: "Account logged in elsewhere"
@@ -9,6 +10,7 @@ auth:
   email-exists: "Email registered, please log in"
   email-not-registered: "Email not registered"
   user-banned: "Your account has been disabled for violating the platform's rules of use"
+  ldap-not-enabled: "LDAP not enabled"
 
 param:
   success: "Success"
@@ -16,3 +18,22 @@ param:
   validate-failed: "Parameter validation failed: {{.errors}}"
   phone-format-error: "The phone number format is incorrect"
   email-format-error: "The email format is incorrect"
+  type-not-exist: "Type does not exist"
+  error: "Parameter error"
+  type-error: "Type error"
+  file-not-found: "File not found"
+
+common:
+  data-not-exist: "Data does not exist"
+  internal-error: "Internal server error"
+
+basic:
+  contacts:
+    rel-already-exists: "Relationship already exists"
+    rel-no-exists: "Relationship does not exist"
+    you-no-other-friend: "You are not the other party's friend"
+    friend-already-exists: "Friend already exists"
+  group:
+    member-already-exists: "You have already joined this group chat"
+  storage:
+    local-storage-not-exist: "Local storage does not exist"

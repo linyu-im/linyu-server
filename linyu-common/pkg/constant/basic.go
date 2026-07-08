@@ -33,23 +33,21 @@ func (c applyType) Validate(v string) bool {
 }
 
 type applySource struct {
-	Account string // 账号申请
-	ECard   string // 名片申请
-	Phone   string // 手机号申请
-	Qrcode  string // 二维码申请
+	Search string // 搜索
+	ECard  string // 名片申请
+	Qrcode string // 二维码申请
 }
 
 // ApplySource 申请来源
 var ApplySource = applySource{
-	Account: "account",
-	ECard:   "ecard",
-	Phone:   "phone",
-	Qrcode:  "qrcode",
+	Search: "search",
+	ECard:  "ecard",
+	Qrcode: "qrcode",
 }
 
 func (c applySource) Validate(v string) bool {
 	switch v {
-	case c.Account, c.ECard, c.Phone, c.Qrcode:
+	case c.Search, c.ECard, c.Qrcode:
 		return true
 	default:
 		return false

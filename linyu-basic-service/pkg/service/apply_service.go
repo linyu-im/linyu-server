@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
@@ -53,6 +54,42 @@ func (s applyService) ApplyAddFriend(userId string, param *basicParam.ApplyAddFr
 			Content: apply,
 		},
 	})
+	return nil
+}
+
+func (s applyService) ApplyAddGroup(userId string, param *basicParam.ApplyAddGroupParam) error {
+	if !constant.ApplySource.Validate(param.ApplySource) {
+		return errors.New("param.error")
+	}
+	if basicDao.GroupMemberDao.GetGroupMemberByGroupIdAndUserId(db.RDB, param.GroupId, userId) != nil {
+		return errors.New("basic.group.member-already-exists")
+	}
+	apply := &basicModel.Apply{
+		ID:          utils.GenerateSfIDString(),
+		UserID:      userId,
+		PeerID:      param.GroupId,
+		Describe:    param.Describe,
+		ApplySource: param.ApplySource,
+		Type:        constant.ApplyType.Group,
+		Status:      constant.ApplyStatus.Wait,
+	}
+	err := basicDao.ApplyDao.Create(db.RDB, apply)
+	if err != nil {
+		return err
+	}
+	// 通知群管理员
+	adminIds := basicDao.GroupMemberDao.GetAdminUserIdsByGroupId(db.RDB, param.GroupId)
+	if len(adminIds) > 0 {
+		_ = eventbus.GlobalBus.Publish(event.WsDataEvent{
+			FromUserId: userId,
+			ToUserIds:  adminIds,
+			Data: &event.WsData{
+				SeqId:   apply.ID,
+				Type:    constant.WsDataType.Apply,
+				Content: apply,
+			},
+		})
+	}
 	return nil
 }
 

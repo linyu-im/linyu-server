@@ -16,6 +16,7 @@ func init() {
 	route.Register("POST", "/basic/v1/apply/cancel", ApplyCancelHandler)
 	route.Register("POST", "/basic/v1/apply/list/friend", ApplyFriendListHandler)
 	route.Register("POST", "/basic/v1/apply/list/group", ApplyGroupListHandler)
+	route.Register("POST", "/basic/v1/apply/add/group", ApplyAddGroupHandler)
 }
 
 // ApplyFriendListHandler 好友申请友列表
@@ -48,6 +49,21 @@ func ApplyAddFriendHandler(c *gin.Context) {
 	}
 	currentUserId := c.GetString("userId")
 	err := basicService.ApplyService.ApplyAddFriend(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// ApplyAddGroupHandler 申请加入群聊
+func ApplyAddGroupHandler(c *gin.Context) {
+	param := &basicParam.ApplyAddGroupParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.ApplyService.ApplyAddGroup(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
