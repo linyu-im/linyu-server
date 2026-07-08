@@ -36,6 +36,12 @@ func (StickerPack) TableInit(db *gorm.DB) error {
 	datas := []StickerPack{
 		{
 			ID:          "1",
+			Name:        "林语小吉",
+			Description: "林语官方表情包",
+			PackIconUrl: "http://thsu1eozt.hd-bkt.clouddn.com/xiaoji/256/傲娇.png",
+		},
+		{
+			ID:          "10",
 			Name:        "米游兔",
 			Description: "米游兔官方表情包",
 			PackIconUrl: "https://upload-bbs.mihoyo.com/upload/2022/11/14/62158b26331a045bbaabf48d1fc5c8eb_980401343708652819.png",
