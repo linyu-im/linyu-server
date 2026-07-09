@@ -1,11 +1,15 @@
 package api
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"github.com/gin-gonic/gin"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
 	basicService "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/service"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/storage"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 )
 
@@ -13,6 +17,7 @@ func init() {
 	route.Register("POST", "/basic/v1/group/create", GroupCreateHandler)
 	route.Register("POST", "/basic/v1/group/dissolve", GroupDissolveHandler)
 	route.Register("POST", "/basic/v1/group/avatar/get", GetGroupAvatarHandler)
+	route.Register("POST", "/basic/v1/group/avatar/upload", UploadGroupAvatarHandler)
 	route.Register("POST", "/basic/v1/group/invite-member", GroupInviteMemberHandler)
 	route.Register("POST", "/basic/v1/group/remove-member", GroupRemoveMemberHandler)
 	route.Register("POST", "/basic/v1/group/info", GroupInfoHandler)
@@ -27,12 +32,12 @@ func GroupCreateHandler(c *gin.Context) {
 		return
 	}
 	currentUserId := c.GetString("userId")
-	err := basicService.GroupService.GroupCreate(currentUserId, param)
+	group, err := basicService.GroupService.GroupCreate(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
 	}
-	response.Ok(c)
+	response.Ok(c, group)
 }
 
 // GroupDissolveHandler 群聊解散
@@ -86,6 +91,50 @@ func GetGroupAvatarHandler(c *gin.Context) {
 		return
 	}
 	url := basicService.GroupService.GetGroupAvatar(param.GroupId)
+	response.Ok(c, url)
+}
+
+// UploadGroupAvatarHandler 上传群头像
+func UploadGroupAvatarHandler(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		response.Fail(c, "param.file-not-found")
+		return
+	}
+
+	groupId := c.PostForm("groupId")
+	if groupId == "" {
+		response.Fail(c, "param.error")
+		return
+	}
+
+	const maxFileSize = 10 * 1024 * 1024
+	if file.Size > maxFileSize {
+		response.Fail(c, "file too large, max 10MB")
+		return
+	}
+
+	currentUserId := c.GetString("userId")
+	ext := filepath.Ext(file.Filename)
+	fileKey := fmt.Sprintf("avatar/group/%s%s", groupId, ext)
+
+	src, err := file.Open()
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	defer src.Close()
+
+	url, err := storage.S.Upload(fileKey, src)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+
+	if err := basicService.GroupService.UpdateAvatar(currentUserId, groupId, url); err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
 	response.Ok(c, url)
 }
 

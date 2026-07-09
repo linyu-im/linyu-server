@@ -86,7 +86,7 @@ func UploadUserAvatarHandler(c *gin.Context) {
 
 	currentUserId := c.GetString("userId")
 	ext := filepath.Ext(file.Filename)
-	fileKey := fmt.Sprintf("avatar/%s%s", currentUserId, ext)
+	fileKey := fmt.Sprintf("avatar/user/%s%s", currentUserId, ext)
 
 	src, err := file.Open()
 	if err != nil {

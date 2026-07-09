@@ -35,5 +35,6 @@ basic:
     friend-already-exists: "好友已经存在"
   group:
     member-already-exists: "您已经加入该群聊"
+    no-friend-selected: "您当前选择的用户，都不是您的好友"
   storage:
     local-storage-not-exist: "本地存储不存在"

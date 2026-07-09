@@ -65,6 +65,17 @@ func (d *contactsDao) IsFriendBothAnd(db *gorm.DB, userId string, peerId string)
 	return d.IsFriend(db, userId, peerId) && d.IsFriend(db, peerId, userId)
 }
 
+func (d *contactsDao) IsGroupContact(db *gorm.DB, userId string, groupId string) bool {
+	var count int64
+	err := db.Model(&basicModel.Contacts{}).
+		Where("user_id = ? AND peer_id = ? AND peer_type = ?", userId, groupId, constant.ContactsPeerType.Group).
+		Count(&count).Error
+	if err != nil {
+		return false
+	}
+	return count > 0
+}
+
 func (d *contactsDao) Create(db *gorm.DB, contacts *basicModel.Contacts) error {
 	if err := db.Create(contacts).Error; err != nil {
 		return err

@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
-	initsticker "github.com/linyu-im/linyu-server/linyu-common/pk
+	initsticker "github.com/linyu-im/linyu-server/linyu-common/pkg/init/sticker"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
@@ -23,13 +24,16 @@ func newGroupService() *groupService {
 
 type groupService struct{}
 
-func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreateParam) error {
+func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreateParam) (*basicModel.Group, error) {
 	// 邀请的用户必须是好友
 	var friendIds = []string{userId}
 	for _, friendId := range param.GroupMemberList {
-		if is := basicDao.ContactsDao.IsContactByUserAndPeer(db.RDB, userId, friendId); is {
+		if is := basicDao.ContactsDao.IsFriendBothAnd(db.RDB, userId, friendId); is {
 			friendIds = append(friendIds, friendId)
 		}
+	}
+	if len(friendIds) == 1 {
+		return nil, errors.New("basic.group.no-friend-selected")
 	}
 	// 查询当前最大群号
 	maxNumber, _ := basicDao.GroupDao.GetMaxGroupNumber(db.RDB)
@@ -38,9 +42,10 @@ func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreatePa
 		user := basicDao.GroupDao.GetGroupByGroupNumber(db.RDB, number)
 		return user == nil
 	})
+	groupId := utils.GenerateSfIDString()
 	group := &basicModel.Group{
-		ID:            utils.GenerateSfIDString(),
-		Name:          param.GroupName,
+		ID:            groupId,
+		Name:          buildGroupNameFromFriendIds(friendIds),
 		CreatorUserID: userId,
 		OwnerUserID:   userId,
 		GroupNumber:   number,
@@ -64,6 +69,9 @@ func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreatePa
 			if err := basicDao.GroupMemberDao.Create(tx, member); err != nil {
 				return err
 			}
+			if err := createGroupContactIfNotExist(tx, id, group.ID); err != nil {
+				return err
+			}
 		}
 		// 新建群
 		if err := basicDao.GroupDao.Create(tx, group); err != nil {
@@ -71,7 +79,31 @@ func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreatePa
 		}
 		return nil
 	})
-	return err
+	return group, err
+}
+
+func buildGroupNameFromFriendIds(friendIds []string) string {
+	limit := min(3, len(friendIds))
+	names := make([]string, 0, limit)
+	for _, id := range friendIds[:limit] {
+		user := basicDao.UserDao.GetUserById(db.RDB, id)
+		if user != nil && user.Username != "" {
+			names = append(names, user.Username)
+		}
+	}
+	return strings.Join(names, "、")
+}
+
+func createGroupContactIfNotExist(tx *gorm.DB, userID, groupID string) error {
+	if basicDao.ContactsDao.IsGroupContact(tx, userID, groupID) {
+		return nil
+	}
+	return basicDao.ContactsDao.Create(tx, &basicModel.Contacts{
+		ID:       utils.GenerateSfIDString(),
+		UserID:   userID,
+		PeerId:   groupID,
+		PeerType: constant.ContactsPeerType.Group,
+	})
 }
 
 func (s groupService) GroupDissolve(userId string, param *basicParam.GroupDissolveParam) error {
@@ -189,6 +221,13 @@ func (s groupService) GetMemberUserIdsByGroupId(groupId string) []string {
 func (s groupService) SearchByKeyword(param *basicParam.GroupSearchParam) (*response.PageResult[*basicModel.Group], error) {
 	tx := basicDao.GroupDao.SearchByKeyword(db.RDB, param.Keyword)
 	return response.Paginate[*basicModel.Group](tx, param.PageQuery)
+}
+
+func (s groupService) UpdateAvatar(userId string, groupId string, avatarUrl string) error {
+	if !s.IsOwnerUser(groupId, userId) {
+		return errors.New("param.error")
+	}
+	return basicDao.GroupDao.UpdateAvatar(db.RDB, groupId, avatarUrl)
 }
 
 func (s groupService) GetGroupAvatar(groupId string) interface{} {

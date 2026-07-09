@@ -35,5 +35,6 @@ basic:
     friend-already-exists: "Friend already exists"
   group:
     member-already-exists: "You have already joined this group chat"
+    no-friend-selected: "None of the users you selected are your friends"
   storage:
     local-storage-not-exist: "Local storage does not exist"

@@ -72,6 +72,12 @@ func (d *groupDao) SearchByKeyword(db *gorm.DB, keyword string) *gorm.DB {
 	return db.Model(&basicModel.Group{}).Where("group_number LIKE ? OR name LIKE ?", like, like)
 }
 
+func (d *groupDao) UpdateAvatar(db *gorm.DB, groupId string, avatar string) error {
+	return db.Model(&basicModel.Group{}).
+		Where("id = ?", groupId).
+		Update("avatar", avatar).Error
+}
+
 func (d *groupDao) GroupInfoById(db *gorm.DB, userId string, groupId string) *basicModel.Group {
 	result := &basicModel.Group{}
 	if err := db.Table("t_group AS g").

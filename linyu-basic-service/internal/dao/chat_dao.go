@@ -126,7 +126,7 @@ func (d *chatDao) touchUpdatedAtByIdAndUserId(db *gorm.DB, userId string, chatId
 }
 
 func (d *chatDao) DeleteByIdAndUserId(db *gorm.DB, userId string, chatId string) error {
-	return db.Delete(&basicModel.Chat{}, "user_id = ? AND id = ?", userId, chatId).Error
+	return db.Unscoped().Where("user_id = ? AND id = ?", userId, chatId).Delete(&basicModel.Chat{}).Error
 }
 
 func (d *chatDao) ClearUnreadByIdAndUserId(db *gorm.DB, userId string, chatId string) error {

@@ -3,7 +3,6 @@ package param
 import "github.com/linyu-im/linyu-server/linyu-common/pkg/request"
 
 type GroupCreateParam struct {
-	GroupName       string   `json:"groupName" binding:"required"`
 	GroupMemberList []string `json:"groupMemberList"`
 }
 
