@@ -23,6 +23,9 @@ func init() {
 	route.Register("POST", "/basic/v1/group/info", GroupInfoHandler)
 	route.Register("POST", "/basic/v1/group/member/list", GroupMemberListHandler)
 	route.Register("POST", "/basic/v1/group/search", GroupSearchHandler)
+	route.Register("POST", "/basic/v1/group/info/update", GroupUpdateInfoHandler)
+	route.Register("POST", "/basic/v1/group/is-admin", GroupIsAdminHandler)
+	route.Register("POST", "/basic/v1/group/set-admin", GroupSetAdminHandler)
 }
 
 // GroupCreateHandler 群聊创建
@@ -163,6 +166,32 @@ func GroupMemberListHandler(c *gin.Context) {
 	response.Ok(c, data)
 }
 
+// GroupIsAdminHandler 当前用户是否是群管理员
+func GroupIsAdminHandler(c *gin.Context) {
+	param := &basicParam.GroupInfoParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	isAdmin := basicService.GroupService.IsGroupAdmin(param.GroupId, currentUserId)
+	response.Ok(c, isAdmin)
+}
+
+// GroupUpdateInfoHandler 修改群聊信息
+func GroupUpdateInfoHandler(c *gin.Context) {
+	param := &basicParam.GroupUpdateInfoParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.UpdateInfo(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
 // GroupSearchHandler 模糊查询群聊列表
 func GroupSearchHandler(c *gin.Context) {
 	param := &basicParam.GroupSearchParam{}
@@ -175,4 +204,19 @@ func GroupSearchHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c, result)
+}
+
+// GroupSetAdminHandler 设置群管理员
+func GroupSetAdminHandler(c *gin.Context) {
+	param := &basicParam.GroupSetAdminParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.SetAdmin(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
 }

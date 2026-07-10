@@ -36,3 +36,16 @@ type GroupSearchParam struct {
 	request.PageQuery
 	Keyword string `json:"keyword" binding:"required"`
 }
+
+type GroupUpdateInfoParam struct {
+	GroupId  string `json:"groupId" binding:"required"`
+	Name     string `json:"name"`
+	Describe string `json:"describe"`
+	Tag      string `json:"tag"`
+}
+
+type GroupSetAdminParam struct {
+	GroupId         string   `json:"groupId" binding:"required"`
+	AddAdminList    []string `json:"addAdminList"`
+	RemoveAdminList []string `json:"removeAdminList"`
+}

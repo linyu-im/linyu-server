@@ -78,6 +78,12 @@ func (d *groupDao) UpdateAvatar(db *gorm.DB, groupId string, avatar string) erro
 		Update("avatar", avatar).Error
 }
 
+func (d *groupDao) UpdateInfo(db *gorm.DB, groupId string, fields map[string]interface{}) error {
+	return db.Model(&basicModel.Group{}).
+		Where("id = ?", groupId).
+		Updates(fields).Error
+}
+
 func (d *groupDao) GroupInfoById(db *gorm.DB, userId string, groupId string) *basicModel.Group {
 	result := &basicModel.Group{}
 	if err := db.Table("t_group AS g").

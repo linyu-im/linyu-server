@@ -19,6 +19,7 @@ type Group struct {
 	Name          string              `gorm:"size:128;not null;comment:群名名称" json:"name"`
 	Avatar        string              `gorm:"size:512;comment:群头像URL" json:"avatar"`
 	Describe      string              `gorm:"type:text;comment:群描述" json:"describe"`
+	Tag           string              `gorm:"type:text;comment:群标签" json:"tag"`
 	MemberNum     int                 `gorm:"default:0;comment:成员数" json:"memberNum"`
 	CreatedAt     localtime.LocalTime `gorm:"type:timestamp(3);not null;autoCreateTime;comment:创建时间" json:"createdAt"`
 	UpdatedAt     localtime.LocalTime `gorm:"type:timestamp(3);not null;autoUpdateTime;comment:更新时间" json:"updatedAt"`

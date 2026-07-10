@@ -202,12 +202,41 @@ func (s groupService) RemoveMember(userId string, param *basicParam.GroupRemoveM
 	return err
 }
 
+func (s groupService) SetAdmin(userId string, param *basicParam.GroupSetAdminParam) error {
+	if !s.IsOwnerUser(param.GroupId, userId) {
+		return errors.New("param.error")
+	}
+	// 添加管理员
+	for _, id := range param.AddAdminList {
+		if !s.IsGroupMember(param.GroupId, id) {
+			continue
+		}
+		if err := basicDao.GroupMemberDao.UpdateMemberRole(db.RDB, param.GroupId, id, constant.MemberRole.Admin); err != nil {
+			return err
+		}
+	}
+	// 移除管理员
+	for _, id := range param.RemoveAdminList {
+		if !s.isGroupRole(param.GroupId, id, constant.MemberRole.Admin) {
+			continue
+		}
+		if err := basicDao.GroupMemberDao.UpdateMemberRole(db.RDB, param.GroupId, id, constant.MemberRole.Member); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s groupService) isGroupRole(groupId string, userId string, role string) bool {
 	member := basicDao.GroupMemberDao.GetGroupMemberByGroupIdAndUserId(db.RDB, groupId, userId)
 	if member == nil {
 		return false
 	}
 	return member.MemberRole == role
+}
+
+func (s groupService) IsGroupAdmin(groupId string, userId string) bool {
+	return s.isGroupRole(groupId, userId, constant.MemberRole.Admin)
 }
 
 func (s groupService) GetMemberUserIdsByGroupId(groupId string) []string {
@@ -249,6 +278,19 @@ func (s groupService) GroupMemberList(userId string, param *basicParam.GroupMemb
 		return nil, err
 	}
 	return members, nil
+}
+
+func (s groupService) UpdateInfo(userId string, param *basicParam.GroupUpdateInfoParam) error {
+	if !s.IsOwnerUser(param.GroupId, userId) {
+		return errors.New("param.error")
+	}
+	fields := map[string]interface{}{}
+	if param.Name != "" {
+		fields["name"] = param.Name
+	}
+	fields["describe"] = param.Describe
+	fields["tag"] = param.Tag
+	return basicDao.GroupDao.UpdateInfo(db.RDB, param.GroupId, fields)
 }
 
 func (s groupService) GroupInfo(userId string, groupId string) *result.GroupInfoResult {
