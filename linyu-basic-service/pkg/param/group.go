@@ -49,3 +49,32 @@ type GroupSetAdminParam struct {
 	AddAdminList    []string `json:"addAdminList"`
 	RemoveAdminList []string `json:"removeAdminList"`
 }
+
+type GroupTransferOwnerParam struct {
+	GroupId    string `json:"groupId" binding:"required"`
+	NewOwnerId string `json:"newOwnerId" binding:"required"`
+}
+
+type GroupLeaveParam struct {
+	GroupId string `json:"groupId" binding:"required"`
+}
+
+type GroupNoticeListParam struct {
+	GroupId string `json:"groupId" binding:"required"`
+}
+
+type GroupNoticeAddParam struct {
+	GroupId string `json:"groupId" binding:"required"`
+	Content string `json:"content" binding:"required"`
+	IsTop   bool   `json:"isTop"`
+}
+
+type GroupNoticeUpdateParam struct {
+	NoticeId string `json:"noticeId" binding:"required"`
+	Content  string `json:"content"`
+	IsTop    *bool  `json:"isTop"`
+}
+
+type GroupNoticeDeleteParam struct {
+	NoticeId string `json:"noticeId" binding:"required"`
+}

@@ -26,6 +26,12 @@ func init() {
 	route.Register("POST", "/basic/v1/group/info/update", GroupUpdateInfoHandler)
 	route.Register("POST", "/basic/v1/group/is-admin", GroupIsAdminHandler)
 	route.Register("POST", "/basic/v1/group/set-admin", GroupSetAdminHandler)
+	route.Register("POST", "/basic/v1/group/transfer-owner", GroupTransferOwnerHandler)
+	route.Register("POST", "/basic/v1/group/leave", GroupLeaveHandler)
+	route.Register("POST", "/basic/v1/group/notice/list", GroupNoticeListHandler)
+	route.Register("POST", "/basic/v1/group/notice/add", GroupNoticeAddHandler)
+	route.Register("POST", "/basic/v1/group/notice/update", GroupNoticeUpdateHandler)
+	route.Register("POST", "/basic/v1/group/notice/delete", GroupNoticeDeleteHandler)
 }
 
 // GroupCreateHandler 群聊创建
@@ -206,6 +212,21 @@ func GroupSearchHandler(c *gin.Context) {
 	response.Ok(c, result)
 }
 
+// GroupTransferOwnerHandler 转让群拥有者
+func GroupTransferOwnerHandler(c *gin.Context) {
+	param := &basicParam.GroupTransferOwnerParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.TransferOwner(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
 // GroupSetAdminHandler 设置群管理员
 func GroupSetAdminHandler(c *gin.Context) {
 	param := &basicParam.GroupSetAdminParam{}
@@ -214,6 +235,81 @@ func GroupSetAdminHandler(c *gin.Context) {
 	}
 	currentUserId := c.GetString("userId")
 	err := basicService.GroupService.SetAdmin(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// GroupLeaveHandler 退出群聊
+func GroupLeaveHandler(c *gin.Context) {
+	param := &basicParam.GroupLeaveParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.LeaveGroup(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// GroupNoticeListHandler 群公告列表
+func GroupNoticeListHandler(c *gin.Context) {
+	param := &basicParam.GroupNoticeListParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	data, err := basicService.GroupService.NoticeList(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, data)
+}
+
+// GroupNoticeAddHandler 新增群公告
+func GroupNoticeAddHandler(c *gin.Context) {
+	param := &basicParam.GroupNoticeAddParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.NoticeAdd(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// GroupNoticeUpdateHandler 更新群公告
+func GroupNoticeUpdateHandler(c *gin.Context) {
+	param := &basicParam.GroupNoticeUpdateParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.NoticeUpdate(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// GroupNoticeDeleteHandler 删除群公告
+func GroupNoticeDeleteHandler(c *gin.Context) {
+	param := &basicParam.GroupNoticeDeleteParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.NoticeDelete(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return

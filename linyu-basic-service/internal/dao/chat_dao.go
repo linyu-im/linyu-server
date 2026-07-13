@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
 	"gorm.io/gorm"
 )
@@ -133,4 +134,12 @@ func (d *chatDao) ClearUnreadByIdAndUserId(db *gorm.DB, userId string, chatId st
 	return db.Model(&basicModel.Chat{}).
 		Where("id = ? AND user_id = ?", chatId, userId).
 		UpdateColumn("unread_num", 0).Error
+}
+
+func (d *chatDao) UnscopedDeleteByGroupId(db *gorm.DB, groupId string) error {
+	return db.Unscoped().Where("peer_id = ? AND scene_type = ?", groupId, constant.SceneType.Group).Delete(&basicModel.Chat{}).Error
+}
+
+func (d *chatDao) UnscopedDeleteByUserIdAndPeerId(db *gorm.DB, userId string, peerId string) error {
+	return db.Unscoped().Where("user_id = ? AND peer_id = ?", userId, peerId).Delete(&basicModel.Chat{}).Error
 }

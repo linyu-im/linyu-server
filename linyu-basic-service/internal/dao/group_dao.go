@@ -44,6 +44,11 @@ func (d *groupDao) DeleteById(db *gorm.DB, id string) error {
 	return err
 }
 
+func (d *groupDao) UnscopedDeleteById(db *gorm.DB, id string) error {
+	err := db.Unscoped().Where("id = ?", id).Delete(&basicModel.Group{}).Error
+	return err
+}
+
 func (d *groupDao) GetGroupById(db *gorm.DB, id string) *basicModel.Group {
 	result := &basicModel.Group{}
 	if err := db.First(result, "id = ?", id).Error; err != nil {
@@ -82,6 +87,12 @@ func (d *groupDao) UpdateInfo(db *gorm.DB, groupId string, fields map[string]int
 	return db.Model(&basicModel.Group{}).
 		Where("id = ?", groupId).
 		Updates(fields).Error
+}
+
+func (d *groupDao) UpdateOwnerUserId(db *gorm.DB, groupId string, newOwnerId string) error {
+	return db.Model(&basicModel.Group{}).
+		Where("id = ?", groupId).
+		Update("owner_user_id", newOwnerId).Error
 }
 
 func (d *groupDao) GroupInfoById(db *gorm.DB, userId string, groupId string) *basicModel.Group {

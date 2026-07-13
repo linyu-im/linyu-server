@@ -145,3 +145,7 @@ func (d *contactsDao) UnscopedDeleteByUserAndPeerId(db *gorm.DB, userId string, 
 	err := db.Unscoped().Where("user_id = ? AND peer_id = ?", userId, peerId).Delete(&basicModel.Contacts{}).Error
 	return err
 }
+
+func (d *contactsDao) UnscopedDeleteByGroupId(db *gorm.DB, groupId string) error {
+	return db.Unscoped().Where("peer_id = ? AND peer_type = ?", groupId, constant.ContactsPeerType.Group).Delete(&basicModel.Contacts{}).Error
+}

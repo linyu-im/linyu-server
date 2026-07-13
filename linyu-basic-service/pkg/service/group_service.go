@@ -116,8 +116,16 @@ func (s groupService) GroupDissolve(userId string, param *basicParam.GroupDissol
 		if err := basicDao.GroupMemberDao.UnscopedDeleteMemberByGroupId(tx, param.GroupId); err != nil {
 			return err
 		}
+		// 删除群相关通讯录
+		if err := basicDao.ContactsDao.UnscopedDeleteByGroupId(tx, param.GroupId); err != nil {
+			return err
+		}
+		// 删除群相关聊天列表
+		if err := basicDao.ChatDao.UnscopedDeleteByGroupId(tx, param.GroupId); err != nil {
+			return err
+		}
 		// 删除群聊
-		if err := basicDao.GroupDao.DeleteById(tx, param.GroupId); err != nil {
+		if err := basicDao.GroupDao.UnscopedDeleteById(tx, param.GroupId); err != nil {
 			return err
 		}
 		return nil
@@ -195,6 +203,52 @@ func (s groupService) RemoveMember(userId string, param *basicParam.GroupRemoveM
 		}
 		//更新群员数量
 		if err := basicDao.GroupDao.UpdateMemberNum(tx, param.GroupId); err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+func (s groupService) TransferOwner(userId string, param *basicParam.GroupTransferOwnerParam) error {
+	if !s.IsOwnerUser(param.GroupId, userId) {
+		return errors.New("param.error")
+	}
+	return db.RDB.Transaction(func(tx *gorm.DB) error {
+		// 转让群主
+		if err := basicDao.GroupDao.UpdateOwnerUserId(tx, param.GroupId, param.NewOwnerId); err != nil {
+			return err
+		}
+		// 新群主设为管理员
+		if err := basicDao.GroupMemberDao.UpdateMemberRole(tx, param.GroupId, param.NewOwnerId, constant.MemberRole.Admin); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (s groupService) LeaveGroup(userId string, param *basicParam.GroupLeaveParam) error {
+	if s.IsOwnerUser(param.GroupId, userId) {
+		return nil
+	}
+	if !s.IsGroupMember(param.GroupId, userId) {
+		return errors.New("param.error")
+	}
+	err := db.RDB.Transaction(func(tx *gorm.DB) error {
+		// 移除群成员
+		if err := basicDao.GroupMemberDao.UnscopedRemoveMember(tx, param.GroupId, userId); err != nil {
+			return err
+		}
+		// 更新群员数量
+		if err := basicDao.GroupDao.UpdateMemberNum(tx, param.GroupId); err != nil {
+			return err
+		}
+		// 删除通讯录
+		if err := basicDao.ContactsDao.UnscopedDeleteByUserAndPeerId(tx, userId, param.GroupId); err != nil {
+			return err
+		}
+		// 删除聊天列表
+		if err := basicDao.ChatDao.UnscopedDeleteByUserIdAndPeerId(tx, userId, param.GroupId); err != nil {
 			return err
 		}
 		return nil
@@ -295,6 +349,10 @@ func (s groupService) UpdateInfo(userId string, param *basicParam.GroupUpdateInf
 
 func (s groupService) GroupInfo(userId string, groupId string) *result.GroupInfoResult {
 	group := basicDao.GroupDao.GroupInfoById(db.RDB, userId, groupId)
+	if group == nil {
+		return nil
+	}
+	group.GroupNoticeContent = basicDao.GroupNoticeDao.GetLatestContentByGroupId(db.RDB, groupId)
 	//获取top6群成员
 	tx := basicDao.GroupMemberDao.BuildGroupMemberQuery(db.RDB, groupId)
 	pages, err := response.Paginate[*basicModel.GroupMember](tx, request.PageQuery{
@@ -310,4 +368,72 @@ func (s groupService) GroupInfo(userId string, groupId string) *result.GroupInfo
 		Info: group,
 		Tops: pages.Records,
 	}
+}
+
+func (s groupService) NoticeList(userId string, param *basicParam.GroupNoticeListParam) ([]*basicModel.GroupNotice, error) {
+	if !s.IsGroupMember(param.GroupId, userId) {
+		return nil, errors.New("param.error")
+	}
+	return basicDao.GroupNoticeDao.ListByGroupId(db.RDB, param.GroupId)
+}
+
+func (s groupService) NoticeAdd(userId string, param *basicParam.GroupNoticeAddParam) error {
+	if !s.isGroupRole(param.GroupId, userId, constant.MemberRole.Admin) {
+		return errors.New("param.error")
+	}
+	return db.RDB.Transaction(func(tx *gorm.DB) error {
+		if param.IsTop {
+			if err := basicDao.GroupNoticeDao.ResetIsTopByGroupId(tx, param.GroupId); err != nil {
+				return err
+			}
+		}
+		return basicDao.GroupNoticeDao.Create(tx, &basicModel.GroupNotice{
+			ID:              utils.GenerateSfIDString(),
+			GroupID:         param.GroupId,
+			PublisherUserID: userId,
+			Content:         param.Content,
+			IsTop:           param.IsTop,
+		})
+	})
+}
+
+func (s groupService) NoticeUpdate(userId string, param *basicParam.GroupNoticeUpdateParam) error {
+	notice := basicDao.GroupNoticeDao.GetById(db.RDB, param.NoticeId)
+	if notice == nil {
+		return errors.New("common.data-not-exist")
+	}
+	if !s.isGroupRole(notice.GroupID, userId, constant.MemberRole.Admin) {
+		return errors.New("param.error")
+	}
+	fields := map[string]interface{}{}
+	if param.Content != "" {
+		fields["content"] = param.Content
+	}
+	if param.IsTop != nil && *param.IsTop {
+		fields["is_top"] = true
+	} else if param.IsTop != nil {
+		fields["is_top"] = false
+	}
+	if len(fields) == 0 {
+		return nil
+	}
+	return db.RDB.Transaction(func(tx *gorm.DB) error {
+		if param.IsTop != nil && *param.IsTop {
+			if err := basicDao.GroupNoticeDao.ResetIsTopByGroupId(tx, notice.GroupID); err != nil {
+				return err
+			}
+		}
+		return basicDao.GroupNoticeDao.Update(tx, param.NoticeId, fields)
+	})
+}
+
+func (s groupService) NoticeDelete(userId string, param *basicParam.GroupNoticeDeleteParam) error {
+	notice := basicDao.GroupNoticeDao.GetById(db.RDB, param.NoticeId)
+	if notice == nil {
+		return errors.New("common.data-not-exist")
+	}
+	if !s.isGroupRole(notice.GroupID, userId, constant.MemberRole.Admin) {
+		return errors.New("param.error")
+	}
+	return basicDao.GroupNoticeDao.DeleteById(db.RDB, param.NoticeId)
 }
