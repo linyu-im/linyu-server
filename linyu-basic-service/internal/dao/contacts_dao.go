@@ -141,6 +141,18 @@ func (d *contactsDao) SetIsMuteByUserAndPeerId(db *gorm.DB, isMute bool, userId 
 		Update("is_mute", isMute).Error
 }
 
+func (d *contactsDao) UpdateRemarkByUserAndPeerId(db *gorm.DB, userId string, peerId string, remark string) error {
+	return db.Model(&basicModel.Contacts{}).
+		Where("user_id = ? AND peer_id = ?", userId, peerId).
+		Update("remark", remark).Error
+}
+
+func (d *contactsDao) UpdateTagByUserAndPeerId(db *gorm.DB, userId string, peerId string, tag string) error {
+	return db.Model(&basicModel.Contacts{}).
+		Where("user_id = ? AND peer_id = ?", userId, peerId).
+		Update("tag", tag).Error
+}
+
 func (d *contactsDao) UnscopedDeleteByUserAndPeerId(db *gorm.DB, userId string, peerId string) error {
 	err := db.Unscoped().Where("user_id = ? AND peer_id = ?", userId, peerId).Delete(&basicModel.Contacts{}).Error
 	return err

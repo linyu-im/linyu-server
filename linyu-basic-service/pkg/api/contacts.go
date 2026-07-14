@@ -13,8 +13,10 @@ func init() {
 	route.Register("POST", "/basic/v1/contacts/friend/list", ContactsFriendListHandler)
 	route.Register("POST", "/basic/v1/contacts/group/list", ContactsGroupListHandler)
 	route.Register("POST", "/basic/v1/contacts/enterprise/list", ContactsEnterpriseListHandler)
-	route.Register("POST", "/basic/v1/contacts/rel/delete", ContactsRelDelHandler)
+	route.Register("POST", "/basic/v1/contacts/friend/delete", ContactsRelDelHandler)
 	route.Register("POST", "/basic/v1/contacts/friend/is", ContactsIsFriendHandler)
+	route.Register("POST", "/basic/v1/contacts/remark/update", ContactsUpdateRemarkHandler)
+	route.Register("POST", "/basic/v1/contacts/tag/update", ContactsUpdateTagHandler)
 }
 
 // ContactsFriendListHandler 通讯录好友列表
@@ -50,14 +52,14 @@ func ContactsEnterpriseListHandler(c *gin.Context) {
 	response.Ok(c, list)
 }
 
-// ContactsRelDelHandler 通讯录关系删除
+// ContactsFriendDelHandler 通讯录好友删除
 func ContactsRelDelHandler(c *gin.Context) {
-	param := &basicParam.ContactsRelDeleteParam{}
+	param := &basicParam.ContactsFriendDeleteParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
 		return
 	}
 	currentUserId := c.GetString("userId")
-	err := basicService.ContactsService.ContactsRelDelete(currentUserId, param)
+	err := basicService.ContactsService.ContactsFriendDelete(currentUserId, param)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
@@ -74,4 +76,34 @@ func ContactsIsFriendHandler(c *gin.Context) {
 	currentUserId := c.GetString("userId")
 	b := basicService.ContactsService.IsFriend(currentUserId, param.UserId)
 	response.Ok(c, b)
+}
+
+// ContactsUpdateRemarkHandler 修改好友备注
+func ContactsUpdateRemarkHandler(c *gin.Context) {
+	param := &basicParam.ContactsUpdateRemarkParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.ContactsService.UpdateRemark(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// ContactsUpdateTagHandler 修改好友标签
+func ContactsUpdateTagHandler(c *gin.Context) {
+	param := &basicParam.ContactsUpdateTagParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.ContactsService.UpdateTag(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
 }

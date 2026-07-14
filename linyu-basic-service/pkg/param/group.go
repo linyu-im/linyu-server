@@ -78,3 +78,13 @@ type GroupNoticeUpdateParam struct {
 type GroupNoticeDeleteParam struct {
 	NoticeId string `json:"noticeId" binding:"required"`
 }
+
+type GroupUpdateNickNameParam struct {
+	GroupId       string `json:"groupId" binding:"required"`
+	GroupNickName string `json:"groupNickName"`
+}
+
+type GroupMemberInfoParam struct {
+	GroupId string `json:"groupId" binding:"required"`
+	UserId  string `json:"userId" binding:"required"`
+}

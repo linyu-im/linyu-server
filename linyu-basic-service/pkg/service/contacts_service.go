@@ -6,7 +6,6 @@ import (
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
-	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"gorm.io/gorm"
 )
@@ -46,22 +45,28 @@ func (s *contactsService) IsFriendBothAnd(userId string, peerId string) bool {
 	return basicDao.ContactsDao.IsFriendBothAnd(db.RDB, userId, peerId)
 }
 
-func (s *contactsService) ContactsRelDelete(userId string, param *basicParam.ContactsRelDeleteParam) error {
-	contacts, err := basicDao.ContactsDao.GetById(db.RDB, param.ContactsId)
-	if contacts == nil || contacts.UserID != userId {
+func (s *contactsService) UpdateRemark(userId string, param *basicParam.ContactsUpdateRemarkParam) error {
+	return basicDao.ContactsDao.UpdateRemarkByUserAndPeerId(db.RDB, userId, param.PeerId, param.Remark)
+}
+
+func (s *contactsService) UpdateTag(userId string, param *basicParam.ContactsUpdateTagParam) error {
+	return basicDao.ContactsDao.UpdateTagByUserAndPeerId(db.RDB, userId, param.PeerId, param.Tag)
+}
+
+func (s *contactsService) ContactsFriendDelete(currentUserId string, param *basicParam.ContactsFriendDeleteParam) error {
+	if !s.IsFriend(currentUserId, param.UserId) {
 		return errors.New("param.error")
 	}
-	if contacts.PeerType == constant.ContactsPeerType.Friend {
-		err = db.RDB.Transaction(func(tx *gorm.DB) error {
-			// 双方关系删除
-			if err := basicDao.ContactsDao.UnscopedDeleteByUserAndPeerId(tx, contacts.UserID, contacts.PeerId); err != nil {
-				return err
-			}
-			if err := basicDao.ContactsDao.UnscopedDeleteByUserAndPeerId(tx, contacts.PeerId, contacts.UserID); err != nil {
-				return err
-			}
-			return nil
-		})
-	}
+	err := db.RDB.Transaction(func(tx *gorm.DB) error {
+		// 删除通讯录关系
+		if err := basicDao.ContactsDao.UnscopedDeleteByUserAndPeerId(tx, currentUserId, param.UserId); err != nil {
+			return err
+		}
+		// 删除聊天列表
+		if err := basicDao.ChatDao.UnscopedDeleteByUserIdAndPeerId(tx, currentUserId, param.UserId); err != nil {
+			return err
+		}
+		return nil
+	})
 	return err
 }

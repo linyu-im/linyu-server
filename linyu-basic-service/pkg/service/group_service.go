@@ -353,6 +353,7 @@ func (s groupService) GroupInfo(userId string, groupId string) *result.GroupInfo
 		return nil
 	}
 	group.GroupNoticeContent = basicDao.GroupNoticeDao.GetLatestContentByGroupId(db.RDB, groupId)
+	currentMember := basicDao.GroupMemberDao.GetGroupMemberByGroupIdAndUserId(db.RDB, groupId, userId)
 	//获取top6群成员
 	tx := basicDao.GroupMemberDao.BuildGroupMemberQuery(db.RDB, groupId)
 	pages, err := response.Paginate[*basicModel.GroupMember](tx, request.PageQuery{
@@ -365,8 +366,9 @@ func (s groupService) GroupInfo(userId string, groupId string) *result.GroupInfo
 		return nil
 	}
 	return &result.GroupInfoResult{
-		Info: group,
-		Tops: pages.Records,
+		Info:          group,
+		CurrentMember: currentMember,
+		Tops:          pages.Records,
 	}
 }
 
@@ -436,4 +438,22 @@ func (s groupService) NoticeDelete(userId string, param *basicParam.GroupNoticeD
 		return errors.New("param.error")
 	}
 	return basicDao.GroupNoticeDao.DeleteById(db.RDB, param.NoticeId)
+}
+
+func (s groupService) UpdateNickName(userId string, param *basicParam.GroupUpdateNickNameParam) error {
+	if !s.IsGroupMember(param.GroupId, userId) {
+		return errors.New("param.error")
+	}
+	return basicDao.GroupMemberDao.UpdateGroupNickName(db.RDB, param.GroupId, userId, param.GroupNickName)
+}
+
+func (s groupService) GroupMemberInfo(userId string, param *basicParam.GroupMemberInfoParam) (*basicModel.GroupMember, error) {
+	if !s.IsGroupMember(param.GroupId, userId) {
+		return nil, errors.New("param.error")
+	}
+	member := basicDao.GroupMemberDao.GetGroupMemberByGroupIdAndUserId(db.RDB, param.GroupId, param.UserId)
+	if member == nil {
+		return nil, errors.New("common.data-not-exist")
+	}
+	return member, nil
 }

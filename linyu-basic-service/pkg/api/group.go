@@ -32,6 +32,8 @@ func init() {
 	route.Register("POST", "/basic/v1/group/notice/add", GroupNoticeAddHandler)
 	route.Register("POST", "/basic/v1/group/notice/update", GroupNoticeUpdateHandler)
 	route.Register("POST", "/basic/v1/group/notice/delete", GroupNoticeDeleteHandler)
+	route.Register("POST", "/basic/v1/group/nickname/update", GroupUpdateNickNameHandler)
+	route.Register("POST", "/basic/v1/group/member/info", GroupMemberInfoHandler)
 }
 
 // GroupCreateHandler 群聊创建
@@ -315,4 +317,34 @@ func GroupNoticeDeleteHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c)
+}
+
+// GroupUpdateNickNameHandler 修改群昵称
+func GroupUpdateNickNameHandler(c *gin.Context) {
+	param := &basicParam.GroupUpdateNickNameParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	err := basicService.GroupService.UpdateNickName(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// GroupMemberInfoHandler 获取指定成员信息
+func GroupMemberInfoHandler(c *gin.Context) {
+	param := &basicParam.GroupMemberInfoParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	member, err := basicService.GroupService.GroupMemberInfo(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, member)
 }

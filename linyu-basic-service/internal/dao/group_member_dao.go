@@ -73,6 +73,12 @@ func (d *groupMemberDao) UpdateMemberRole(db *gorm.DB, groupId string, userId st
 		Update("member_role", role).Error
 }
 
+func (d *groupMemberDao) UpdateGroupNickName(db *gorm.DB, groupId string, userId string, nickName string) error {
+	return db.Model(&basicModel.GroupMember{}).
+		Where("group_id = ? AND user_id = ?", groupId, userId).
+		Update("group_nick_name", nickName).Error
+}
+
 func (d *groupMemberDao) BuildGroupMemberQuery(db *gorm.DB, id string) *gorm.DB {
 	return db.Table("t_group_member AS gm").
 		Select("gm.*, u.username, e.emotion_name AS emotion_name, e.url AS emotion_url").
