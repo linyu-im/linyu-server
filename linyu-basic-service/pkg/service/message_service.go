@@ -64,6 +64,8 @@ func (s messageService) SendMessage(userId string, param *basicParam.SendMessage
 		KeywordContent: content.GetKeywordContent(),
 		MsgType:        param.MsgType,
 		FromType:       constant.MessageFromType.User,
+		IsShowTime:     param.IsShowTime,
+		QuoteMsgId:     param.QuoteMsgId,
 	}
 	if err != nil {
 		message.Status = "failed"

@@ -7,10 +7,12 @@ import (
 )
 
 type SendMessageToUserParam struct {
-	SessionId string          `json:"sessionId" binding:"required"`
-	MsgType   string          `json:"msgType" binding:"required"`
-	Content   json.RawMessage `json:"content" binding:"required"`
-	Mentions  []struct {
+	SessionId  string          `json:"sessionId" binding:"required"`
+	MsgType    string          `json:"msgType" binding:"required"`
+	Content    json.RawMessage `json:"content" binding:"required"`
+	IsShowTime bool            `json:"isShowTime"`
+	QuoteMsgId string          `json:"quoteMsgId"`
+	Mentions   []struct {
 		Id          string `json:"id"`
 		MentionType string `json:"mentionType"`
 	} `json:"mentions"`
