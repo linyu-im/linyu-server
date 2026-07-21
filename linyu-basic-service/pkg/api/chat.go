@@ -16,6 +16,7 @@ func init() {
 	route.Register("POST", "/basic/v1/chat/mute", ChatMuteHandler)
 	route.Register("POST", "/basic/v1/chat/delete", ChatDeleteHandler)
 	route.Register("POST", "/basic/v1/chat/mark-read", ChatMarkReadHandler)
+	route.Register("POST", "/basic/v1/chat/active-session", ChatSetActiveSessionHandler)
 }
 
 // ChatListHandler 聊天会话列表
@@ -97,6 +98,24 @@ func ChatMarkReadHandler(c *gin.Context) {
 	}
 	currentUserId := c.GetString("userId")
 	err := basicService.ChatService.MarkRead(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
+}
+
+// ChatSetActiveSessionHandler 设置当前设备激活的会话
+func ChatSetActiveSessionHandler(c *gin.Context) {
+	param := &basicParam.ChatSetActiveSessionParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	err := basicService.ChatService.SetActiveSession(
+		c.GetString("userId"),
+		c.GetString("device"),
+		param.ActiveSessionId,
+	)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return

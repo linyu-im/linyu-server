@@ -13,6 +13,7 @@ type Cache interface {
 	Del(key string) error
 	Exists(key string) (bool, error)
 	SAdd(key string, expiration time.Duration, members ...interface{}) error
+	SRem(key string, members ...interface{}) error
 	SMembers(key string) ([]string, error)
 }
 

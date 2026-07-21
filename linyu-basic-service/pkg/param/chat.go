@@ -22,3 +22,7 @@ type ChatDeleteParam struct {
 type ChatMarkReadParam struct {
 	ChatId string `json:"chatId" binding:"required"`
 }
+
+type ChatSetActiveSessionParam struct {
+	ActiveSessionId string `json:"activeSessionId"`
+}

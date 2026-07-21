@@ -1,10 +1,15 @@
 package ws
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/RussellLuo/timingwheel"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/logger"
+	"go.uber.org/zap"
 )
 
 var Manager = NewClientManager()
@@ -33,35 +38,66 @@ func NewClientManager() *ClientManager {
 
 func (m *ClientManager) Join(userId string, client *Client) {
 	m.lock.Lock()
-	defer m.lock.Unlock()
 
 	if m.Users[userId] == nil {
 		m.Users[userId] = make(map[string]*Client)
 	}
 	if old, ok := m.Users[userId][client.Device]; ok {
-		_ = old.Conn.Close()
+		if old.Conn != nil {
+			_ = old.Conn.Close()
+		}
 	}
 	m.Users[userId][client.Device] = client
+	m.lock.Unlock()
+
+	if err := db.CacheDB.SAdd(m.onlineDevicesKey(userId), 0, client.Device); err != nil {
+		logger.Log.Error("failed to cache online device",
+			zap.String("userId", userId),
+			zap.String("device", client.Device),
+			zap.Error(err))
+	}
 }
 
 func (m *ClientManager) Leave(userId string, device string) {
 	m.lock.Lock()
-	defer m.lock.Unlock()
-	m.LeaveUnlock(userId, device)
+	removed := m.LeaveUnlock(userId, device)
+	m.lock.Unlock()
+
+	if removed {
+		m.removeOnlineDeviceCache(userId, device)
+	}
 }
 
-func (m *ClientManager) LeaveUnlock(userId string, device string) {
+func (m *ClientManager) LeaveUnlock(userId string, device string) bool {
 	devices, ok := m.Users[userId]
 	if !ok {
-		return
+		return false
 	}
 	if client, ok := devices[device]; ok {
-		_ = client.Conn.Close()
+		if client.Conn != nil {
+			_ = client.Conn.Close()
+		}
 		delete(devices, device)
+	} else {
+		return false
 	}
 
 	if len(devices) == 0 {
 		delete(m.Users, userId)
+	}
+	return true
+}
+
+func (m *ClientManager) onlineDevicesKey(userId string) string {
+	return fmt.Sprintf(constant.RedisKey.UserOnline, userId)
+}
+
+func (m *ClientManager) removeOnlineDeviceCache(userId string, device string) {
+	if err := db.CacheDB.SRem(m.onlineDevicesKey(userId), device); err != nil {
+		logger.Log.Error("failed to remove cached online device",
+			zap.String("userId", userId),
+			zap.String("device", device),
+			zap.Error(err))
 	}
 }
 
@@ -173,10 +209,19 @@ func (m *ClientManager) CleanExpiredClients() bool {
 	m.lock.RUnlock()
 
 	m.lock.Lock()
-	defer m.lock.Unlock()
-
+	removedClients := make([]struct {
+		userId   string
+		deviceId string
+	}, 0, len(expiredClients))
 	for _, ec := range expiredClients {
-		m.LeaveUnlock(ec.userId, ec.deviceId)
+		if m.LeaveUnlock(ec.userId, ec.deviceId) {
+			removedClients = append(removedClients, ec)
+		}
+	}
+	m.lock.Unlock()
+
+	for _, ec := range removedClients {
+		m.removeOnlineDeviceCache(ec.userId, ec.deviceId)
 	}
 	return true
 }

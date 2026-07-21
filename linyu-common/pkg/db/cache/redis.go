@@ -78,6 +78,10 @@ func (r *RedisClient) SAdd(key string, ttl time.Duration, members ...interface{}
 	return nil
 }
 
+func (r *RedisClient) SRem(key string, members ...interface{}) error {
+	return r.client.SRem(r.ctx, key, members...).Err()
+}
+
 func (r *RedisClient) SMembers(key string) ([]string, error) {
 	return r.client.SMembers(r.ctx, key).Result()
 }

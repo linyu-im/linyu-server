@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
@@ -38,7 +39,6 @@ func (s *chatService) SaveOrUpdateUserIncUnreadNum(userId string, message *basic
 		return nil, err
 	}
 	return []string{userId, message.ToID}, nil
-
 }
 
 func (s *chatService) SaveOrUpdateGroupIncUnreadNum(userId string, message *basicModel.Message) ([]string, error) {
@@ -72,8 +72,33 @@ func (s *chatService) SaveOrUpdateIncUnreadNum(userId, peerId string, message *b
 		})
 	}
 	chat.LastMsgContent = message
-	chat.UnreadNum = chat.UnreadNum + 1
+	isActiveSession := s.isUserActiveSession(userId, message.SessionID)
+	if isActiveSession {
+		chat.UnreadNum = 0
+	} else {
+		chat.UnreadNum++
+	}
 	return basicDao.ChatDao.Update(db.RDB, chat)
+}
+
+func (s *chatService) isUserActiveSession(userId string, sessionId string) bool {
+	if sessionId == "" {
+		return false
+	}
+
+	devices, err := db.CacheDB.SMembers(fmt.Sprintf(constant.RedisKey.UserOnline, userId))
+	if err != nil || len(devices) == 0 {
+		return false
+	}
+	for _, device := range devices {
+		activeSessionId, err := db.CacheDB.Get(
+			fmt.Sprintf(constant.RedisKey.UserActiveSession, userId, device),
+		)
+		if err == nil && activeSessionId == sessionId {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *chatService) SaveOrUpdate(userId, peerId string, message *basicModel.Message) error {
@@ -132,4 +157,12 @@ func (s *chatService) ChatDelete(userId string, param *basicParam.ChatDeletePara
 
 func (s *chatService) MarkRead(userId string, param *basicParam.ChatMarkReadParam) error {
 	return basicDao.ChatDao.ClearUnreadByIdAndUserId(db.RDB, userId, param.ChatId)
+}
+
+func (s *chatService) SetActiveSession(userId string, device string, activeSessionId string) error {
+	key := fmt.Sprintf(constant.RedisKey.UserActiveSession, userId, device)
+	if activeSessionId == "" {
+		return db.CacheDB.Del(key)
+	}
+	return db.CacheDB.Set(key, activeSessionId, 0)
 }

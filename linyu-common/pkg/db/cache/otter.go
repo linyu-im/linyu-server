@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
@@ -14,6 +15,7 @@ var LongPeriod = time.Hour * 24 * 365 * 12
 
 type OtterClient struct {
 	cache otter.CacheWithVariableTTL[string, string]
+	mu    sync.Mutex
 }
 
 func NewOtterClient() *OtterClient {
@@ -100,6 +102,9 @@ func (o *OtterClient) GetObject(key string, dest interface{}) error {
 }
 
 func (o *OtterClient) SAdd(key string, expiration time.Duration, members ...interface{}) error {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
 	var current map[string]struct{}
 	val, ok := o.cache.Get(key)
 	if ok {
@@ -126,6 +131,35 @@ func (o *OtterClient) SAdd(key string, expiration time.Duration, members ...inte
 
 	o.cache.Set(key, string(data), expiration)
 
+	return nil
+}
+
+func (o *OtterClient) SRem(key string, members ...interface{}) error {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	val, ok := o.cache.Get(key)
+	if !ok {
+		return nil
+	}
+
+	var current map[string]struct{}
+	if err := json.Unmarshal([]byte(val), &current); err != nil {
+		return err
+	}
+	for _, member := range members {
+		delete(current, fmt.Sprintf("%v", member))
+	}
+	if len(current) == 0 {
+		o.cache.Delete(key)
+		return nil
+	}
+
+	data, err := json.Marshal(current)
+	if err != nil {
+		return err
+	}
+	o.cache.Set(key, string(data), LongPeriod)
 	return nil
 }
 
