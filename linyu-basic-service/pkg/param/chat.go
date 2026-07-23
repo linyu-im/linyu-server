@@ -24,5 +24,5 @@ type ChatMarkReadParam struct {
 }
 
 type ChatSetActiveSessionParam struct {
-	ActiveSessionId string `json:"activeSessionId"`
+	ActiveSessionIds []string `json:"activeSessionIds"`
 }

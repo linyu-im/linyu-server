@@ -91,11 +91,18 @@ func (s *chatService) isUserActiveSession(userId string, sessionId string) bool 
 		return false
 	}
 	for _, device := range devices {
-		activeSessionId, err := db.CacheDB.Get(
+		var activeSessionIds []string
+		err := db.CacheDB.GetObject(
 			fmt.Sprintf(constant.RedisKey.UserActiveSession, userId, device),
+			&activeSessionIds,
 		)
-		if err == nil && activeSessionId == sessionId {
-			return true
+		if err != nil {
+			continue
+		}
+		for _, activeSessionId := range activeSessionIds {
+			if activeSessionId == sessionId {
+				return true
+			}
 		}
 	}
 	return false
@@ -159,10 +166,10 @@ func (s *chatService) MarkRead(userId string, param *basicParam.ChatMarkReadPara
 	return basicDao.ChatDao.ClearUnreadByIdAndUserId(db.RDB, userId, param.ChatId)
 }
 
-func (s *chatService) SetActiveSession(userId string, device string, activeSessionId string) error {
+func (s *chatService) SetActiveSession(userId string, device string, activeSessionIds []string) error {
 	key := fmt.Sprintf(constant.RedisKey.UserActiveSession, userId, device)
-	if activeSessionId == "" {
+	if len(activeSessionIds) == 0 {
 		return db.CacheDB.Del(key)
 	}
-	return db.CacheDB.Set(key, activeSessionId, 0)
+	return db.CacheDB.SetObject(key, activeSessionIds, 0)
 }

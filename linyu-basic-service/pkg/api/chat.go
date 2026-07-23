@@ -114,7 +114,7 @@ func ChatSetActiveSessionHandler(c *gin.Context) {
 	err := basicService.ChatService.SetActiveSession(
 		c.GetString("userId"),
 		c.GetString("device"),
-		param.ActiveSessionId,
+		param.ActiveSessionIds,
 	)
 	if err != nil {
 		response.Fail(c, err.Error())
