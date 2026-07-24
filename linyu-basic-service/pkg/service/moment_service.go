@@ -155,3 +155,22 @@ func (s momentService) MomentCommentDel(userId string, commentId string) error {
 func (s momentService) MomentDelete(userId string, momentId string) error {
 	return basicDao.MomentDao.DeleteByUserIdAndMomentId(db.RDB, userId, momentId)
 }
+
+func (s momentService) UpdateBackground(userId string, backgroundUrl string) error {
+	return basicDao.MomentSetDao.UpdateBackground(db.RDB, userId, backgroundUrl)
+}
+
+func (s momentService) GetSetting(userId string) *basicModel.MomentSetting {
+	setting := basicDao.MomentSetDao.GetByUserId(db.RDB, userId)
+	if setting != nil {
+		return setting
+	}
+	setting = &basicModel.MomentSetting{
+		UserID:     userId,
+		ExpireDays: 9999,
+	}
+	if err := basicDao.MomentSetDao.Create(db.RDB, setting); err != nil {
+		return nil
+	}
+	return setting
+}

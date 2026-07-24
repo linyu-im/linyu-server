@@ -1,11 +1,15 @@
 package api
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"github.com/gin-gonic/gin"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
 	basicService "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/service"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/storage"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 )
 
@@ -17,6 +21,8 @@ func init() {
 	route.Register("POST", "/basic/v1/moment/like/cancel", MomentLikeCancelHandler)
 	route.Register("POST", "/basic/v1/moment/comment/add", MomentCommentAddHandler)
 	route.Register("POST", "/basic/v1/moment/comment/del", MomentCommentDelHandler)
+	route.Register("POST", "/basic/v1/moment/background/upload", UploadMomentBackgroundHandler)
+	route.Register("POST", "/basic/v1/moment/setting/get", GetMomentSettingHandler)
 }
 
 func MomentCreateHandler(c *gin.Context) {
@@ -115,4 +121,56 @@ func MomentCommentDelHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c)
+}
+
+// UploadMomentBackgroundHandler 上传过往背景图片
+func UploadMomentBackgroundHandler(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		response.Fail(c, "param.file-not-found")
+		return
+	}
+
+	const maxFileSize = 10 * 1024 * 1024
+	if file.Size > maxFileSize {
+		response.Fail(c, "file too large, max 10MB")
+		return
+	}
+
+	currentUserId := c.GetString("userId")
+	ext := filepath.Ext(file.Filename)
+	fileKey := fmt.Sprintf("moment/%s%s", currentUserId, ext)
+
+	src, err := file.Open()
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	defer src.Close()
+
+	url, err := storage.S.Upload(fileKey, src)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+
+	if err := basicService.MomentService.UpdateBackground(currentUserId, url); err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, url)
+}
+
+// GetMomentSettingHandler 查询过往设置
+func GetMomentSettingHandler(c *gin.Context) {
+	param := &basicParam.MomentSettingParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	setting := basicService.MomentService.GetSetting(param.UserId)
+	if setting == nil {
+		response.Ok(c, nil)
+		return
+	}
+	response.Ok(c, setting)
 }

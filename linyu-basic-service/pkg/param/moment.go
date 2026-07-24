@@ -39,3 +39,7 @@ type MomentCommentDelParam struct {
 type MomentDeleteParam struct {
 	MomentId string `json:"momentId" binding:"required"`
 }
+
+type MomentSettingParam struct {
+	UserId string `json:"userId" binding:"required"`
+}

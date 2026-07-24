@@ -37,46 +37,58 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 		Joins("LEFT JOIN t_user u ON u.id = t_moment.user_id AND u.deleted_at IS NULL").
 		Where("t_moment.deleted_at IS NULL")
 
-	// 查看自己
+	// 查看自己全部（不过滤可见性和过期）
 	if viewUserId == userId {
-		tx = tx.Where("t_moment.user_id = ?", userId).
+		return tx.Where("t_moment.user_id = ?", userId).
 			Order("t_moment.created_at DESC")
-		return tx
 	}
-
-	// 过期规则
-	now := time.Now()
-	tx = tx.Where(`(
-			ms.expire_days IS NULL
-			OR ms.expire_days = 0
-			OR (
-				ms.expire_days > 0
-				AND t_moment.created_at >= DATE_SUB(?, INTERVAL ms.expire_days DAY)
-			))
-		`, now)
 
 	// 查看指定好友
 	if viewUserId != "" {
-
-		tx = tx.Where("t_moment.user_id = ?", viewUserId)
-
-	} else {
-
-		// 查看所有好友朋友圈和自己的
+		// 过期规则
+		now := time.Now()
 		tx = tx.Where(`(
-			t_moment.user_id = ?
-            OR
-			t_moment.user_id IN (
-				SELECT peer_id
-				FROM t_contacts
-				WHERE user_id = ?
-			))
-		`, userId, userId)
-
+				ms.expire_days IS NULL
+				OR ms.expire_days = 0
+				OR (
+					ms.expire_days > 0
+					AND t_moment.created_at >= DATE_SUB(?, INTERVAL ms.expire_days DAY)
+				))
+			`, now)
+		tx = tx.Where("t_moment.user_id = ?", viewUserId)
+		tx = d.buildVisibilityWhere(tx, userId)
+		return tx.Order("t_moment.created_at DESC")
 	}
 
-	// 可见性规则
-	tx = tx.Where(`
+	// 查看全部：自己的 + 好友的（自己的不受可见性和过期限制）
+	now := time.Now()
+	tx = tx.Where(`(
+		t_moment.user_id = ?
+		OR (
+			t_moment.user_id IN (
+				SELECT peer_id FROM t_contacts WHERE user_id = ?
+			)
+			AND (
+				ms.expire_days IS NULL
+				OR ms.expire_days = 0
+				OR (
+					ms.expire_days > 0
+					AND t_moment.created_at >= DATE_SUB(?, INTERVAL ms.expire_days DAY)
+				)
+			)
+		)
+	)`, userId, userId, now)
+	tx = d.buildVisibilityWhere(tx, userId)
+
+	return tx.Order("t_moment.created_at DESC")
+}
+
+func (d momentDao) DeleteByUserIdAndMomentId(db *gorm.DB, userId string, momentId string) error {
+	return db.Delete(&basicModel.Moment{}, "user_id = ? AND id = ?", userId, momentId).Error
+}
+
+func (d momentDao) buildVisibilityWhere(tx *gorm.DB, userId string) *gorm.DB {
+	return tx.Where(`
 		(
 			t_moment.user_id = ?
 			OR
@@ -103,10 +115,4 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 			)
 		)
 	`, userId, userId, userId)
-
-	return tx.Order("t_moment.created_at DESC")
-}
-
-func (d momentDao) DeleteByUserIdAndMomentId(db *gorm.DB, userId string, momentId string) error {
-	return db.Delete(&basicModel.Moment{}, "user_id = ? AND id = ?", userId, momentId).Error
 }
