@@ -153,7 +153,16 @@ func (s applyService) ApplyCancel(userId string, param *basicParam.ApplyCancelPa
 }
 
 func (s applyService) ApplyFriendList(userId string) ([]*basicModel.Apply, error) {
-	return basicDao.ApplyDao.ApplyFriendList(db.RDB, userId)
+	list, err := basicDao.ApplyDao.ApplyFriendList(db.RDB, userId)
+	if err != nil {
+		return nil, err
+	}
+	lastReadId := "0"
+	if len(list) > 0 {
+		lastReadId = list[0].ID
+	}
+	_ = basicDao.UserBadgeDao.UpsertLastReadID(db.RDB, userId, constant.BadgeCode.NewFriend, lastReadId)
+	return list, nil
 }
 
 func (s applyService) ApplyGroupList(userId string) ([]*basicModel.Apply, error) {
@@ -161,7 +170,7 @@ func (s applyService) ApplyGroupList(userId string) ([]*basicModel.Apply, error)
 }
 
 func createContactIfNotExist(tx *gorm.DB, userID, peerID string) error {
-	if !basicDao.ContactsDao.IsContactByUserAndPeer(tx, userID, peerID) {
+	if !basicDao.ContactsDao.IsFriend(tx, userID, peerID) {
 		return basicDao.ContactsDao.Create(tx, &basicModel.Contacts{
 			ID:       utils.GenerateSfIDString(),
 			UserID:   userID,

@@ -85,6 +85,27 @@ var ContactsPeerType = contactsPeerType{
 	Enterprise: "enterprise",
 }
 
+// ------------------badge相关------------------
+type badgeCode struct {
+	NewFriend   string // 新的好友
+	GroupNotion string // 群聊通知
+}
+
+// BadgeCode 用户红点编码
+var BadgeCode = badgeCode{
+	NewFriend:   "new-friend",
+	GroupNotion: "group-notion",
+}
+
+func (c badgeCode) Validate(v string) bool {
+	switch v {
+	case c.NewFriend, c.GroupNotion:
+		return true
+	default:
+		return false
+	}
+}
+
 // ------------------group-member相关------------------
 type memberRole struct {
 	Member string // 普通成员
@@ -183,6 +204,65 @@ var EnterpriseMemberRole = enterpriseMemberRole{
 func (c enterpriseMemberRole) Validate(v string) bool {
 	switch v {
 	case c.Owner, c.Admin, c.SubAdmin, c.Leader, c.Member:
+		return true
+	default:
+		return false
+	}
+}
+
+// ------------------notice相关------------------
+type noticeType struct {
+	Group string // 群通知
+}
+
+// NoticeType 通知类型
+var NoticeType = noticeType{
+	Group: "group",
+}
+
+func (c noticeType) Validate(v string) bool {
+	switch v {
+	case c.Group:
+		return true
+	default:
+		return false
+	}
+}
+
+type noticeSource struct {
+	System string // 系统
+}
+
+// NoticeSource 通知来源
+var NoticeSource = noticeSource{
+	System: "system",
+}
+
+func (c noticeSource) Validate(v string) bool {
+	switch v {
+	case c.System:
+		return true
+	default:
+		return false
+	}
+}
+
+type groupNoticeStatus struct {
+	Dissolve string // 群解散
+	Remove   string // 移除群成员
+	Leave    string // 退出群聊
+}
+
+// GroupNoticeStatus 群通知状态
+var GroupNoticeStatus = groupNoticeStatus{
+	Dissolve: "dissolve",
+	Remove:   "remove",
+	Leave:    "leave",
+}
+
+func (c groupNoticeStatus) Validate(v string) bool {
+	switch v {
+	case c.Dissolve, c.Remove, c.Leave:
 		return true
 	default:
 		return false

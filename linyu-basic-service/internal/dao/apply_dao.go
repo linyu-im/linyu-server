@@ -42,6 +42,7 @@ func (d *applyDao) ApplyFriendList(db *gorm.DB, userId string) ([]*basicModel.Ap
 		Select("t_apply.*, t_user.username AS peer_name").
 		Joins("LEFT JOIN t_user ON t_apply.peer_id = t_user.id").
 		Where("(user_id = ? OR peer_id = ?) AND type = ?", userId, userId, constant.ApplyType.Friend).
+		Order("t_apply.created_at DESC").
 		Find(&applyList).Error; err != nil {
 		return nil, err
 	}
@@ -76,4 +77,18 @@ func (d *applyDao) ApplyGroupList(db *gorm.DB, userId string) ([]*basicModel.App
 		return nil, err
 	}
 	return applyList, nil
+}
+
+func (d *applyDao) CountFriendApplyAfterLastReadId(db *gorm.DB, userId string, lastReadId string) (int64, error) {
+	tx := db.Table("t_apply").
+		Where("(user_id = ? OR peer_id = ?) AND type = ?", userId, userId, constant.ApplyType.Friend).
+		Where("NOT (user_id = ? AND status = ?)", userId, constant.ApplyStatus.Wait)
+	if lastReadId != "" && lastReadId != "0" {
+		tx = tx.Where("id > ?", lastReadId)
+	}
+	var count int64
+	if err := tx.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
 }

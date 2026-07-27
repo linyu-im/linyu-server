@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 
@@ -111,6 +112,13 @@ func (s groupService) GroupDissolve(userId string, param *basicParam.GroupDissol
 	if !s.IsOwnerUser(param.GroupId, userId) {
 		return errors.New("param.error")
 	}
+	// 先获取群成员和群信息，用于后续发送通知
+	memberIds := s.GetMemberUserIdsByGroupId(param.GroupId)
+	extra, _ := json.Marshal(basicModel.GroupNoticeExtra{
+		GroupID: param.GroupId,
+		Status:  constant.GroupNoticeStatus.Dissolve,
+	})
+
 	err := db.RDB.Transaction(func(tx *gorm.DB) error {
 		// 清空群成员
 		if err := basicDao.GroupMemberDao.UnscopedDeleteMemberByGroupId(tx, param.GroupId); err != nil {
@@ -125,12 +133,28 @@ func (s groupService) GroupDissolve(userId string, param *basicParam.GroupDissol
 			return err
 		}
 		// 删除群聊
-		if err := basicDao.GroupDao.UnscopedDeleteById(tx, param.GroupId); err != nil {
+		if err := basicDao.GroupDao.DeleteById(tx, param.GroupId); err != nil {
 			return err
 		}
 		return nil
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	// 给每个群成员发送解散通知（失败不影响主流程）
+	var notices []*basicModel.Notice
+	for _, memberId := range memberIds {
+		notices = append(notices, &basicModel.Notice{
+			ID:           utils.GenerateSfIDString(),
+			UserID:       memberId,
+			SenderID:     "system",
+			Type:         constant.NoticeType.Group,
+			NoticeSource: constant.NoticeSource.System,
+			Extra:        extra,
+		})
+	}
+	_ = basicDao.NoticeDao.CreateBatch(db.RDB, notices)
+	return nil
 }
 
 func (s groupService) IsOwnerUser(groupId string, userId string) bool {
@@ -192,14 +216,27 @@ func (s groupService) RemoveMember(userId string, param *basicParam.GroupRemoveM
 	if !s.isGroupRole(param.GroupId, userId, constant.MemberRole.Admin) {
 		return errors.New("param.error")
 	}
+
+	var removedIds []string
+	isOwner := s.IsOwnerUser(param.GroupId, userId)
 	err := db.RDB.Transaction(func(tx *gorm.DB) error {
 		for _, id := range param.GroupMemberList {
-			// 移除普通成员
-			if s.isGroupRole(param.GroupId, id, constant.MemberRole.Member) {
-				if err := basicDao.GroupMemberDao.UnscopedRemoveMember(tx, param.GroupId, id); err != nil {
-					return err
-				}
+			// 群主可移除任何人，管理员只能移除普通成员
+			if !isOwner && !s.isGroupRole(param.GroupId, id, constant.MemberRole.Member) {
+				continue
 			}
+			if err := basicDao.GroupMemberDao.UnscopedRemoveMember(tx, param.GroupId, id); err != nil {
+				return err
+			}
+			// 删除通讯录
+			if err := basicDao.ContactsDao.UnscopedDeleteByUserAndPeerId(tx, id, param.GroupId); err != nil {
+				return err
+			}
+			// 删除聊天列表
+			if err := basicDao.ChatDao.UnscopedDeleteByUserIdAndPeerId(tx, id, param.GroupId); err != nil {
+				return err
+			}
+			removedIds = append(removedIds, id)
 		}
 		//更新群员数量
 		if err := basicDao.GroupDao.UpdateMemberNum(tx, param.GroupId); err != nil {
@@ -207,7 +244,29 @@ func (s groupService) RemoveMember(userId string, param *basicParam.GroupRemoveM
 		}
 		return nil
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	// 给被移除成员发送通知（失败不影响主流程）
+	if len(removedIds) > 0 {
+		extra, _ := json.Marshal(basicModel.GroupNoticeExtra{
+			GroupID: param.GroupId,
+			Status:  constant.GroupNoticeStatus.Remove,
+		})
+		var notices []*basicModel.Notice
+		for _, memberId := range removedIds {
+			notices = append(notices, &basicModel.Notice{
+				ID:           utils.GenerateSfIDString(),
+				UserID:       memberId,
+				SenderID:     "system",
+				Type:         constant.NoticeType.Group,
+				NoticeSource: constant.NoticeSource.System,
+				Extra:        extra,
+			})
+		}
+		_ = basicDao.NoticeDao.CreateBatch(db.RDB, notices)
+	}
+	return nil
 }
 
 func (s groupService) TransferOwner(userId string, param *basicParam.GroupTransferOwnerParam) error {
@@ -234,6 +293,7 @@ func (s groupService) LeaveGroup(userId string, param *basicParam.GroupLeavePara
 	if !s.IsGroupMember(param.GroupId, userId) {
 		return errors.New("param.error")
 	}
+	adminIds := basicDao.GroupMemberDao.GetAdminUserIdsByGroupId(db.RDB, param.GroupId)
 	err := db.RDB.Transaction(func(tx *gorm.DB) error {
 		// 移除群成员
 		if err := basicDao.GroupMemberDao.UnscopedRemoveMember(tx, param.GroupId, userId); err != nil {
@@ -253,7 +313,31 @@ func (s groupService) LeaveGroup(userId string, param *basicParam.GroupLeavePara
 		}
 		return nil
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	// 通知群管理员（失败不影响主流程）
+	extra, _ := json.Marshal(basicModel.GroupNoticeExtra{
+		GroupID:     param.GroupId,
+		Status:      constant.GroupNoticeStatus.Leave,
+		LeaveUserID: userId,
+	})
+	var notices []*basicModel.Notice
+	for _, adminId := range adminIds {
+		if adminId == userId {
+			continue
+		}
+		notices = append(notices, &basicModel.Notice{
+			ID:           utils.GenerateSfIDString(),
+			UserID:       adminId,
+			SenderID:     "system",
+			Type:         constant.NoticeType.Group,
+			NoticeSource: constant.NoticeSource.System,
+			Extra:        extra,
+		})
+	}
+	_ = basicDao.NoticeDao.CreateBatch(db.RDB, notices)
+	return nil
 }
 
 func (s groupService) SetAdmin(userId string, param *basicParam.GroupSetAdminParam) error {

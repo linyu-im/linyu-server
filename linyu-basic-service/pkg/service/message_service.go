@@ -11,6 +11,7 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/event"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/event/eventbus"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 )
@@ -68,6 +69,7 @@ func (s messageService) SendMessage(userId string, param *basicParam.SendMessage
 		QuoteMsgId:     param.QuoteMsgId,
 	}
 	if err != nil {
+		message.CreatedAt = localtime.Now()
 		message.Status = "failed"
 		message.FailReason = err.Error()
 		_ = ChatService.SaveOrUpdate(userId, message.ToID, message)
