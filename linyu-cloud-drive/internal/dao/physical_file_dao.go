@@ -28,6 +28,15 @@ func (d *physicalFileDao) FileRefIncById(db *gorm.DB, id string) error {
 	return err
 }
 
+func (d *physicalFileDao) FileRefDecById(db *gorm.DB, id string) error {
+	if id == "" {
+		return nil
+	}
+	return db.Model(&driveModel.PhysicalFile{}).
+		Where("id = ? AND ref_count > 0", id).
+		Update("ref_count", gorm.Expr("ref_count - ?", 1)).Error
+}
+
 func (d *physicalFileDao) Create(db *gorm.DB, file *driveModel.PhysicalFile) error {
 	if err := db.Create(file).Error; err != nil {
 		return err

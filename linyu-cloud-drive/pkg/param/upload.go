@@ -7,5 +7,4 @@ type UploadFileInfoParam struct {
 	ParentID   string `json:"parentId" binding:"required"`
 	TotalChunk int    `json:"totalChunk" binding:"required"`
 	SpaceID    string `json:"spaceId" binding:"required"`
-	SpaceType  string `json:"spaceType" binding:"required"`
 }

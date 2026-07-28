@@ -2,6 +2,9 @@ package service
 
 import (
 	"errors"
+	"path/filepath"
+	"strings"
+
 	basicService "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/service"
 	driveDao "github.com/linyu-im/linyu-server/linyu-cloud-drive/internal/dao"
 	driveModel "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/model"
@@ -24,11 +27,11 @@ func (s spaceFileService) CreateFileFromPhysicalFile(userId string,
 	param *driveParam.UploadFileInfoParam,
 	physicalFile *driveModel.PhysicalFile) error {
 
-	if !constant.SpaceType.Validate(param.SpaceType) {
-		return errors.New("param.error")
+	if _, err := s.VerifySpacePermission(param.SpaceID, userId); err != nil {
+		return err
 	}
 	// 验证目录权限
-	parentFile, err := s.VerifyDirPermission(param.ParentID, userId)
+	parentFile, err := s.VerifyDirPermission(param.ParentID, param.SpaceID, userId)
 	if err != nil {
 		return err
 	}
@@ -45,11 +48,11 @@ func (s spaceFileService) CreateFileFromPhysicalFile(userId string,
 		spaceFile := &driveModel.SpaceFile{
 			ID:                  utils.GenerateSfIDString(),
 			FileName:            param.FileName,
+			FileType:            strings.TrimPrefix(filepath.Ext(param.FileName), "."),
 			FileSize:            param.FileSize,
 			PhysicalID:          physicalFile.ID,
 			PhysicalStoragePath: physicalFile.StoragePath,
 			SpaceID:             param.SpaceID,
-			SpaceType:           param.SpaceType,
 			UserID:              userId,
 			Path:                path + "/" + param.FileName,
 			Level:               level + 1,
@@ -70,25 +73,31 @@ func (s spaceFileService) CreateFileFromPhysicalFile(userId string,
 	return err
 }
 
-func (s spaceFileService) VerifyDirPermission(parentID, userId string) (*driveModel.SpaceFile, error) {
-	// 验证父目录id是否是文件夹或者根目录
-	if parentID != "root" {
-		file := driveDao.SpaceFileDao.GetById(db.RDB, parentID)
-		if file == nil || !file.IsDir {
-			return nil, errors.New("param.error")
+func (s spaceFileService) VerifySpacePermission(spaceId, userId string) (*driveModel.Space, error) {
+	space := driveDao.SpaceDao.GetById(db.RDB, spaceId)
+	if space == nil {
+		return nil, errors.New("param.error")
+	}
+	switch space.SpaceType {
+	case constant.SpaceType.User:
+		if space.OwnerID == userId || space.TargetID == userId {
+			return space, nil
 		}
-		// 验证不同类型的操作权限
-		switch file.SpaceType {
-		case constant.SpaceType.User:
-			if file.SpaceID == userId {
-				return file, nil
-			}
-		case constant.SpaceType.Group:
-			is := basicService.GroupService.IsGroupMember(file.SpaceID, userId)
-			if is {
-				return file, nil
-			}
+	case constant.SpaceType.Group:
+		if basicService.GroupService.IsGroupMember(space.TargetID, userId) {
+			return space, nil
 		}
 	}
-	return nil, nil
+	return nil, errors.New("param.error")
+}
+
+func (s spaceFileService) VerifyDirPermission(parentID, spaceId, userId string) (*driveModel.SpaceFile, error) {
+	if parentID == "root" {
+		return nil, nil
+	}
+	file := driveDao.SpaceFileDao.GetById(db.RDB, parentID)
+	if file == nil || file.SpaceID != spaceId || !file.IsDir {
+		return nil, errors.New("param.error")
+	}
+	return file, nil
 }
