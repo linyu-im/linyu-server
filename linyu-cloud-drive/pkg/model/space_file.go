@@ -22,6 +22,7 @@ type SpaceFile struct {
 	FileName            string              `gorm:"size:255;not null;comment:文件名称" json:"fileName"`
 	IsDir               bool                `gorm:"default:0;comment:是否文件夹" json:"isDir"`
 	FileType            string              `gorm:"size:64;comment:文件类型(后缀)" json:"fileType"`
+	FileCategory        string              `gorm:"size:32;index;not null;default:other;comment:文件分类" json:"fileCategory"`
 	FileSize            int64               `gorm:"type:bigint;comment:文件大小" json:"filSize"`
 	Status              string              `gorm:"size:32;comment:状态" json:"status"`
 	CreatedAt           localtime.LocalTime `gorm:"type:timestamp(3);autoCreateTime;comment:创建时间" json:"createdAt"`

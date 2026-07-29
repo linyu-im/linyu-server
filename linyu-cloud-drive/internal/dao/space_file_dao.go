@@ -2,6 +2,7 @@ package dao
 
 import (
 	driveModel "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/model"
+	driveResult "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/result"
 	"gorm.io/gorm"
 )
 
@@ -92,4 +93,16 @@ func (d *spaceFileDao) UnscopedDeleteByIds(db *gorm.DB, ids []string) error {
 		return nil
 	}
 	return db.Unscoped().Where("id IN ?", ids).Delete(&driveModel.SpaceFile{}).Error
+}
+
+func (d *spaceFileDao) StatByCategory(db *gorm.DB, spaceId string) ([]*driveResult.SpaceFileCategoryStat, error) {
+	var list []*driveResult.SpaceFileCategoryStat
+	if err := db.Model(&driveModel.SpaceFile{}).
+		Select("file_category AS file_category, COUNT(*) AS file_count, COALESCE(SUM(file_size), 0) AS total_size").
+		Where("space_id = ? AND is_dir = ?", spaceId, false).
+		Group("file_category").
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
 }

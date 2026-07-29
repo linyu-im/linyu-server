@@ -64,3 +64,31 @@ var SpaceMemberStatus = spaceMemberStatus{
 	Active:   "active",
 	Disabled: "disabled",
 }
+
+type fileCategory struct {
+	Image    string
+	Video    string
+	Document string
+	Audio    string
+	Archive  string
+	Other    string
+}
+
+// FileCategory 文件分类
+var FileCategory = fileCategory{
+	Image:    "image",
+	Video:    "video",
+	Document: "document",
+	Audio:    "audio",
+	Archive:  "archive",
+	Other:    "other",
+}
+
+func (c fileCategory) Validate(v string) bool {
+	switch v {
+	case c.Image, c.Video, c.Document, c.Audio, c.Archive, c.Other:
+		return true
+	default:
+		return false
+	}
+}

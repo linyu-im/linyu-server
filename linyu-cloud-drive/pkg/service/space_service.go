@@ -6,6 +6,7 @@ import (
 
 	driveDao "github.com/linyu-im/linyu-server/linyu-cloud-drive/internal/dao"
 	driveModel "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/model"
+	driveResult "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/result"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
@@ -162,4 +163,42 @@ func (s *spaceService) DeleteUserSpaceFiles(userId string, spaceFileIds []string
 		}
 		return driveDao.SpaceRecycleDao.CreateBatch(tx, recycles)
 	})
+}
+
+func (s *spaceService) ListUserSpaceCategoryStats(userId string) ([]*driveResult.SpaceFileCategoryStat, error) {
+	space, err := s.GetOrCreateUserSpace(userId)
+	if err != nil {
+		return nil, err
+	}
+	stats, err := driveDao.SpaceFileDao.StatByCategory(db.RDB, space.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	statMap := make(map[string]*driveResult.SpaceFileCategoryStat, len(stats))
+	for _, stat := range stats {
+		statMap[stat.FileCategory] = stat
+	}
+
+	categories := []string{
+		constant.FileCategory.Image,
+		constant.FileCategory.Video,
+		constant.FileCategory.Document,
+		constant.FileCategory.Audio,
+		constant.FileCategory.Archive,
+		constant.FileCategory.Other,
+	}
+	result := make([]*driveResult.SpaceFileCategoryStat, 0, len(categories))
+	for _, category := range categories {
+		if stat, ok := statMap[category]; ok {
+			result = append(result, stat)
+			continue
+		}
+		result = append(result, &driveResult.SpaceFileCategoryStat{
+			FileCategory: category,
+			FileCount:    0,
+			TotalSize:    0,
+		})
+	}
+	return result, nil
 }

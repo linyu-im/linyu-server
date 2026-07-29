@@ -14,6 +14,7 @@ func init() {
 	route.Register("POST", "/cloud-drive/v1/space/user/file/list", UserSpaceFileListHandler)
 	route.Register("POST", "/cloud-drive/v1/space/user/dir/create", UserSpaceDirCreateHandler)
 	route.Register("POST", "/cloud-drive/v1/space/user/file/delete", UserSpaceFileDeleteHandler)
+	route.Register("POST", "/cloud-drive/v1/space/user/file/category/stats", UserSpaceFileCategoryStatsHandler)
 }
 
 // UserSpaceInfoHandler 查询当前用户个人空间信息
@@ -69,4 +70,15 @@ func UserSpaceFileDeleteHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c, nil)
+}
+
+// UserSpaceFileCategoryStatsHandler 查询当前用户空间各文件分类的数量与大小
+func UserSpaceFileCategoryStatsHandler(c *gin.Context) {
+	currentUserId := c.GetString("userId")
+	list, err := driveService.SpaceService.ListUserSpaceCategoryStats(currentUserId)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, list)
 }

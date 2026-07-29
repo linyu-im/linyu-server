@@ -23,15 +23,15 @@ func nweSpaceFileService() *spaceFileService {
 
 type spaceFileService struct{}
 
-func (s spaceFileService) CreateFileFromPhysicalFile(userId string,
+func (s spaceFileService) CreateUserFileFromPhysicalFile(userId string,
 	param *driveParam.UploadFileInfoParam,
 	physicalFile *driveModel.PhysicalFile) error {
 
-	if _, err := s.VerifySpacePermission(param.SpaceID, userId); err != nil {
+	space, err := SpaceService.GetOrCreateUserSpace(userId)
+	if err != nil {
 		return err
 	}
-	// 验证目录权限
-	parentFile, err := s.VerifyDirPermission(param.ParentID, param.SpaceID, userId)
+	parentFile, err := s.VerifyDirPermission(param.ParentID, space.ID, userId)
 	if err != nil {
 		return err
 	}
@@ -45,16 +45,19 @@ func (s spaceFileService) CreateFileFromPhysicalFile(userId string,
 	}
 
 	err = db.RDB.Transaction(func(tx *gorm.DB) error {
+		id := utils.GenerateSfIDString()
+		ext := strings.TrimPrefix(filepath.Ext(param.FileName), ".")
 		spaceFile := &driveModel.SpaceFile{
-			ID:                  utils.GenerateSfIDString(),
+			ID:                  id,
 			FileName:            param.FileName,
-			FileType:            strings.TrimPrefix(filepath.Ext(param.FileName), "."),
+			FileType:            ext,
+			FileCategory:        utils.FileCategoryFromExt(ext),
 			FileSize:            param.FileSize,
 			PhysicalID:          physicalFile.ID,
 			PhysicalStoragePath: physicalFile.StoragePath,
-			SpaceID:             param.SpaceID,
+			SpaceID:             space.ID,
 			UserID:              userId,
-			Path:                path + "/" + param.FileName,
+			Path:                path + "/" + id,
 			Level:               level + 1,
 			ParentID:            parentId,
 		}

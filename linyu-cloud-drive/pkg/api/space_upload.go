@@ -12,24 +12,22 @@ import (
 )
 
 func init() {
-	route.Register("POST", "/cloud-drive/v1/upload/check", CheckUploadStatusHandler)
-	route.Register("POST", "/cloud-drive/v1/upload/chunk", UploadChunkHandler)
-	route.Register("POST", "/cloud-drive/v1/upload/merge", MergeChunkHandler)
-
+	route.Register("POST", "/cloud-drive/v1/space/user/upload/check", UserUploadCheckHandler)
+	route.Register("POST", "/cloud-drive/v1/space/user/upload/chunk", UserUploadChunkHandler)
+	route.Register("POST", "/cloud-drive/v1/space/user/upload/merge", UserUploadMergeHandler)
 }
 
-// CheckUploadStatusHandler 校验文件上传状态
-func CheckUploadStatusHandler(c *gin.Context) {
+// UserUploadCheckHandler 校验文件上传状态（秒传检查）
+func UserUploadCheckHandler(c *gin.Context) {
 	param := &driveParam.UploadFileInfoParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
 		return
 	}
 	currentUserId := c.GetString("userId")
 
-	// 验证物理文件是否存在(秒传)
 	file := driveService.PhysicalFileService.GetFileByHash(param.FileHash)
 	if file != nil {
-		err := driveService.SpaceFileService.CreateFileFromPhysicalFile(currentUserId, param, file)
+		err := driveService.SpaceFileService.CreateUserFileFromPhysicalFile(currentUserId, param, file)
 		if err != nil {
 			response.Fail(c, err.Error())
 			return
@@ -41,14 +39,13 @@ func CheckUploadStatusHandler(c *gin.Context) {
 	}
 
 	response.Ok(c, &driveResult.CheckUploadStatusResult{
-		Uploaded: false,
-		// 获取已上传分片
+		Uploaded:       false,
 		UploadedChunks: storage.GetUploadChunkInfo(param.FileHash),
 	})
 }
 
-// UploadChunkHandler 上传切片
-func UploadChunkHandler(c *gin.Context) {
+// UserUploadChunkHandler 上传切片
+func UserUploadChunkHandler(c *gin.Context) {
 	fileHash := c.PostForm("fileHash")
 	chunkIndex := c.PostForm("chunkIndex")
 	if fileHash == "" || chunkIndex == "" {
@@ -67,8 +64,8 @@ func UploadChunkHandler(c *gin.Context) {
 	response.Ok(c)
 }
 
-// MergeChunkHandler 合并切片
-func MergeChunkHandler(c *gin.Context) {
+// UserUploadMergeHandler 合并切片
+func UserUploadMergeHandler(c *gin.Context) {
 	param := &driveParam.UploadFileInfoParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
 		return
@@ -81,7 +78,7 @@ func MergeChunkHandler(c *gin.Context) {
 		response.Fail(c, err.Error())
 		return
 	}
-	err = driveService.SpaceFileService.CreateFileFromPhysicalFile(currentUserId, param, physicalFile)
+	err = driveService.SpaceFileService.CreateUserFileFromPhysicalFile(currentUserId, param, physicalFile)
 	if err != nil {
 		response.Fail(c, err.Error())
 		return
