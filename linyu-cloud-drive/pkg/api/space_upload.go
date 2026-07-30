@@ -24,6 +24,10 @@ func UserUploadCheckHandler(c *gin.Context) {
 		return
 	}
 	currentUserId := c.GetString("userId")
+	if err := driveService.SpaceService.CheckUserSpaceQuota(currentUserId, param.FileSize); err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
 
 	file := driveService.PhysicalFileService.GetFileByHash(param.FileHash)
 	if file != nil {
@@ -48,6 +52,7 @@ func UserUploadCheckHandler(c *gin.Context) {
 func UserUploadChunkHandler(c *gin.Context) {
 	fileHash := c.PostForm("fileHash")
 	chunkIndex := c.PostForm("chunkIndex")
+	fileName := c.PostForm("fileName")
 	if fileHash == "" || chunkIndex == "" {
 		response.Fail(c, "param.error")
 		return
@@ -57,7 +62,7 @@ func UserUploadChunkHandler(c *gin.Context) {
 		response.Fail(c, err.Error())
 		return
 	}
-	if err = storage.UploadChunk(file, chunkIndex, fileHash); err != nil {
+	if err = storage.UploadChunk(file, chunkIndex, fileHash, fileName, "clouddrive"); err != nil {
 		response.Fail(c, err.Error())
 		return
 	}
@@ -71,7 +76,15 @@ func UserUploadMergeHandler(c *gin.Context) {
 		return
 	}
 	currentUserId := c.GetString("userId")
+	if err := driveService.SpaceService.CheckUserSpaceQuota(currentUserId, param.FileSize); err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
 	err, storagePath := storage.MergeChunk(param.FileHash, param.TotalChunk, param.FileName, "clouddrive")
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
 
 	err, physicalFile := driveService.PhysicalFileService.CreateFile(param, storagePath)
 	if err != nil {

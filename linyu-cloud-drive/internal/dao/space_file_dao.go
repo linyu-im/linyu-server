@@ -69,6 +69,33 @@ func (d *spaceFileDao) ListByIds(db *gorm.DB, ids []string) ([]*driveModel.Space
 	return list, nil
 }
 
+func (d *spaceFileDao) ListByIdsUnscoped(db *gorm.DB, ids []string) ([]*driveModel.SpaceFile, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var list []*driveModel.SpaceFile
+	if err := db.Unscoped().Where("id IN ?", ids).Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (d *spaceFileDao) SumFileSizeSelfAndDescendants(db *gorm.DB, spaceId, id, path string) (int64, int64, error) {
+	type row struct {
+		TotalSize int64
+		FileCount int64
+	}
+	var r row
+	err := db.Model(&driveModel.SpaceFile{}).
+		Select("COALESCE(SUM(file_size), 0) AS total_size, COUNT(*) AS file_count").
+		Where("space_id = ? AND is_dir = ? AND (id = ? OR path LIKE ?)", spaceId, false, id, path+"/%").
+		Scan(&r).Error
+	if err != nil {
+		return 0, 0, err
+	}
+	return r.TotalSize, r.FileCount, nil
+}
+
 func (d *spaceFileDao) ClearDeletedAtByIds(db *gorm.DB, ids []string) error {
 	if len(ids) == 0 {
 		return nil

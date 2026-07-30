@@ -87,6 +87,7 @@ func MessageListHandler(c *gin.Context) {
 func UploadMsgFileChunkHandler(c *gin.Context) {
 	fileHash := c.PostForm("fileHash")
 	chunkIndex := c.PostForm("chunkIndex")
+	fileName := c.PostForm("fileName")
 	if fileHash == "" || chunkIndex == "" {
 		response.Fail(c, "param.error")
 		return
@@ -96,7 +97,8 @@ func UploadMsgFileChunkHandler(c *gin.Context) {
 		response.Fail(c, err.Error())
 		return
 	}
-	if err = storage.UploadChunk(file, chunkIndex, fileHash); err != nil {
+	currentUserId := c.GetString("userId")
+	if err = storage.UploadChunk(file, chunkIndex, fileHash, fileName, "msgfile/"+currentUserId); err != nil {
 		response.Fail(c, err.Error())
 		return
 	}

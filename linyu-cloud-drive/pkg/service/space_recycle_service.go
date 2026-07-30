@@ -45,11 +45,39 @@ func (s *spaceRecycleService) RestoreUserRecycle(userId string, spaceRecycleIds 
 		recycleIds[i] = r.ID
 	}
 
+	files, err := driveDao.SpaceFileDao.ListByIdsUnscoped(db.RDB, spaceFileIds)
+	if err != nil {
+		return err
+	}
+	if len(files) != len(spaceFileIds) {
+		return errors.New("param.error")
+	}
+	for _, file := range files {
+		if file.SpaceID != space.ID {
+			return errors.New("param.error")
+		}
+	}
+
+	// 文件夹通过 path like 汇总子文件占用；还原前校验容量是否够用
+	totalSize, fileCount, err := SpaceService.CalcSpaceFilesUsedBytes(db.RDB.Unscoped(), space.ID, files)
+	if err != nil {
+		return err
+	}
+	if err := SpaceService.CheckSpaceQuota(space, totalSize); err != nil {
+		return err
+	}
+
 	return db.RDB.Transaction(func(tx *gorm.DB) error {
 		if err := driveDao.SpaceFileDao.ClearDeletedAtByIds(tx, spaceFileIds); err != nil {
 			return err
 		}
-		return driveDao.SpaceRecycleDao.UnscopedDeleteByIds(tx, recycleIds)
+		if err := driveDao.SpaceRecycleDao.UnscopedDeleteByIds(tx, recycleIds); err != nil {
+			return err
+		}
+		if totalSize == 0 && fileCount == 0 {
+			return nil
+		}
+		return driveDao.SpaceDao.IncUsedBytesById(tx, space.ID, totalSize, fileCount)
 	})
 }
 

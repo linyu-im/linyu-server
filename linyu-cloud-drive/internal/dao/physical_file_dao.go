@@ -38,8 +38,6 @@ func (d *physicalFileDao) FileRefDecById(db *gorm.DB, id string) error {
 }
 
 func (d *physicalFileDao) Create(db *gorm.DB, file *driveModel.PhysicalFile) error {
-	if err := db.Create(file).Error; err != nil {
-		return err
-	}
-	return nil
+	// 显式写入 ref_count，避免 gorm 把 0 当成空值而落到库表旧 default:1
+	return db.Select("ID", "FileHash", "FileSize", "StoragePath", "RefCount").Create(file).Error
 }

@@ -1,12 +1,14 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
@@ -130,37 +132,140 @@ func (s *OssStorage) Merge(fileKey string, chunkDir string, totalChunks int) (st
 	if err != nil {
 		return "", err
 	}
-	//初始化
+
 	imur, err := bucket.InitiateMultipartUpload(fileKey)
 	if err != nil {
 		return "", fmt.Errorf("failed to initiate multipart upload: %v", err)
 	}
-	var parts []oss.UploadPart
-	//逐个上传
+
+	parts := make([]oss.UploadPart, totalChunks)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var (
+		wg        sync.WaitGroup
+		errOnce   sync.Once
+		uploadErr error
+		sem       = make(chan struct{}, mergeUploadConcurrency)
+	)
+
 	for i := 0; i < totalChunks; i++ {
-		partPath := fmt.Sprintf("%s/%d.part", chunkDir, i)
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
 
-		fileInfo, err := os.Stat(partPath)
-		if err != nil {
-			bucket.AbortMultipartUpload(imur)
-			return "", fmt.Errorf("failed to stat part %d: %v", i, err)
-		}
-		partSize := fileInfo.Size()
+			select {
+			case sem <- struct{}{}:
+			case <-ctx.Done():
+				return
+			}
+			defer func() { <-sem }()
 
-		partNumber := i + 1
-		part, err := bucket.UploadPartFromFile(imur, partPath, 0, partSize, partNumber)
-		if err != nil {
-			bucket.AbortMultipartUpload(imur)
-			return "", fmt.Errorf("failed to upload part %d: %v", i, err)
-		}
-		parts = append(parts, part)
+			if ctx.Err() != nil {
+				return
+			}
+
+			partPath := fmt.Sprintf("%s/%d.part", chunkDir, i)
+			fileInfo, err := os.Stat(partPath)
+			if err != nil {
+				errOnce.Do(func() {
+					uploadErr = fmt.Errorf("failed to stat part %d: %v", i, err)
+					cancel()
+				})
+				return
+			}
+
+			partNumber := i + 1
+			part, err := bucket.UploadPartFromFile(imur, partPath, 0, fileInfo.Size(), partNumber)
+			if err != nil {
+				errOnce.Do(func() {
+					uploadErr = fmt.Errorf("failed to upload part %d: %v", i, err)
+					cancel()
+				})
+				return
+			}
+			parts[i] = part
+		}(i)
+	}
+	wg.Wait()
+
+	if uploadErr != nil {
+		_ = bucket.AbortMultipartUpload(imur)
+		return "", uploadErr
 	}
 
 	_, err = bucket.CompleteMultipartUpload(imur, parts)
 	if err != nil {
-		bucket.AbortMultipartUpload(imur)
+		_ = bucket.AbortMultipartUpload(imur)
 		return "", fmt.Errorf("failed to complete multipart upload: %v", err)
 	}
 
 	return s.GetURL(fileKey, 0)
+}
+
+func (s *OssStorage) InitMultipart(fileKey string) (string, error) {
+	bucket, err := s.getBucket()
+	if err != nil {
+		return "", err
+	}
+	imur, err := bucket.InitiateMultipartUpload(fileKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to init multipart upload: %v", err)
+	}
+	return imur.UploadID, nil
+}
+
+func (s *OssStorage) UploadPart(fileKey, uploadID string, partNumber int32, reader io.Reader, size int64) (string, error) {
+	bucket, err := s.getBucket()
+	if err != nil {
+		return "", err
+	}
+	imur := oss.InitiateMultipartUploadResult{
+		Bucket:   s.BucketName,
+		Key:      fileKey,
+		UploadID: uploadID,
+	}
+	part, err := bucket.UploadPart(imur, reader, size, int(partNumber))
+	if err != nil {
+		return "", fmt.Errorf("failed to upload part %d: %v", partNumber, err)
+	}
+	return part.ETag, nil
+}
+
+func (s *OssStorage) CompleteMultipart(fileKey, uploadID string, parts []CompletedPartInfo) (string, error) {
+	bucket, err := s.getBucket()
+	if err != nil {
+		return "", err
+	}
+	imur := oss.InitiateMultipartUploadResult{
+		Bucket:   s.BucketName,
+		Key:      fileKey,
+		UploadID: uploadID,
+	}
+	ossParts := make([]oss.UploadPart, len(parts))
+	for i, part := range parts {
+		ossParts[i] = oss.UploadPart{
+			PartNumber: int(part.PartNumber),
+			ETag:       part.ETag,
+		}
+	}
+	_, err = bucket.CompleteMultipartUpload(imur, ossParts)
+	if err != nil {
+		_ = s.AbortMultipart(fileKey, uploadID)
+		return "", fmt.Errorf("failed to complete multipart upload: %v", err)
+	}
+	return s.GetURL(fileKey, 0)
+}
+
+func (s *OssStorage) AbortMultipart(fileKey, uploadID string) error {
+	bucket, err := s.getBucket()
+	if err != nil {
+		return err
+	}
+	imur := oss.InitiateMultipartUploadResult{
+		Bucket:   s.BucketName,
+		Key:      fileKey,
+		UploadID: uploadID,
+	}
+	return bucket.AbortMultipartUpload(imur)
 }

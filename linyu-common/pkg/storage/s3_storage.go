@@ -3,6 +3,14 @@ package storage
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/url"
+	"os"
+	"path"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	s3config "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -10,12 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
-	"io"
-	"net/url"
-	"os"
-	"path"
-	"strings"
-	"time"
 )
 
 type S3Storage struct {
@@ -146,8 +148,8 @@ func (s *S3Storage) GetURL(fileKey string, expire int64) (string, error) {
 }
 
 func (s *S3Storage) Merge(fileKey string, chunkDir string, totalChunks int) (string, error) {
-
-	ctx := context.TODO()
+	// 本地分片回退路径（未走 MultipartStorage 时）
+	ctx := context.Background()
 
 	createResp, err := s.Client.CreateMultipartUpload(ctx, &s3.CreateMultipartUploadInput{
 		Bucket: aws.String(s.BucketName),
@@ -156,40 +158,91 @@ func (s *S3Storage) Merge(fileKey string, chunkDir string, totalChunks int) (str
 	if err != nil {
 		return "", err
 	}
-
 	uploadID := *createResp.UploadId
 
-	var completedParts []types.CompletedPart
+	abort := func() {
+		_, _ = s.Client.AbortMultipartUpload(context.Background(), &s3.AbortMultipartUploadInput{
+			Bucket:   aws.String(s.BucketName),
+			Key:      aws.String(fileKey),
+			UploadId: aws.String(uploadID),
+		})
+	}
+
+	completedParts := make([]types.CompletedPart, totalChunks)
+	uploadCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	var (
+		wg        sync.WaitGroup
+		errOnce   sync.Once
+		uploadErr error
+		sem       = make(chan struct{}, mergeUploadConcurrency)
+	)
 
 	for i := 0; i < totalChunks; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
 
-		partPath := fmt.Sprintf("%s/%d.part", chunkDir, i)
+			select {
+			case sem <- struct{}{}:
+			case <-uploadCtx.Done():
+				return
+			}
+			defer func() { <-sem }()
 
-		file, err := os.Open(partPath)
-		if err != nil {
-			return "", err
-		}
+			if uploadCtx.Err() != nil {
+				return
+			}
 
-		partNumber := int32(i + 1)
+			partPath := fmt.Sprintf("%s/%d.part", chunkDir, i)
+			file, err := os.Open(partPath)
+			if err != nil {
+				errOnce.Do(func() {
+					uploadErr = err
+					cancel()
+				})
+				return
+			}
+			defer file.Close()
 
-		resp, err := s.Client.UploadPart(ctx, &s3.UploadPartInput{
-			Bucket:     aws.String(s.BucketName),
-			Key:        aws.String(fileKey),
-			UploadId:   aws.String(uploadID),
-			PartNumber: utils.Int32Ptr(partNumber),
-			Body:       file,
-		})
+			info, err := file.Stat()
+			if err != nil {
+				errOnce.Do(func() {
+					uploadErr = err
+					cancel()
+				})
+				return
+			}
 
-		file.Close()
+			partNumber := int32(i + 1)
+			resp, err := s.Client.UploadPart(uploadCtx, &s3.UploadPartInput{
+				Bucket:        aws.String(s.BucketName),
+				Key:           aws.String(fileKey),
+				UploadId:      aws.String(uploadID),
+				PartNumber:    utils.Int32Ptr(partNumber),
+				Body:          file,
+				ContentLength: aws.Int64(info.Size()),
+			})
+			if err != nil {
+				errOnce.Do(func() {
+					uploadErr = err
+					cancel()
+				})
+				return
+			}
 
-		if err != nil {
-			return "", err
-		}
+			completedParts[i] = types.CompletedPart{
+				ETag:       resp.ETag,
+				PartNumber: utils.Int32Ptr(partNumber),
+			}
+		}(i)
+	}
+	wg.Wait()
 
-		completedParts = append(completedParts, types.CompletedPart{
-			ETag:       resp.ETag,
-			PartNumber: utils.Int32Ptr(partNumber),
-		})
+	if uploadErr != nil {
+		abort()
+		return "", uploadErr
 	}
 
 	_, err = s.Client.CompleteMultipartUpload(ctx, &s3.CompleteMultipartUploadInput{
@@ -200,10 +253,72 @@ func (s *S3Storage) Merge(fileKey string, chunkDir string, totalChunks int) (str
 			Parts: completedParts,
 		},
 	})
-
 	if err != nil {
+		abort()
 		return "", err
 	}
 
 	return s.GetURL(fileKey, 0)
+}
+
+func (s *S3Storage) InitMultipart(fileKey string) (string, error) {
+	resp, err := s.Client.CreateMultipartUpload(context.Background(), &s3.CreateMultipartUploadInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(fileKey),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to init multipart upload: %v", err)
+	}
+	return *resp.UploadId, nil
+}
+
+func (s *S3Storage) UploadPart(fileKey, uploadID string, partNumber int32, reader io.Reader, size int64) (string, error) {
+	resp, err := s.Client.UploadPart(context.Background(), &s3.UploadPartInput{
+		Bucket:        aws.String(s.BucketName),
+		Key:           aws.String(fileKey),
+		UploadId:      aws.String(uploadID),
+		PartNumber:    utils.Int32Ptr(partNumber),
+		Body:          reader,
+		ContentLength: aws.Int64(size),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to upload part %d: %v", partNumber, err)
+	}
+	if resp.ETag == nil {
+		return "", fmt.Errorf("empty etag for part %d", partNumber)
+	}
+	return *resp.ETag, nil
+}
+
+func (s *S3Storage) CompleteMultipart(fileKey, uploadID string, parts []CompletedPartInfo) (string, error) {
+	completedParts := make([]types.CompletedPart, len(parts))
+	for i, part := range parts {
+		etag := part.ETag
+		completedParts[i] = types.CompletedPart{
+			ETag:       &etag,
+			PartNumber: utils.Int32Ptr(part.PartNumber),
+		}
+	}
+	_, err := s.Client.CompleteMultipartUpload(context.Background(), &s3.CompleteMultipartUploadInput{
+		Bucket:   aws.String(s.BucketName),
+		Key:      aws.String(fileKey),
+		UploadId: aws.String(uploadID),
+		MultipartUpload: &types.CompletedMultipartUpload{
+			Parts: completedParts,
+		},
+	})
+	if err != nil {
+		_ = s.AbortMultipart(fileKey, uploadID)
+		return "", fmt.Errorf("failed to complete multipart upload: %v", err)
+	}
+	return s.GetURL(fileKey, 0)
+}
+
+func (s *S3Storage) AbortMultipart(fileKey, uploadID string) error {
+	_, err := s.Client.AbortMultipartUpload(context.Background(), &s3.AbortMultipartUploadInput{
+		Bucket:   aws.String(s.BucketName),
+		Key:      aws.String(fileKey),
+		UploadId: aws.String(uploadID),
+	})
+	return err
 }

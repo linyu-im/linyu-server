@@ -26,6 +26,7 @@ func (s physicalFileService) CreateFile(param *driveParam.UploadFileInfoParam, s
 		FileHash:    param.FileHash,
 		FileSize:    param.FileSize,
 		StoragePath: storagePath,
+		RefCount:    0,
 	}
 	err := driveDao.PhysicalFileDao.Create(db.RDB, file)
 	if err != nil {

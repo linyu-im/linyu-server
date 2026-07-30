@@ -7,6 +7,8 @@ type redisKey struct {
 	UserCode          string //用户验证码
 	UserCodeLock      string //用户验证码锁（限制频繁发送）
 	UploadChunk       string //上传的分片内容
+	UploadMultipart   string //分片上传会话（uploadId/fileKey）
+	UploadPartETag    string //分片 ETag
 }
 
 var RedisKey = redisKey{
@@ -16,4 +18,6 @@ var RedisKey = redisKey{
 	UserCode:          "user:code:%s",              //(user:code:手机号/邮箱)
 	UserCodeLock:      "user:code:lock:%s",         //(user:code:lock:手机号/邮箱)
 	UploadChunk:       "upload:chunk:%s",           //(upload:chunk:文件hash)
+	UploadMultipart:   "upload:multipart:%s",       //(upload:multipart:文件hash)
+	UploadPartETag:    "upload:multipart:%s:part:%s", //(upload:multipart:文件hash:part:分片序号)
 }

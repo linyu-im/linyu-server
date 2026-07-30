@@ -38,3 +38,7 @@ basic:
     no-friend-selected: "None of the users you selected are your friends"
   storage:
     local-storage-not-exist: "Local storage does not exist"
+
+cloud-drive:
+  space:
+    quota-exceeded: "Cloud drive space is insufficient, please free up space and try again"

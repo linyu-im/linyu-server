@@ -7,6 +7,9 @@ import (
 
 var S Storage
 
+// mergeUploadConcurrency 合并时并发上传分片数，避免串行二次上传过慢
+const mergeUploadConcurrency = 8
+
 type Storage interface {
 	Upload(fileKey string, reader io.Reader) (string, error)
 	Download(fileKey string, writer io.Writer) error

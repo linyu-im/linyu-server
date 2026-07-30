@@ -66,8 +66,13 @@ func (s spaceFileService) CreateUserFileFromPhysicalFile(userId string,
 		if err != nil {
 			return err
 		}
-		// 物理文件引数加1
-		err = driveDao.PhysicalFileDao.FileRefIncById(tx, spaceFile.ID)
+		// 物理文件引用数加1
+		err = driveDao.PhysicalFileDao.FileRefIncById(tx, physicalFile.ID)
+		if err != nil {
+			return err
+		}
+		// 累加空间已用容量
+		err = driveDao.SpaceDao.IncUsedBytesById(tx, space.ID, param.FileSize, 1)
 		if err != nil {
 			return err
 		}
