@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -130,6 +131,64 @@ func (s *spaceService) ListUserSpaceFiles(userId string, parentId string) ([]*dr
 	return driveDao.SpaceFileDao.ListBySpaceIdAndParentId(db.RDB, space.ID, parentId)
 }
 
+// ListUserSpaceAllFiles 查询目录下全部文件（含子目录，仅文件不含目录）
+func (s *spaceService) ListUserSpaceAllFiles(userId string, parentId string) ([]*driveModel.SpaceFile, error) {
+	space, err := s.GetOrCreateUserSpace(userId)
+	if err != nil {
+		return nil, err
+	}
+	parentFile, err := SpaceFileService.VerifyDirPermission(parentId, space.ID, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	pathPrefix := ""
+	if parentFile != nil {
+		pathPrefix = parentFile.Path
+	}
+	return driveDao.SpaceFileDao.ListFilesUnderPath(db.RDB, space.ID, pathPrefix)
+}
+
+// ListUserSpaceDirTree 查询用户空间目录树（仅目录）
+func (s *spaceService) ListUserSpaceDirTree(userId string) ([]*driveResult.SpaceDirTreeNode, error) {
+	space, err := s.GetOrCreateUserSpace(userId)
+	if err != nil {
+		return nil, err
+	}
+	dirs, err := driveDao.SpaceFileDao.ListDirsBySpaceId(db.RDB, space.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeMap := make(map[string]*driveResult.SpaceDirTreeNode, len(dirs))
+	roots := make([]*driveResult.SpaceDirTreeNode, 0)
+	for _, dir := range dirs {
+		node := &driveResult.SpaceDirTreeNode{
+			ID:       dir.ID,
+			FileName: dir.FileName,
+			ParentID: dir.ParentID,
+			Path:     dir.Path,
+			Level:    dir.Level,
+			Children: make([]*driveResult.SpaceDirTreeNode, 0),
+		}
+		nodeMap[dir.ID] = node
+	}
+	for _, dir := range dirs {
+		node := nodeMap[dir.ID]
+		if dir.ParentID == "root" {
+			roots = append(roots, node)
+			continue
+		}
+		if parent, ok := nodeMap[dir.ParentID]; ok {
+			parent.Children = append(parent.Children, node)
+			continue
+		}
+		// 父目录缺失时兜底挂到根，避免丢节点
+		roots = append(roots, node)
+	}
+	return roots, nil
+}
+
 func (s *spaceService) CreateUserSpaceDir(userId string, parentId string, dirName string) (*driveModel.SpaceFile, error) {
 	space, err := s.GetOrCreateUserSpace(userId)
 	if err != nil {
@@ -234,6 +293,129 @@ func (s *spaceService) DeleteUserSpaceFiles(userId string, spaceFileIds []string
 		}
 		return driveDao.SpaceDao.DecUsedBytesById(tx, space.ID, totalSize, fileCount)
 	})
+}
+
+func (s *spaceService) MoveUserSpaceFiles(userId string, spaceFileIds []string, targetParentId string) error {
+	space, err := s.GetOrCreateUserSpace(userId)
+	if err != nil {
+		return err
+	}
+
+	targetParent, err := SpaceFileService.VerifyDirPermission(targetParentId, space.ID, userId)
+	if err != nil {
+		return err
+	}
+
+	targetPathPrefix := ""
+	targetLevel := 0
+	resolvedParentId := "root"
+	if targetParent != nil {
+		targetPathPrefix = targetParent.Path
+		targetLevel = targetParent.Level
+		resolvedParentId = targetParent.ID
+	}
+
+	idSet := make(map[string]struct{}, len(spaceFileIds))
+	uniqueIds := make([]string, 0, len(spaceFileIds))
+	for _, id := range spaceFileIds {
+		if id == "" {
+			return errors.New("param.error")
+		}
+		if _, ok := idSet[id]; ok {
+			continue
+		}
+		idSet[id] = struct{}{}
+		uniqueIds = append(uniqueIds, id)
+	}
+
+	files, err := driveDao.SpaceFileDao.ListByIds(db.RDB, uniqueIds)
+	if err != nil {
+		return err
+	}
+	if len(files) != len(uniqueIds) {
+		return errors.New("param.error")
+	}
+	for _, file := range files {
+		if file.SpaceID != space.ID {
+			return errors.New("param.error")
+		}
+		// 不能移动到自身
+		if file.ID == resolvedParentId {
+			return errors.New("param.error")
+		}
+		// 不能把目录移动到自己的子孙目录下
+		if file.IsDir && targetPathPrefix != "" &&
+			(targetPathPrefix == file.Path || strings.HasPrefix(targetPathPrefix, file.Path+"/")) {
+			return errors.New("param.error")
+		}
+	}
+
+	// 只移动顶层项，避免父子同时选中时重复处理
+	topFiles := filterTopLevelSpaceFiles(files)
+
+	return db.RDB.Transaction(func(tx *gorm.DB) error {
+		for _, file := range topFiles {
+			if file.ParentID == resolvedParentId {
+				continue
+			}
+			oldPath := file.Path
+			oldLevel := file.Level
+			newPath := targetPathPrefix + "/" + file.ID
+			newLevel := targetLevel + 1
+
+			if err := driveDao.SpaceFileDao.UpdateMove(tx, file.ID, resolvedParentId, newPath, newLevel); err != nil {
+				return err
+			}
+			if file.IsDir {
+				levelDelta := newLevel - oldLevel
+				if err := driveDao.SpaceFileDao.UpdateDescendantsPathAndLevel(tx, space.ID, oldPath, newPath, levelDelta); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}
+
+// RenameUserSpaceFile 重命名文件或目录
+func (s *spaceService) RenameUserSpaceFile(userId, spaceFileId, newName string) (*driveModel.SpaceFile, error) {
+	newName = strings.TrimSpace(newName)
+	if spaceFileId == "" || newName == "" {
+		return nil, errors.New("param.error")
+	}
+
+	space, err := s.GetOrCreateUserSpace(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	file := driveDao.SpaceFileDao.GetById(db.RDB, spaceFileId)
+	if file == nil || file.SpaceID != space.ID {
+		return nil, errors.New("param.error")
+	}
+	if file.FileName == newName {
+		return file, nil
+	}
+
+	fileType := file.FileType
+	fileCategory := file.FileCategory
+	updateTypeMeta := false
+	if !file.IsDir {
+		fileType = strings.TrimPrefix(filepath.Ext(newName), ".")
+		fileCategory = utils.FileCategoryFromExt(fileType)
+		updateTypeMeta = true
+	}
+
+	if err := driveDao.SpaceFileDao.UpdateName(db.RDB, file.ID, newName, fileType, fileCategory, updateTypeMeta); err != nil {
+		return nil, err
+	}
+
+	file.FileName = newName
+	if updateTypeMeta {
+		file.FileType = fileType
+		file.FileCategory = fileCategory
+	}
+	return file, nil
 }
 
 func (s *spaceService) ListUserSpaceCategoryStats(userId string) ([]*driveResult.SpaceFileCategoryStat, error) {

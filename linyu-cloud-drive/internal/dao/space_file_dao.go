@@ -47,6 +47,30 @@ func (d *spaceFileDao) ListBySpaceIdAndParentId(db *gorm.DB, spaceId string, par
 	return list, nil
 }
 
+func (d *spaceFileDao) ListDirsBySpaceId(db *gorm.DB, spaceId string) ([]*driveModel.SpaceFile, error) {
+	var list []*driveModel.SpaceFile
+	if err := db.Where("space_id = ? AND is_dir = ?", spaceId, true).
+		Order("level ASC, file_name ASC").
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// ListFilesUnderPath 查询指定目录 path 下全部文件（含子目录，不含目录）
+// pathPrefix 为空表示空间根下全部文件
+func (d *spaceFileDao) ListFilesUnderPath(db *gorm.DB, spaceId, pathPrefix string) ([]*driveModel.SpaceFile, error) {
+	var list []*driveModel.SpaceFile
+	query := db.Where("space_id = ? AND is_dir = ?", spaceId, false)
+	if pathPrefix != "" {
+		query = query.Where("path LIKE ?", pathPrefix+"/%")
+	}
+	if err := query.Order("updated_at DESC").Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
 func (d *spaceFileDao) DeleteById(db *gorm.DB, id string) error {
 	return db.Where("id = ?", id).Delete(&driveModel.SpaceFile{}).Error
 }
@@ -120,6 +144,39 @@ func (d *spaceFileDao) UnscopedDeleteByIds(db *gorm.DB, ids []string) error {
 		return nil
 	}
 	return db.Unscoped().Where("id IN ?", ids).Delete(&driveModel.SpaceFile{}).Error
+}
+
+func (d *spaceFileDao) UpdateMove(db *gorm.DB, id, parentId, newPath string, newLevel int) error {
+	return db.Model(&driveModel.SpaceFile{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"parent_id": parentId,
+			"path":      newPath,
+			"level":     newLevel,
+		}).Error
+}
+
+func (d *spaceFileDao) UpdateName(db *gorm.DB, id, fileName string, fileType, fileCategory string, updateTypeMeta bool) error {
+	updates := map[string]interface{}{
+		"file_name": fileName,
+	}
+	if updateTypeMeta {
+		updates["file_type"] = fileType
+		updates["file_category"] = fileCategory
+	}
+	return db.Model(&driveModel.SpaceFile{}).
+		Where("id = ?", id).
+		Updates(updates).Error
+}
+
+// UpdateDescendantsPathAndLevel 移动目录后，批量更新所有子孙节点 path/level
+func (d *spaceFileDao) UpdateDescendantsPathAndLevel(db *gorm.DB, spaceId, oldPath, newPath string, levelDelta int) error {
+	return db.Model(&driveModel.SpaceFile{}).
+		Where("space_id = ? AND path LIKE ?", spaceId, oldPath+"/%").
+		Updates(map[string]interface{}{
+			"path":  gorm.Expr("CONCAT(?, SUBSTRING(path, ?))", newPath, len(oldPath)+1),
+			"level": gorm.Expr("level + ?", levelDelta),
+		}).Error
 }
 
 func (d *spaceFileDao) StatByCategory(db *gorm.DB, spaceId string) ([]*driveResult.SpaceFileCategoryStat, error) {
