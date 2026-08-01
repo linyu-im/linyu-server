@@ -65,6 +65,15 @@ var SpaceMemberStatus = spaceMemberStatus{
 	Disabled: "disabled",
 }
 
+type fileType struct {
+	Folder string
+}
+
+// FileType 文件类型
+var FileType = fileType{
+	Folder: "folder",
+}
+
 type fileCategory struct {
 	Image    string
 	Video    string

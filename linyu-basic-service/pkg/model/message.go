@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
@@ -44,13 +45,14 @@ func (Message) TableComment() string {
 }
 
 var msgContentFactory = map[string]func() MsgContent{
-	constant.MessageType.Text:    func() MsgContent { return &TextContent{} },
-	constant.MessageType.Image:   func() MsgContent { return &ImageContent{} },
-	constant.MessageType.Video:   func() MsgContent { return &VideoContent{} },
-	constant.MessageType.File:    func() MsgContent { return &FileContent{} },
-	constant.MessageType.ECard:   func() MsgContent { return &ECardContent{} },
-	constant.MessageType.Voice:   func() MsgContent { return &VoiceContent{} },
-	constant.MessageType.Sticker: func() MsgContent { return &StickerContent{} },
+	constant.MessageType.Text:       func() MsgContent { return &TextContent{} },
+	constant.MessageType.Image:      func() MsgContent { return &ImageContent{} },
+	constant.MessageType.Video:      func() MsgContent { return &VideoContent{} },
+	constant.MessageType.File:       func() MsgContent { return &FileContent{} },
+	constant.MessageType.ECard:      func() MsgContent { return &ECardContent{} },
+	constant.MessageType.Voice:      func() MsgContent { return &VoiceContent{} },
+	constant.MessageType.Sticker:    func() MsgContent { return &StickerContent{} },
+	constant.MessageType.CloudShare: func() MsgContent { return &CloudShareContent{} },
 }
 
 func ParseMsgContent(msgType string, raw json.RawMessage) (MsgContent, error) {
@@ -172,4 +174,41 @@ func (c StickerContent) ToString() string {
 
 func (c StickerContent) GetKeywordContent() string {
 	return ""
+}
+
+// CloudShareItem 网盘分享项
+type CloudShareItem struct {
+	ShareName   string `json:"shareName"`
+	SpaceFileID string `json:"spaceFileId"`
+	FileType    string `json:"fileType"`
+	FileSize    int64  `json:"fileSize"`
+	IsDir       bool   `json:"isDir"`
+}
+
+// CloudShareContent 网盘分享消息内容（分享文件/目录列表）
+type CloudShareContent struct {
+	Files []CloudShareItem `json:"files"`
+}
+
+func (c CloudShareContent) ToString() string {
+	if len(c.Files) == 0 {
+		return "[Cloud Share]"
+	}
+	if len(c.Files) == 1 {
+		return "[Cloud Share]:" + c.Files[0].ShareName
+	}
+	return fmt.Sprintf("[Cloud Share]:%s 等%d项", c.Files[0].ShareName, len(c.Files))
+}
+
+func (c CloudShareContent) GetKeywordContent() string {
+	if len(c.Files) == 0 {
+		return ""
+	}
+	names := make([]string, 0, len(c.Files))
+	for _, file := range c.Files {
+		if file.ShareName != "" {
+			names = append(names, file.ShareName)
+		}
+	}
+	return strings.Join(names, " ")
 }

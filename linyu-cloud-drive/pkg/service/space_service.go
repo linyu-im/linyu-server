@@ -149,6 +149,91 @@ func (s *spaceService) ListUserSpaceAllFiles(userId string, parentId string) ([]
 	return driveDao.SpaceFileDao.ListFilesUnderPath(db.RDB, space.ID, pathPrefix)
 }
 
+// GetUserSpaceFileDetail 查询文件或文件夹详情
+func (s *spaceService) GetUserSpaceFileDetail(userId, spaceFileId string) (*driveResult.SpaceFileDetail, error) {
+	if spaceFileId == "" {
+		return nil, errors.New("param.error")
+	}
+	space, err := s.GetOrCreateUserSpace(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	file := driveDao.SpaceFileDao.GetById(db.RDB, spaceFileId)
+	if file == nil || file.SpaceID != space.ID {
+		return nil, errors.New("param.error")
+	}
+
+	location, err := s.buildLocation(file)
+	if err != nil {
+		return nil, err
+	}
+
+	detail := &driveResult.SpaceFileDetail{
+		ID:           file.ID,
+		FileName:     file.FileName,
+		IsDir:        file.IsDir,
+		FileType:     file.FileType,
+		FileCategory: file.FileCategory,
+		Location:     location,
+		Size:         file.FileSize,
+		Contains:     nil,
+		UpdatedAt:    file.UpdatedAt,
+	}
+
+	if file.IsDir {
+		totalSize, _, err := driveDao.SpaceFileDao.SumFileSizeSelfAndDescendants(db.RDB, space.ID, file.ID, file.Path)
+		if err != nil {
+			return nil, err
+		}
+		fileCount, folderCount, err := driveDao.SpaceFileDao.CountDescendants(db.RDB, space.ID, file.Path)
+		if err != nil {
+			return nil, err
+		}
+		detail.Size = totalSize
+		detail.Contains = &driveResult.SpaceFileContains{
+			FileCount:   fileCount,
+			FolderCount: folderCount,
+		}
+	}
+	return detail, nil
+}
+
+// buildLocation 根据 path 组装可读位置，如 /文档/工作
+func (s *spaceService) buildLocation(file *driveModel.SpaceFile) (string, error) {
+	if file.ParentID == "root" || file.Path == "" {
+		return "/", nil
+	}
+
+	parts := strings.Split(strings.Trim(file.Path, "/"), "/")
+	if len(parts) <= 1 {
+		return "/", nil
+	}
+	// path 含自身 id，位置取父级名称路径
+	ancestorIds := parts[:len(parts)-1]
+	ancestors, err := driveDao.SpaceFileDao.ListByIds(db.RDB, ancestorIds)
+	if err != nil {
+		return "", err
+	}
+	nameMap := make(map[string]string, len(ancestors))
+	for _, item := range ancestors {
+		nameMap[item.ID] = item.FileName
+	}
+
+	names := make([]string, 0, len(ancestorIds))
+	for _, id := range ancestorIds {
+		name, ok := nameMap[id]
+		if !ok || name == "" {
+			continue
+		}
+		names = append(names, name)
+	}
+	if len(names) == 0 {
+		return "/", nil
+	}
+	return "/" + strings.Join(names, "/"), nil
+}
+
 // ListUserSpaceDirTree 查询用户空间目录树（仅目录）
 func (s *spaceService) ListUserSpaceDirTree(userId string) ([]*driveResult.SpaceDirTreeNode, error) {
 	space, err := s.GetOrCreateUserSpace(userId)
@@ -219,7 +304,7 @@ func (s *spaceService) CreateUserSpaceDir(userId string, parentId string, dirNam
 		Level:               level + 1,
 		FileName:            dirName,
 		IsDir:               true,
-		FileType:            "",
+		FileType:            constant.FileType.Folder,
 		FileSize:            0,
 	}
 	if err := driveDao.SpaceFileDao.Create(db.RDB, dir); err != nil {

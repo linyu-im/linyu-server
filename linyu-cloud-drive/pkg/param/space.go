@@ -27,6 +27,10 @@ type SpaceFileRenameParam struct {
 	NewName     string `json:"newName" binding:"required"`
 }
 
+type SpaceFileDetailParam struct {
+	SpaceFileID string `json:"spaceFileId" binding:"required"`
+}
+
 type SpaceRecycleRestoreParam struct {
 	SpaceRecycleIDs []string `json:"spaceRecycleIds" binding:"required,min=1"`
 }

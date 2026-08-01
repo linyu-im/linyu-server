@@ -120,6 +120,26 @@ func (d *spaceFileDao) SumFileSizeSelfAndDescendants(db *gorm.DB, spaceId, id, p
 	return r.TotalSize, r.FileCount, nil
 }
 
+// CountDescendants 统计目录下子孙文件数与文件夹数
+func (d *spaceFileDao) CountDescendants(db *gorm.DB, spaceId, path string) (fileCount, folderCount int64, err error) {
+	type row struct {
+		FileCount   int64
+		FolderCount int64
+	}
+	var r row
+	err = db.Model(&driveModel.SpaceFile{}).
+		Select(`
+			COALESCE(SUM(CASE WHEN is_dir = 0 THEN 1 ELSE 0 END), 0) AS file_count,
+			COALESCE(SUM(CASE WHEN is_dir = 1 THEN 1 ELSE 0 END), 0) AS folder_count
+		`).
+		Where("space_id = ? AND path LIKE ?", spaceId, path+"/%").
+		Scan(&r).Error
+	if err != nil {
+		return 0, 0, err
+	}
+	return r.FileCount, r.FolderCount, nil
+}
+
 func (d *spaceFileDao) ClearDeletedAtByIds(db *gorm.DB, ids []string) error {
 	if len(ids) == 0 {
 		return nil

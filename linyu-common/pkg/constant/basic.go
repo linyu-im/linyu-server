@@ -126,24 +126,26 @@ type messageStatus struct {
 var MessageStatus = messageStatus{}
 
 type messageType struct {
-	Text    string //文本
-	Image   string //图片
-	File    string //文件
-	Video   string //视频
-	Voice   string //语音
-	ECard   string //电子名片
-	Sticker string //表情
+	Text       string //文本
+	Image      string //图片
+	File       string //文件
+	Video      string //视频
+	Voice      string //语音
+	ECard      string //电子名片
+	Sticker    string //表情
+	CloudShare string //网盘分享
 }
 
 // MessageType 消息类型
 var MessageType = messageType{
-	Text:    "text",
-	Image:   "image",
-	File:    "file",
-	Video:   "video",
-	Voice:   "voice",
-	ECard:   "ecard",
-	Sticker: "sticker",
+	Text:       "text",
+	Image:      "image",
+	File:       "file",
+	Video:      "video",
+	Voice:      "voice",
+	ECard:      "ecard",
+	Sticker:    "sticker",
+	CloudShare: "cloud_share",
 }
 
 type messageFromType struct {
