@@ -3,11 +3,12 @@ go 1.25.5
 use (
 	.
 	./linyu-ai
+	./linyu-application
+	./linyu-auth
 	./linyu-basic-service
+	./linyu-cloud-drive
 	./linyu-common
 	./linyu-gateway
 	./linyu-im
 	./linyu-voip-chat
-	./linyu-auth
-	./linyu-cloud-drive
 )

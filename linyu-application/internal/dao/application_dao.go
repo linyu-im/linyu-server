@@ -1,7 +1,7 @@
 package dao
 
 import (
-	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	appModel "github.com/linyu-im/linyu-server/linyu-application/pkg/model"
 	"gorm.io/gorm"
 )
 
@@ -13,9 +13,9 @@ func newApplicationDao() *applicationDao {
 
 type applicationDao struct{}
 
-func (d *applicationDao) List(db *gorm.DB, keyword string) ([]*basicModel.Application, error) {
-	var list []*basicModel.Application
-	tx := db.Model(&basicModel.Application{})
+func (d *applicationDao) List(db *gorm.DB, keyword string) ([]*appModel.Application, error) {
+	var list []*appModel.Application
+	tx := db.Model(&appModel.Application{})
 	if keyword != "" {
 		like := "%" + keyword + "%"
 		tx = tx.Where("app_name LIKE ? OR author LIKE ? OR description LIKE ?", like, like, like)
