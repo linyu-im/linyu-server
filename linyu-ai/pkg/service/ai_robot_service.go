@@ -5,7 +5,6 @@ import (
 	aiModel "github.com/linyu-im/linyu-server/linyu-ai/pkg/model"
 	aiParam "github.com/linyu-im/linyu-server/linyu-ai/pkg/param"
 	aiResult "github.com/linyu-im/linyu-server/linyu-ai/pkg/result"
-	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 )
@@ -36,13 +35,7 @@ func (s *aiRobotService) GetAvatar(robotId string) string {
 }
 
 func (s *aiRobotService) PrepareRobotAnswers(userId string, param *aiParam.RobotAnswersParam) (*aiResult.RobotAnswersPrepareResult, error) {
-	var sessionId string
-	switch param.SceneType {
-	case constant.SceneType.User:
-		sessionId = utils.Generate1v1SessionID(userId, param.PeerId)
-	case constant.SceneType.Group:
-		sessionId = param.PeerId
-	}
+	sessionId := utils.GenerateSessionID(userId, param.PeerId, param.SceneType)
 	//longMemory, _ := AiMemoryService.GetLongTermMemory(sessionId, param.Question)
 	shortMemory := AiMemoryService.GetShortTermMemory(sessionId)
 	in := map[string]any{

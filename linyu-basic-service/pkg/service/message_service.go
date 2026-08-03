@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"strings"
 
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
@@ -84,11 +83,11 @@ func (s messageService) GetMessageBySessionId(sessionId string, num int) []*basi
 }
 
 func (s messageService) VerifySessionSceneType(userId, session string) (string, string, error) {
-	if strings.Contains(session, userId) {
-		ids := utils.Split1v1SessionID(session)
-		toId := ids[0]
-		if toId == userId {
-			toId = ids[1]
+	switch utils.GetSessionSceneType(session) {
+	case constant.SceneType.User:
+		toId := utils.GetPeerIdFromUserSession(session, userId)
+		if toId == "" {
+			return constant.SceneType.User, "", fmt.Errorf("param.error")
 		}
 		if toId == userId {
 			return constant.SceneType.User, userId, nil
@@ -96,20 +95,19 @@ func (s messageService) VerifySessionSceneType(userId, session string) (string, 
 		// 判断自己是否是对方好友
 		if ContactsService.IsFriend(toId, userId) {
 			return constant.SceneType.User, toId, nil
-		} else {
-			return constant.SceneType.User, toId, fmt.Errorf("basic.contacts.you-no-other-friend")
 		}
-	} else if GroupService.IsGroupMember(session, userId) {
-		return constant.SceneType.Group, session, nil
-	}
-	return constant.SceneType.Group, session, fmt.Errorf("param.error")
-}
-
-func (s messageService) GetSessionIdByPeerIdAndSceneType(userId, peerId, sceneType string) string {
-	if sceneType == constant.SceneType.User {
-		return utils.Generate1v1SessionID(userId, peerId)
-	} else {
-		return peerId
+		return constant.SceneType.User, toId, fmt.Errorf("basic.contacts.you-no-other-friend")
+	case constant.SceneType.Group:
+		groupId := utils.GetGroupIdFromSessionID(session)
+		if groupId == "" {
+			return constant.SceneType.Group, "", fmt.Errorf("param.error")
+		}
+		if GroupService.IsGroupMember(groupId, userId) {
+			return constant.SceneType.Group, groupId, nil
+		}
+		return constant.SceneType.Group, groupId, fmt.Errorf("param.error")
+	default:
+		return "", "", fmt.Errorf("param.error")
 	}
 }
 
@@ -128,9 +126,9 @@ func (s messageService) MessageList(userId string, param *basicParam.MessageList
 func (s messageService) MessagePage(userId string, param *basicParam.MessagePageParam) (*response.PageResult[*basicModel.Message], error) {
 	var sessionId string
 	if ContactsService.IsFriendBothOr(userId, param.ToId) {
-		sessionId = utils.Generate1v1SessionID(userId, param.ToId)
+		sessionId = utils.GenerateSessionID(userId, param.ToId, constant.SceneType.User)
 	} else if GroupService.IsGroupMember(param.ToId, userId) {
-		sessionId = param.ToId
+		sessionId = utils.GenerateSessionID(userId, param.ToId, constant.SceneType.Group)
 	} else {
 		return nil, fmt.Errorf("param.error")
 	}
@@ -175,12 +173,8 @@ func (s messageService) ForwardMessage(currentUserId string, param *basicParam.F
 			SceneType:      peerInfo.PeerSceneType,
 			FromType:       constant.MessageFromType.User,
 		}
-		switch peerInfo.PeerSceneType {
-		case constant.SceneType.User:
-			message.SessionID = utils.Generate1v1SessionID(currentUserId, peerInfo.PeerId)
-		case constant.SceneType.Group:
-			message.SessionID = peerInfo.PeerId
-		default:
+		message.SessionID = utils.GenerateSessionID(currentUserId, peerInfo.PeerId, peerInfo.PeerSceneType)
+		if message.SessionID == "" {
 			return fmt.Errorf("param.error")
 		}
 		_, _ = s.SendMessageToSession(currentUserId, message)
