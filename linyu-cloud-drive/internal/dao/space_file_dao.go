@@ -159,6 +159,17 @@ func (d *spaceFileDao) ListSelfAndDescendantsUnscoped(db *gorm.DB, spaceId strin
 	return list, nil
 }
 
+// ListSelfAndDescendants 查询自身及全部子孙
+func (d *spaceFileDao) ListSelfAndDescendants(db *gorm.DB, spaceId string, id string, path string) ([]*driveModel.SpaceFile, error) {
+	var list []*driveModel.SpaceFile
+	if err := db.Where("space_id = ? AND (id = ? OR path LIKE ?)", spaceId, id, path+"/%").
+		Order("level ASC").
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
 func (d *spaceFileDao) UnscopedDeleteByIds(db *gorm.DB, ids []string) error {
 	if len(ids) == 0 {
 		return nil

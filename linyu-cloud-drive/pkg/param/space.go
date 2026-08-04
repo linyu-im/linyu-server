@@ -22,6 +22,12 @@ type SpaceFileMoveParam struct {
 	TargetParentID string   `json:"targetParentId" binding:"required"`
 }
 
+// SpaceFileTransferParam 转存：将源文件/目录复制到当前用户空间指定目录
+type SpaceFileTransferParam struct {
+	SpaceFileIDs []string `json:"spaceFileIds" binding:"required,min=1"`
+	TargetDirID  string   `json:"targetDirId" binding:"required"`
+}
+
 type SpaceFileRenameParam struct {
 	SpaceFileID string `json:"spaceFileId" binding:"required"`
 	NewName     string `json:"newName" binding:"required"`

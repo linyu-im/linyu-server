@@ -42,3 +42,6 @@ basic:
 cloud-drive:
   space:
     quota-exceeded: "Cloud drive space is insufficient, please free up space and try again"
+    transfer-source-denied: "You can only transfer files from yourself or your friends"
+    target-dir-not-exist: "Target directory does not exist"
+    transfer-file-expired: "All files have expired"

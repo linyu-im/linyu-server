@@ -17,6 +17,7 @@ func init() {
 	route.Register("POST", "/cloud-drive/v1/space/user/dir/tree", UserSpaceDirTreeHandler)
 	route.Register("POST", "/cloud-drive/v1/space/user/file/delete", UserSpaceFileDeleteHandler)
 	route.Register("POST", "/cloud-drive/v1/space/user/file/move", UserSpaceFileMoveHandler)
+	route.Register("POST", "/cloud-drive/v1/space/user/file/transfer", UserSpaceFileTransferHandler)
 	route.Register("POST", "/cloud-drive/v1/space/user/file/rename", UserSpaceFileRenameHandler)
 	route.Register("POST", "/cloud-drive/v1/space/user/file/detail", UserSpaceFileDetailHandler)
 	route.Register("POST", "/cloud-drive/v1/space/user/file/category/stats", UserSpaceFileCategoryStatsHandler)
@@ -111,6 +112,20 @@ func UserSpaceFileMoveHandler(c *gin.Context) {
 	}
 	currentUserId := c.GetString("userId")
 	if err := driveService.SpaceService.MoveUserSpaceFiles(currentUserId, param.SpaceFileIDs, param.TargetParentID); err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, nil)
+}
+
+// UserSpaceFileTransferHandler 转存：将自己或好友的文件/目录复制到当前用户指定目录
+func UserSpaceFileTransferHandler(c *gin.Context) {
+	param := &driveParam.SpaceFileTransferParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	if err := driveService.SpaceService.TransferSaveUserSpaceFiles(currentUserId, param.SpaceFileIDs, param.TargetDirID); err != nil {
 		response.Fail(c, err.Error())
 		return
 	}

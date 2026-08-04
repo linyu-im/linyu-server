@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	basicService "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/service"
 	driveDao "github.com/linyu-im/linyu-server/linyu-cloud-drive/internal/dao"
 	driveModel "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/model"
 	driveResult "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/result"
@@ -378,6 +379,173 @@ func (s *spaceService) DeleteUserSpaceFiles(userId string, spaceFileIds []string
 		}
 		return driveDao.SpaceDao.DecUsedBytesById(tx, space.ID, totalSize, fileCount)
 	})
+}
+
+// TransferSaveUserSpaceFiles 将源文件/目录转存（复制）到当前用户空间指定目录
+func (s *spaceService) TransferSaveUserSpaceFiles(userId string, spaceFileIds []string, targetDirId string) error {
+	destSpace, err := s.GetOrCreateUserSpace(userId)
+	if err != nil {
+		return err
+	}
+
+	targetParent, err := SpaceFileService.VerifyDirPermission(targetDirId, destSpace.ID, userId)
+	if err != nil {
+		return errors.New("cloud-drive.space.target-dir-not-exist")
+	}
+
+	targetPathPrefix := ""
+	targetLevel := 0
+	resolvedParentId := "root"
+	if targetParent != nil {
+		targetPathPrefix = targetParent.Path
+		targetLevel = targetParent.Level
+		resolvedParentId = targetParent.ID
+	}
+
+	idSet := make(map[string]struct{}, len(spaceFileIds))
+	uniqueIds := make([]string, 0, len(spaceFileIds))
+	for _, id := range spaceFileIds {
+		if id == "" {
+			return errors.New("param.error")
+		}
+		if _, ok := idSet[id]; ok {
+			continue
+		}
+		idSet[id] = struct{}{}
+		uniqueIds = append(uniqueIds, id)
+	}
+
+	files, err := driveDao.SpaceFileDao.ListByIds(db.RDB, uniqueIds)
+	if err != nil {
+		return err
+	}
+	// ListByIds 默认排除软删除；查不到视为已过期/已删除
+	if len(files) == 0 || len(files) != len(uniqueIds) {
+		return errors.New("cloud-drive.space.transfer-file-expired")
+	}
+
+	spaceCache := make(map[string]*driveModel.Space)
+	for _, file := range files {
+		space, ok := spaceCache[file.SpaceID]
+		if !ok {
+			space = driveDao.SpaceDao.GetById(db.RDB, file.SpaceID)
+			if space == nil || space.SpaceType != constant.SpaceType.User {
+				return errors.New("cloud-drive.space.transfer-source-denied")
+			}
+			spaceCache[file.SpaceID] = space
+		}
+		ownerId := space.OwnerID
+		if ownerId == "" {
+			ownerId = space.TargetID
+		}
+		if ownerId != userId && !basicService.ContactsService.IsFriend(userId, ownerId) {
+			return errors.New("cloud-drive.space.transfer-source-denied")
+		}
+	}
+
+	topFiles := filterTopLevelSpaceFiles(files)
+
+	var totalSize, fileCount int64
+	for _, file := range topFiles {
+		size, count, calcErr := s.CalcSpaceFilesUsedBytes(db.RDB, file.SpaceID, []*driveModel.SpaceFile{file})
+		if calcErr != nil {
+			return calcErr
+		}
+		totalSize += size
+		fileCount += count
+	}
+	if err := s.CheckSpaceQuota(destSpace, totalSize); err != nil {
+		return err
+	}
+
+	return db.RDB.Transaction(func(tx *gorm.DB) error {
+		var copiedSize, copiedCount int64
+		for _, file := range topFiles {
+			size, count, copyErr := s.copySpaceFileTree(tx, file, destSpace.ID, userId, resolvedParentId, targetPathPrefix, targetLevel)
+			if copyErr != nil {
+				return copyErr
+			}
+			copiedSize += size
+			copiedCount += count
+		}
+		if copiedSize == 0 && copiedCount == 0 {
+			return nil
+		}
+		return driveDao.SpaceDao.IncUsedBytesById(tx, destSpace.ID, copiedSize, copiedCount)
+	})
+}
+
+// copySpaceFileTree 将单个文件或整棵目录树复制到目标空间目录下，复用物理文件引用
+func (s *spaceService) copySpaceFileTree(
+	tx *gorm.DB,
+	src *driveModel.SpaceFile,
+	destSpaceId, userId, destParentId, destParentPath string,
+	destParentLevel int,
+) (int64, int64, error) {
+	nodes := []*driveModel.SpaceFile{src}
+	if src.IsDir {
+		list, err := driveDao.SpaceFileDao.ListSelfAndDescendants(tx, src.SpaceID, src.ID, src.Path)
+		if err != nil {
+			return 0, 0, err
+		}
+		nodes = list
+	}
+
+	idMap := make(map[string]string, len(nodes))
+	pathMap := make(map[string]string, len(nodes))
+	levelMap := make(map[string]int, len(nodes))
+	var totalSize, fileCount int64
+
+	for _, node := range nodes {
+		newId := utils.GenerateSfIDString()
+		idMap[node.ID] = newId
+
+		var newParentId, newPath string
+		var newLevel int
+		if node.ID == src.ID {
+			newParentId = destParentId
+			newPath = destParentPath + "/" + newId
+			newLevel = destParentLevel + 1
+		} else {
+			mappedParent, ok := idMap[node.ParentID]
+			if !ok {
+				return 0, 0, errors.New("param.error")
+			}
+			newParentId = mappedParent
+			newPath = pathMap[node.ParentID] + "/" + newId
+			newLevel = levelMap[node.ParentID] + 1
+		}
+		pathMap[node.ID] = newPath
+		levelMap[node.ID] = newLevel
+
+		clone := &driveModel.SpaceFile{
+			ID:                  newId,
+			SpaceID:             destSpaceId,
+			UserID:              userId,
+			PhysicalID:          node.PhysicalID,
+			PhysicalStoragePath: node.PhysicalStoragePath,
+			ParentID:            newParentId,
+			Path:                newPath,
+			Level:               newLevel,
+			FileName:            node.FileName,
+			IsDir:               node.IsDir,
+			FileType:            node.FileType,
+			FileCategory:        node.FileCategory,
+			FileSize:            node.FileSize,
+			Status:              node.Status,
+		}
+		if err := driveDao.SpaceFileDao.Create(tx, clone); err != nil {
+			return 0, 0, err
+		}
+		if !node.IsDir && node.PhysicalID != "" {
+			if err := driveDao.PhysicalFileDao.FileRefIncById(tx, node.PhysicalID); err != nil {
+				return 0, 0, err
+			}
+			totalSize += node.FileSize
+			fileCount++
+		}
+	}
+	return totalSize, fileCount, nil
 }
 
 func (s *spaceService) MoveUserSpaceFiles(userId string, spaceFileIds []string, targetParentId string) error {

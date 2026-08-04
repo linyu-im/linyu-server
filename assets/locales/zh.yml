@@ -42,3 +42,6 @@ basic:
 cloud-drive:
   space:
     quota-exceeded: "云盘空间不足，请清理后重试"
+    transfer-source-denied: "仅可转存自己或好友的文件"
+    target-dir-not-exist: "目标目录不存在"
+    transfer-file-expired: "文件都已过期"
