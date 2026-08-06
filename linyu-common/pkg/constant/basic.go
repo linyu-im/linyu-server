@@ -134,6 +134,7 @@ type messageType struct {
 	ECard      string //电子名片
 	Sticker    string //表情
 	CloudShare string //网盘分享
+	CallRecord string //通话记录
 }
 
 // MessageType 消息类型
@@ -146,6 +147,7 @@ var MessageType = messageType{
 	ECard:      "ecard",
 	Sticker:    "sticker",
 	CloudShare: "cloud_share",
+	CallRecord: "call_record",
 }
 
 type messageFromType struct {

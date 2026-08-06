@@ -53,6 +53,7 @@ var msgContentFactory = map[string]func() MsgContent{
 	constant.MessageType.Voice:      func() MsgContent { return &VoiceContent{} },
 	constant.MessageType.Sticker:    func() MsgContent { return &StickerContent{} },
 	constant.MessageType.CloudShare: func() MsgContent { return &CloudShareContent{} },
+	constant.MessageType.CallRecord: func() MsgContent { return &CallRecordContent{} },
 }
 
 func ParseMsgContent(msgType string, raw json.RawMessage) (MsgContent, error) {
@@ -173,6 +174,38 @@ func (c StickerContent) ToString() string {
 }
 
 func (c StickerContent) GetKeywordContent() string {
+	return ""
+}
+
+// CallRecordContent 通话记录消息内容
+type CallRecordContent struct {
+	Duration   int64  `json:"duration"`   // 通话时长（秒）
+	CallType   string `json:"callType"`   // audio / video
+	CallStatus string `json:"callStatus"` // ended / missed / rejected / canceled / calling
+}
+
+func (c CallRecordContent) ToString() string {
+	typeName := "语音通话"
+	if c.CallType == constant.AvCallType.Video {
+		typeName = "视频通话"
+	}
+	switch c.CallStatus {
+	case constant.AvCallStatus.Ended:
+		return fmt.Sprintf("[%s] 通话时长 %d 秒", typeName, c.Duration)
+	case constant.AvCallStatus.Missed:
+		return fmt.Sprintf("[%s] 未接通", typeName)
+	case constant.AvCallStatus.Rejected:
+		return fmt.Sprintf("[%s] 已拒绝", typeName)
+	case constant.AvCallStatus.Canceled:
+		return fmt.Sprintf("[%s] 已取消", typeName)
+	case constant.AvCallStatus.Calling:
+		return fmt.Sprintf("[%s] 通话中", typeName)
+	default:
+		return fmt.Sprintf("[%s]", typeName)
+	}
+}
+
+func (c CallRecordContent) GetKeywordContent() string {
 	return ""
 }
 

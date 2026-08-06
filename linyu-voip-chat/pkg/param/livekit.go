@@ -1,5 +1,9 @@
 package param
 
 type LivekitTokenParam struct {
-	GroupId string `json:"groupId"`
+	SessionId string `json:"sessionId" binding:"required"`
+}
+
+type LivekitUserTokenParam struct {
+	SessionId string `json:"sessionId" binding:"required"`
 }
