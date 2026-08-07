@@ -38,7 +38,7 @@ func (StickerPack) TableInit(db *gorm.DB) error {
 			ID:          "1",
 			Name:        "林语小吉",
 			Description: "林语官方表情包",
-			PackIconUrl: "http://thsu1eozt.hd-bkt.clouddn.com/xiaoji/256/傲娇.png",
+			PackIconUrl: "http://127.0.0.1:9000/linyu/sticker/xiaoji/256x256/傲娇.png",
 		},
 		{
 			ID:          "10",
