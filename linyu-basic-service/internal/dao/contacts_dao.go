@@ -89,7 +89,22 @@ func (d *contactsDao) ContactsFriendList(db *gorm.DB, userId string) ([]*basicMo
 		Select("c.*, u.username AS username, u.user_level AS user_level, e.emotion_name AS emotion_name, e.url AS emotion_url ").
 		Joins("LEFT JOIN t_user u ON u.id = c.peer_id").
 		Joins("LEFT JOIN t_emotion e ON u.emotion_id = e.id").
-		Where("user_id = ? AND peer_type = ?", userId, constant.ContactsPeerType.Friend).
+		Where("c.user_id = ? AND c.peer_type = ?", userId, constant.ContactsPeerType.Friend).
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (d *contactsDao) ContactsFriendSearch(db *gorm.DB, userId string, keyword string) ([]*basicModel.Contacts, error) {
+	var list []*basicModel.Contacts
+	like := "%" + keyword + "%"
+	if err := db.Table("t_contacts AS c").
+		Select("c.*, u.username AS username, u.user_level AS user_level, e.emotion_name AS emotion_name, e.url AS emotion_url ").
+		Joins("LEFT JOIN t_user u ON u.id = c.peer_id").
+		Joins("LEFT JOIN t_emotion e ON u.emotion_id = e.id").
+		Where("c.user_id = ? AND c.peer_type = ?", userId, constant.ContactsPeerType.Friend).
+		Where("u.username LIKE ? OR u.account LIKE ? OR c.remark LIKE ?", like, like, like).
 		Find(&list).Error; err != nil {
 		return nil, err
 	}
@@ -101,7 +116,21 @@ func (d *contactsDao) ContactsGroupList(db *gorm.DB, userId string) ([]*basicMod
 	if err := db.Table("t_contacts AS c").
 		Select("c.*, g.name AS group_name, g.member_num AS group_member_num").
 		Joins("LEFT JOIN t_group g ON g.id = c.peer_id").
-		Where("user_id = ? AND peer_type = ?", userId, constant.ContactsPeerType.Group).
+		Where("c.user_id = ? AND c.peer_type = ?", userId, constant.ContactsPeerType.Group).
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (d *contactsDao) ContactsGroupSearch(db *gorm.DB, userId string, keyword string) ([]*basicModel.Contacts, error) {
+	var list []*basicModel.Contacts
+	like := "%" + keyword + "%"
+	if err := db.Table("t_contacts AS c").
+		Select("c.*, g.name AS group_name, g.member_num AS group_member_num").
+		Joins("LEFT JOIN t_group g ON g.id = c.peer_id").
+		Where("c.user_id = ? AND c.peer_type = ?", userId, constant.ContactsPeerType.Group).
+		Where("g.name LIKE ? OR g.group_number LIKE ? OR c.remark LIKE ?", like, like, like).
 		Find(&list).Error; err != nil {
 		return nil, err
 	}

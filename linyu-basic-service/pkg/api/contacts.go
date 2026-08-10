@@ -13,6 +13,7 @@ func init() {
 	route.Register("POST", "/basic/v1/contacts/friend/list", ContactsFriendListHandler)
 	route.Register("POST", "/basic/v1/contacts/group/list", ContactsGroupListHandler)
 	route.Register("POST", "/basic/v1/contacts/enterprise/list", ContactsEnterpriseListHandler)
+	route.Register("POST", "/basic/v1/contacts/search", ContactsSearchHandler)
 	route.Register("POST", "/basic/v1/contacts/friend/delete", ContactsRelDelHandler)
 	route.Register("POST", "/basic/v1/contacts/friend/is", ContactsIsFriendHandler)
 	route.Register("POST", "/basic/v1/contacts/remark/update", ContactsUpdateRemarkHandler)
@@ -50,6 +51,21 @@ func ContactsEnterpriseListHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c, list)
+}
+
+// ContactsSearchHandler 通讯录关键字聚合搜索（好友+群）
+func ContactsSearchHandler(c *gin.Context) {
+	param := &basicParam.ContactsSearchParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	result, err := basicService.ContactsService.ContactsSearch(currentUserId, param)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, result)
 }
 
 // ContactsFriendDelHandler 通讯录好友删除

@@ -33,6 +33,27 @@ func (s *contactsService) ContactsEnterpriseList(userId string) ([]*basicModel.C
 	return list, err
 }
 
+func (s *contactsService) ContactsSearch(userId string, param *basicParam.ContactsSearchParam) (*basicParam.ContactsSearchResult, error) {
+	friends, err := basicDao.ContactsDao.ContactsFriendSearch(db.RDB, userId, param.Keyword)
+	if err != nil {
+		return nil, err
+	}
+	groups, err := basicDao.ContactsDao.ContactsGroupSearch(db.RDB, userId, param.Keyword)
+	if err != nil {
+		return nil, err
+	}
+	if friends == nil {
+		friends = []*basicModel.Contacts{}
+	}
+	if groups == nil {
+		groups = []*basicModel.Contacts{}
+	}
+	return &basicParam.ContactsSearchResult{
+		Friends: friends,
+		Groups:  groups,
+	}, nil
+}
+
 func (s *contactsService) IsFriend(userId string, peerId string) bool {
 	return basicDao.ContactsDao.IsFriend(db.RDB, userId, peerId)
 }
