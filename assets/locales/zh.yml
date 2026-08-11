@@ -11,6 +11,7 @@ auth:
   email-not-registered: "邮箱未注册"
   user-banned: "您的账户因违反平台使用规则已被禁用"
   ldap-not-enabled: "Ldap未开启"
+  version-too-low: "当前客户端版本过低，请更新后再登录"
 
 param:
   success: "操作成功"

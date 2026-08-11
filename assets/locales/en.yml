@@ -11,6 +11,7 @@ auth:
   email-not-registered: "Email not registered"
   user-banned: "Your account has been disabled for violating the platform's rules of use"
   ldap-not-enabled: "LDAP not enabled"
+  version-too-low: "Your client version is too low, please update and try again"
 
 param:
   success: "Success"

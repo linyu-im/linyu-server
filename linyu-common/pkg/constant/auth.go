@@ -15,3 +15,30 @@ var Device = device{
 	Mobile:  "mobile",
 	Unknown: "unknown",
 }
+
+// ------------------app platform相关------------------
+type appPlatform struct {
+	Android string
+	IOS     string
+	Windows string
+	MacOS   string
+	Web     string
+}
+
+// AppPlatform 客户端平台
+var AppPlatform = appPlatform{
+	Android: "android",
+	IOS:     "ios",
+	Windows: "windows",
+	MacOS:   "macos",
+	Web:     "web",
+}
+
+func (c appPlatform) Validate(v string) bool {
+	switch v {
+	case c.Android, c.IOS, c.Windows, c.MacOS, c.Web:
+		return true
+	default:
+		return false
+	}
+}

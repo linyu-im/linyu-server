@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/linyu-im/linyu-server/linyu-auth/pkg/param"
 	authService "github.com/linyu-im/linyu-server/linyu-auth/pkg/service"
+	basicService "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/service"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
@@ -18,10 +19,21 @@ func init() {
 	route.Register("POST", "/auth/v1/login/token/reset", TokenResetHandler)
 }
 
+func ensureLoginVersion(c *gin.Context, platform string, versionCode int) bool {
+	if err := basicService.AppVersionService.EnsureMinSupport(platform, versionCode); err != nil {
+		response.Fail(c, err.Error())
+		return false
+	}
+	return true
+}
+
 // PwdLoginHandler 密码登录
 func PwdLoginHandler(c *gin.Context) {
 	pwdLoginParam := &param.PwdLoginParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, pwdLoginParam) {
+		return
+	}
+	if !ensureLoginVersion(c, pwdLoginParam.Platform, pwdLoginParam.VersionCode) {
 		return
 	}
 	userInfo, err := authService.LoginService.PasswordLogin(pwdLoginParam.Account, pwdLoginParam.Password,
@@ -39,6 +51,9 @@ func Oauth2LoginHandler(c *gin.Context) {
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, loginParam) {
 		return
 	}
+	if !ensureLoginVersion(c, loginParam.Platform, loginParam.VersionCode) {
+		return
+	}
 	userInfo, err := authService.LoginService.Oauth2Login(loginParam.Type, loginParam.Code,
 		c.GetString("device"))
 	if err != nil {
@@ -52,6 +67,9 @@ func Oauth2LoginHandler(c *gin.Context) {
 func LdapLoginHandler(c *gin.Context) {
 	ldapParam := &param.LdapLoginParam{}
 	if !utils.ShouldBindBodyWithJSONAndValidate(c, ldapParam) {
+		return
+	}
+	if !ensureLoginVersion(c, ldapParam.Platform, ldapParam.VersionCode) {
 		return
 	}
 	userInfo, err := authService.LoginService.LdapLogin(ldapParam.Username, ldapParam.Password,
