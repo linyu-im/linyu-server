@@ -80,7 +80,11 @@ func (s groupService) GroupCreate(userId string, param *basicParam.GroupCreatePa
 		}
 		return nil
 	})
-	return group, err
+	if err != nil {
+		return nil, err
+	}
+	basicDao.GroupDao.UpdateMaxGroupNumberCache(number)
+	return group, nil
 }
 
 func buildGroupNameFromFriendIds(friendIds []string) string {

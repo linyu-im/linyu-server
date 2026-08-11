@@ -17,6 +17,7 @@ func init() {
 	route.RegisterWhite("POST", "/auth/v1/login/oauth2", Oauth2LoginHandler)
 	route.RegisterWhite("POST", "/auth/v1/login/enable/ldap", EnableLdapHandler)
 	route.Register("POST", "/auth/v1/login/token/reset", TokenResetHandler)
+	route.Register("POST", "/auth/v1/login/password/verify", VerifyPasswordHandler)
 }
 
 func ensureLoginVersion(c *gin.Context, platform string, versionCode int) bool {
@@ -95,4 +96,18 @@ func TokenResetHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c, userInfo)
+}
+
+// VerifyPasswordHandler 校验当前登录用户密码是否正确
+func VerifyPasswordHandler(c *gin.Context) {
+	p := &param.VerifyPasswordParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, p) {
+		return
+	}
+	ok, err := authService.LoginService.VerifyPassword(c.GetString("userId"), p.Password)
+	if err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c, &ok)
 }

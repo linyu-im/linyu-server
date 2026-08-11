@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -176,4 +177,23 @@ func (o *OtterClient) SMembers(key string) ([]string, error) {
 		keys = append(keys, k)
 	}
 	return keys, nil
+}
+
+// SetIfGreater 进程内加锁后比较再写入（Otter 本身非跨进程共享）
+func (o *OtterClient) SetIfGreater(key string, newValue string, expiration time.Duration) error {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if cur, ok := o.cache.Get(key); ok && cur != "" {
+		curN, curErr := strconv.ParseInt(cur, 10, 64)
+		newN, newErr := strconv.ParseInt(newValue, 10, 64)
+		if curErr == nil && newErr == nil && newN <= curN {
+			return nil
+		}
+	}
+	if expiration <= 0 {
+		expiration = LongPeriod
+	}
+	o.cache.Set(key, newValue, expiration)
+	return nil
 }

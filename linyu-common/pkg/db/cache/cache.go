@@ -1,8 +1,9 @@
 package cache
 
 import (
-	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"time"
+
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 )
 
 type Cache interface {
@@ -15,6 +16,8 @@ type Cache interface {
 	SAdd(key string, expiration time.Duration, members ...interface{}) error
 	SRem(key string, members ...interface{}) error
 	SMembers(key string) ([]string, error)
+	// SetIfGreater 仅当 newValue 数值大于当前值（或不存在）时写入，用于分布式下安全更新最大值
+	SetIfGreater(key string, newValue string, expiration time.Duration) error
 }
 
 func InitCache() Cache {

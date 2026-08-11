@@ -91,6 +91,19 @@ func (s *loginService) TokenReset(userId string, device string) (*authResult.Use
 	return s.Login(user, device)
 }
 
+// VerifyPassword 校验当前登录用户密码是否正确
+func (s *loginService) VerifyPassword(userId, password string) (bool, error) {
+	user := basicService.UserService.GetUserById(userId)
+	if user == nil {
+		return false, errors.New("auth.user-not-exist")
+	}
+	ok, err := utils.VerifyPasswordArgon2id(password, user.Password)
+	if err != nil {
+		return false, errors.New("auth.password-error")
+	}
+	return ok, nil
+}
+
 // LdapAuthenticate ldap验证
 func LdapAuthenticate(username, password string) (string, error) {
 	if !config.C.Auth.Ldap.Enabled {

@@ -3,9 +3,10 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"github.com/redis/go-redis/v9"
-	"time"
 )
 
 type RedisClient struct {
@@ -84,4 +85,24 @@ func (r *RedisClient) SRem(key string, members ...interface{}) error {
 
 func (r *RedisClient) SMembers(key string) ([]string, error) {
 	return r.client.SMembers(r.ctx, key).Result()
+}
+
+// SetIfGreater 原子更新：仅当新值大于当前值时写入
+func (r *RedisClient) SetIfGreater(key string, newValue string, expiration time.Duration) error {
+	const script = `
+local cur = redis.call('GET', KEYS[1])
+if (not cur) or (tonumber(ARGV[1]) > tonumber(cur)) then
+    if tonumber(ARGV[2]) > 0 then
+        redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[2])
+    else
+        redis.call('SET', KEYS[1], ARGV[1])
+    end
+end
+return 1
+`
+	ms := int64(0)
+	if expiration > 0 {
+		ms = expiration.Milliseconds()
+	}
+	return r.client.Eval(r.ctx, script, []string{key}, newValue, ms).Err()
 }

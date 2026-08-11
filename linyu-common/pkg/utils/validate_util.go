@@ -2,22 +2,25 @@ package utils
 
 import (
 	"errors"
+	"reflect"
+	"regexp"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
-	"reflect"
-	"regexp"
 )
 
 var (
-	Mobile = "mobile"
-	Email  = "email"
+	Mobile   = "mobile"
+	Email    = "email"
+	Account  = "account"
+	Password = "password"
+	Eqfield  = "eqfield"
 )
 
 var ValidationErrorMessages = map[string]string{
-	Mobile: "param.phone-format-error",
-	Email:  "param.email-format-error",
+	Eqfield: "param.password-not-match",
 }
 
 func init() {
@@ -25,8 +28,15 @@ func init() {
 	if !ok {
 		return
 	}
-	mobileValidator(v)
-	emailValidator(v)
+	_ = RegisterRegexValidation(v, Mobile, `^1[3-9]\d{9}$`, "param.phone-format-error")
+	_ = RegisterRegexValidation(v, Email, `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`, "param.email-format-error")
+	_ = RegisterRegexValidation(v, Account, `^[a-zA-Z][a-zA-Z0-9_-]{3,19}$`, "param.account-format-error")
+	_ = RegisterAllRegexValidation(v, Password, "param.password-format-error",
+		`^[\x21-\x7E]{8,20}$`,
+		`[A-Za-z]`,
+		`[0-9]`,
+		`[^A-Za-z0-9]`,
+	)
 }
 
 func ShouldBindBodyWithJSONAndValidate(c *gin.Context, obj interface{}) bool {
@@ -55,18 +65,31 @@ func ShouldBindBodyWithJSONAndValidate(c *gin.Context, obj interface{}) bool {
 	return true
 }
 
-// 手机号验证
-func mobileValidator(v *validator.Validate) {
-	_ = v.RegisterValidation(Mobile, func(fl validator.FieldLevel) bool {
-		reg := regexp.MustCompile(`^1[3-9]\d{9}$`)
-		return reg.MatchString(fl.Field().String())
-	})
+// RegisterRegexValidation 注册基于正则的通用校验器，并绑定对应报错文案
+func RegisterRegexValidation(v *validator.Validate, tag, pattern, errMsg string) error {
+	return RegisterAllRegexValidation(v, tag, errMsg, pattern)
 }
 
-// 邮箱验证
-func emailValidator(v *validator.Validate) {
-	_ = v.RegisterValidation(Email, func(fl validator.FieldLevel) bool {
-		reg := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
-		return reg.MatchString(fl.Field().String())
+// RegisterAllRegexValidation 注册多正则校验器（全部命中才通过），并绑定报错文案
+func RegisterAllRegexValidation(v *validator.Validate, tag, errMsg string, patterns ...string) error {
+	regs := make([]*regexp.Regexp, 0, len(patterns))
+	for _, pattern := range patterns {
+		reg, err := regexp.Compile(pattern)
+		if err != nil {
+			return err
+		}
+		regs = append(regs, reg)
+	}
+	if errMsg != "" {
+		ValidationErrorMessages[tag] = errMsg
+	}
+	return v.RegisterValidation(tag, func(fl validator.FieldLevel) bool {
+		val := fl.Field().String()
+		for _, reg := range regs {
+			if !reg.MatchString(val) {
+				return false
+			}
+		}
+		return true
 	})
 }

@@ -20,3 +20,7 @@ type Oauth2LoginParam struct {
 	Platform    string `json:"platform" binding:"required"`
 	VersionCode int    `json:"versionCode"`
 }
+
+type VerifyPasswordParam struct {
+	Password string `json:"password" binding:"required"`
+}

@@ -1,7 +1,11 @@
 package dao
 
 import (
+	"sync"
+
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -13,15 +17,39 @@ func newGroupDao() *groupDao {
 
 type groupDao struct{}
 
-func (d *groupDao) GetMaxGroupNumber(db *gorm.DB) (string, error) {
+var maxGroupNumberMu sync.Mutex
+
+func (d *groupDao) GetMaxGroupNumber(gdb *gorm.DB) (string, error) {
+	key := constant.RedisKey.GroupMaxNumber
+	if val, err := db.CacheDB.Get(key); err == nil && val != "" {
+		return val, nil
+	}
+
+	// 缓存未命中时加锁，避免并发打穿数据库
+	maxGroupNumberMu.Lock()
+	defer maxGroupNumberMu.Unlock()
+
+	if val, err := db.CacheDB.Get(key); err == nil && val != "" {
+		return val, nil
+	}
+
 	var maxNumber string
-	err := db.Model(&basicModel.Group{}).
+	err := gdb.Model(&basicModel.Group{}).
 		Select("COALESCE(MAX(CAST(group_number AS UNSIGNED)), 0)").
 		Scan(&maxNumber).Error
 	if err != nil {
 		return "", err
 	}
+	_ = db.CacheDB.Set(key, maxNumber, 0)
 	return maxNumber, nil
+}
+
+// UpdateMaxGroupNumberCache 创建群成功后回写最大群号缓存（原子取较大值）
+func (d *groupDao) UpdateMaxGroupNumberCache(number string) {
+	if number == "" {
+		return
+	}
+	_ = db.CacheDB.SetIfGreater(constant.RedisKey.GroupMaxNumber, number, 0)
 }
 
 func (d *groupDao) GetGroupByGroupNumber(db *gorm.DB, account string) *basicModel.Group {

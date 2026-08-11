@@ -52,19 +52,22 @@ func (s *userService) SendCodeByEmail(email string) error {
 }
 
 // RegisterByEmail 根据邮箱创建账号
-func (s *userService) RegisterByEmail(email string) error {
-	account := utils.GenerateOnlyNumber("linyu_", func(account string) bool {
-		user := basicDao.UserDao.GetUserByAccount(db.RDB, account)
-		return user == nil
-	})
+func (s *userService) RegisterByEmail(email, account, password string) error {
+	if basicDao.UserDao.GetUserByAccount(db.RDB, account) != nil {
+		return errors.New("auth.account-exists")
+	}
+	hashedPwd, err := utils.HashPasswordArgon2id(password)
+	if err != nil {
+		return errors.New("auth.error")
+	}
 	user := &basicModel.User{
 		ID:       utils.GenerateSfIDString(),
 		Email:    &email,
 		Username: utils.RandUsername("林语"),
 		Account:  account,
+		Password: hashedPwd,
 	}
-	err := basicDao.UserDao.Create(db.RDB, user)
-	if err != nil {
+	if err := basicDao.UserDao.Create(db.RDB, user); err != nil {
 		return err
 	}
 	return nil
