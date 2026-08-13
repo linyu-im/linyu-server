@@ -51,6 +51,70 @@ func (s *userService) SendCodeByEmail(email string) error {
 	return nil
 }
 
+func resetPasswordCodeTag(email string) string {
+	return "password-reset:" + email
+}
+
+// SendResetPasswordCodeByEmail 找回密码发送邮箱验证码（与注册验证码隔离）
+func (s *userService) SendResetPasswordCodeByEmail(email string) error {
+	if basicDao.UserDao.GetUserByEmail(db.RDB, email) == nil {
+		return errors.New("auth.email-not-registered")
+	}
+	code, err := s.GenerateCode(resetPasswordCodeTag(email))
+	if err != nil {
+		return err
+	}
+	emailutil.SendEmailCode(email, code)
+	return nil
+}
+
+// ResetPasswordByEmail 通过邮箱验证码重置密码
+func (s *userService) ResetPasswordByEmail(email, code, password string) error {
+	user := basicDao.UserDao.GetUserByEmail(db.RDB, email)
+	if user == nil {
+		return errors.New("auth.email-not-registered")
+	}
+	if !s.VerifyCode(resetPasswordCodeTag(email), code) {
+		return errors.New("auth.code-expire")
+	}
+	hashedPwd, err := utils.HashPasswordArgon2id(password)
+	if err != nil {
+		return errors.New("auth.error")
+	}
+	if err := basicDao.UserDao.UpdatePassword(db.RDB, user.ID, hashedPwd); err != nil {
+		return err
+	}
+	s.clearUserAuthCache(user.ID)
+	return nil
+}
+
+// clearUserAuthCache 清除用户各端登录态与在线相关缓存
+func (s *userService) clearUserAuthCache(userId string) {
+	devices := []string{
+		constant.Device.Web,
+		constant.Device.Desktop,
+		constant.Device.Mobile,
+		constant.Device.Unknown,
+	}
+	if onlineDevices, err := db.CacheDB.SMembers(fmt.Sprintf(constant.RedisKey.UserOnline, userId)); err == nil {
+		devices = append(devices, onlineDevices...)
+	}
+
+	seen := make(map[string]struct{}, len(devices))
+	for _, device := range devices {
+		if device == "" {
+			continue
+		}
+		if _, ok := seen[device]; ok {
+			continue
+		}
+		seen[device] = struct{}{}
+		_ = db.CacheDB.Del(fmt.Sprintf(constant.RedisKey.UserToken, userId, device))
+		_ = db.CacheDB.Del(fmt.Sprintf(constant.RedisKey.UserActiveSession, userId, device))
+	}
+	_ = db.CacheDB.Del(fmt.Sprintf(constant.RedisKey.UserOnline, userId))
+}
+
 // RegisterByEmail 根据邮箱创建账号
 func (s *userService) RegisterByEmail(email, account, password string) error {
 	if basicDao.UserDao.GetUserByAccount(db.RDB, account) != nil {

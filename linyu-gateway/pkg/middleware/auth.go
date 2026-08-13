@@ -1,12 +1,15 @@
 package middleware
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/jwt"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/response"
 	"golang.org/x/text/language"
-	"strings"
 )
 
 func AddWhiteListPaths(paths []string) {
@@ -48,6 +51,14 @@ func Auth() gin.HandlerFunc {
 		// 解析用户信息
 		userInfo, err := jwt.ParseJwtToken(tokenString)
 		if err != nil {
+			response.FailErrCode(ctx, response.CodeUnauthorized, "Identity information error")
+			return
+		}
+
+		// 校验当前设备缓存中的登录版本是否与 token 一致
+		device := ctx.GetString("device")
+		cachedVersion, err := db.CacheDB.Get(fmt.Sprintf(constant.RedisKey.UserToken, userInfo.UserID, device))
+		if err != nil || cachedVersion == "" || cachedVersion != userInfo.LoginVersion {
 			response.FailErrCode(ctx, response.CodeUnauthorized, "Identity information error")
 			return
 		}

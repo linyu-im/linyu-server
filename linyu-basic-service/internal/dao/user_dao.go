@@ -99,6 +99,12 @@ func (r userDao) UserAvatarById(rdb *gorm.DB, userId string) string {
 	return avatarUrl
 }
 
+func (r userDao) UpdatePassword(db *gorm.DB, userId string, password string) error {
+	return db.Model(&basicModel.User{}).
+		Where("id = ?", userId).
+		Update("password", password).Error
+}
+
 func (r userDao) UpdateAvatar(db *gorm.DB, userId string, avatar string) error {
 	return db.Model(&basicModel.User{}).
 		Where("id = ?", userId).
