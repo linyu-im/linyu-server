@@ -45,7 +45,7 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 
 	// 查看指定好友
 	if viewUserId != "" {
-		// 过期规则
+		// 过期规则：NULL/0=永久；>0=最近 N 天；-1=对他人不可见
 		now := time.Now()
 		tx = tx.Where(`(
 				ms.expire_days IS NULL
@@ -53,8 +53,8 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 				OR (
 					ms.expire_days > 0
 					AND t_moment.created_at >= DATE_SUB(?, INTERVAL ms.expire_days DAY)
-				))
-			`, now)
+				)
+			)`, now)
 		tx = tx.Where("t_moment.user_id = ?", viewUserId)
 		tx = d.buildVisibilityWhere(tx, userId)
 		return tx.Order("t_moment.created_at DESC")

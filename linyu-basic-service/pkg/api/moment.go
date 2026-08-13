@@ -23,6 +23,7 @@ func init() {
 	route.Register("POST", "/basic/v1/moment/comment/del", MomentCommentDelHandler)
 	route.Register("POST", "/basic/v1/moment/background/upload", UploadMomentBackgroundHandler)
 	route.Register("POST", "/basic/v1/moment/setting/get", GetMomentSettingHandler)
+	route.Register("POST", "/basic/v1/moment/setting/expire-days", UpdateMomentExpireDaysHandler)
 }
 
 func MomentCreateHandler(c *gin.Context) {
@@ -173,4 +174,18 @@ func GetMomentSettingHandler(c *gin.Context) {
 		return
 	}
 	response.Ok(c, setting)
+}
+
+// UpdateMomentExpireDaysHandler 设置过往查看时间范围
+func UpdateMomentExpireDaysHandler(c *gin.Context) {
+	param := &basicParam.MomentExpireDaysUpdateParam{}
+	if !utils.ShouldBindBodyWithJSONAndValidate(c, param) {
+		return
+	}
+	currentUserId := c.GetString("userId")
+	if err := basicService.MomentService.UpdateExpireDays(currentUserId, *param.ExpireDays); err != nil {
+		response.Fail(c, err.Error())
+		return
+	}
+	response.Ok(c)
 }

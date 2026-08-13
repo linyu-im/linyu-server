@@ -167,10 +167,17 @@ func (s momentService) GetSetting(userId string) *basicModel.MomentSetting {
 	}
 	setting = &basicModel.MomentSetting{
 		UserID:     userId,
-		ExpireDays: 9999,
+		ExpireDays: 0,
 	}
 	if err := basicDao.MomentSetDao.Create(db.RDB, setting); err != nil {
 		return nil
 	}
 	return setting
+}
+
+func (s momentService) UpdateExpireDays(userId string, expireDays int64) error {
+	if expireDays < -1 {
+		return errors.New("param.error")
+	}
+	return basicDao.MomentSetDao.UpdateExpireDays(db.RDB, userId, expireDays)
 }

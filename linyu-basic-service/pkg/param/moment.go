@@ -43,3 +43,7 @@ type MomentDeleteParam struct {
 type MomentSettingParam struct {
 	UserId string `json:"userId" binding:"required"`
 }
+
+type MomentExpireDaysUpdateParam struct {
+	ExpireDays *int64 `json:"expireDays" binding:"required"`
+}
