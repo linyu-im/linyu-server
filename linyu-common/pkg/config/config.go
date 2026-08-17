@@ -49,15 +49,17 @@ type Config struct {
 
 	Storage struct {
 		Type         StorageType        `mapstructure:"type"`
+		SpaceQuota   int64              `mapstructure:"space-quota"`
 		LocalStorage LocalStorageConfig `mapstructure:"local"`
 		OssStorage   OssStorageConfig   `mapstructure:"oss"`
 		S3Storage    S3StorageConfig    `mapstructure:"s3"`
 	} `mapstructure:"storage"`
 
 	Livekit struct {
-		Host   string `mapstructure:"host"`
-		Key    string `mapstructure:"key"`
-		Secret string `mapstructure:"secret"`
+		Enabled bool   `mapstructure:"enabled"`
+		Host    string `mapstructure:"host"`
+		Key     string `mapstructure:"key"`
+		Secret  string `mapstructure:"secret"`
 	} `mapstructure:"livekit"`
 
 	Auth struct {

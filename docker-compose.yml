@@ -1,0 +1,71 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: linyu-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: linyu
+    volumes:
+      - /workspace/data/mysql:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+08:00
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - linyu
+
+  server:
+    image: linyu-server:latest
+    container_name: linyu-server
+    restart: unless-stopped
+    ports:
+      - "9088:9088"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - /workspace/data/linyu-server/config:/app/assets/config
+      - /workspace/data/linyu-server/data:/app/linyu
+    networks:
+      linyu:
+        aliases:
+          - api
+
+  official:
+    image: linyu-official:latest
+    container_name: linyu-official
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    networks:
+      - linyu
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: linyu-nginx
+    restart: unless-stopped
+    depends_on:
+      - official
+      - server
+    ports:
+      - "80:80"
+    volumes:
+      - /workspace/data/nginx/conf.d:/etc/nginx/conf.d:ro
+    networks:
+      - linyu
+
+networks:
+  linyu:
+    driver: bridge

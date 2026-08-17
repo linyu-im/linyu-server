@@ -35,9 +35,6 @@ var SpaceStatus = spaceStatus{
 	Readonly: "readonly",
 }
 
-// DefaultUserSpaceQuotaBytes 用户空间默认容量 50G
-const DefaultUserSpaceQuotaBytes int64 = 50 * 1024 * 1024 * 1024
-
 // DefaultSpaceRecycleExpireDays 回收站默认保留天数
 const DefaultSpaceRecycleExpireDays = 30
 

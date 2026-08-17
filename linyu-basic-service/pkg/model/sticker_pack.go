@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
+	initsticker "github.com/linyu-im/linyu-server/linyu-common/pkg/init/sticker"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -33,12 +34,19 @@ func (StickerPack) TableComment() string {
 }
 
 func (StickerPack) TableInit(db *gorm.DB) error {
+	packIconUrl := ""
+	for _, s := range initsticker.LinyuXiaoji() {
+		if s.ID == "1003" {
+			packIconUrl = s.IconUrl
+			break
+		}
+	}
 	datas := []StickerPack{
 		{
 			ID:          "1",
 			Name:        "林语小吉",
 			Description: "林语官方表情包",
-			PackIconUrl: "http://127.0.0.1:9000/linyu/sticker/xiaoji/256x256/傲娇.png",
+			PackIconUrl: packIconUrl,
 		},
 		{
 			ID:          "10",

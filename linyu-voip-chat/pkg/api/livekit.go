@@ -9,18 +9,22 @@ import (
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 	voipParam "github.com/linyu-im/linyu-server/linyu-voip-chat/pkg/param"
+	voipResult "github.com/linyu-im/linyu-server/linyu-voip-chat/pkg/result"
 	voipService "github.com/linyu-im/linyu-server/linyu-voip-chat/pkg/service"
 )
 
 func init() {
-	route.Register("POST", "/voip/v1/livekit/host", LivekitHostHandler)
+	route.Register("POST", "/voip/v1/livekit/info", LivekitInfoHandler)
 	route.Register("POST", "/voip/v1/livekit/token/group", LivekitTokenHandler)
 	route.Register("POST", "/voip/v1/livekit/token/user", LivekitUserTokenHandler)
 	route.Register("POST", "/voip/v1/livekit/room/users", LivekitGroupRoomUsersHandler)
 }
 
-func LivekitHostHandler(c *gin.Context) {
-	response.Ok(c, config.C.Livekit.Host)
+func LivekitInfoHandler(c *gin.Context) {
+	response.Ok(c, voipResult.LivekitInfo{
+		Enabled: config.C.Livekit.Enabled,
+		Host:    config.C.Livekit.Host,
+	})
 }
 
 func LivekitTokenHandler(c *gin.Context) {

@@ -1,0 +1,25 @@
+# Git / IDE
+.git
+.github
+.idea
+.vscode
+
+# Docs / license
+*.md
+LICENSE
+
+# Local runtime data & binaries
+linyu/
+temp/
+*.exe
+__debug_bin*
+
+# Build artifacts
+bin/
+dist/
+vendor/
+
+# Docker
+Dockerfile*
+.dockerignore
+docker-compose*.yml

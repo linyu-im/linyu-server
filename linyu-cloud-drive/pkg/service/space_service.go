@@ -10,6 +10,7 @@ import (
 	driveDao "github.com/linyu-im/linyu-server/linyu-cloud-drive/internal/dao"
 	driveModel "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/model"
 	driveResult "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/result"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/localtime"
@@ -96,7 +97,7 @@ func (s *spaceService) GetOrCreateUserSpace(userId string) (*driveModel.Space, e
 		TargetID:   userId,
 		OwnerID:    userId,
 		SpaceName:  "我的云盘",
-		QuotaBytes: constant.DefaultUserSpaceQuotaBytes,
+		QuotaBytes: config.C.Storage.SpaceQuota,
 		Status:     constant.SpaceStatus.Active,
 	}
 
