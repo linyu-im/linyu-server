@@ -52,17 +52,20 @@ services:
     networks:
       - linyu
 
-  nginx:
-    image: nginx:1.27-alpine
-    container_name: linyu-nginx
+  caddy:
+    image: caddy:2-alpine
+    container_name: linyu-caddy
     restart: unless-stopped
     depends_on:
       - official
       - server
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - /workspace/data/nginx/conf.d:/etc/nginx/conf.d:ro
+      - /workspace/data/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /workspace/data/caddy/data:/data
+      - /workspace/data/caddy/config:/config
     networks:
       - linyu
 

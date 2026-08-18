@@ -29,7 +29,11 @@ func Auth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//设置语言
 		SetLanguage(ctx)
-		ctx.Set("device", DetectDeviceType(ctx.Request.UserAgent()))
+		device := ctx.GetHeader("device")
+		if device == "" {
+			device = DetectDeviceType(ctx.Request.UserAgent())
+		}
+		ctx.Set("device", device)
 		ctx.Set("ip", ctx.ClientIP())
 
 		path := ctx.FullPath()
@@ -56,7 +60,7 @@ func Auth() gin.HandlerFunc {
 		}
 
 		// 校验当前设备缓存中的登录版本是否与 token 一致
-		device := ctx.GetString("device")
+		device = ctx.GetString("device")
 		cachedVersion, err := db.CacheDB.Get(fmt.Sprintf(constant.RedisKey.UserToken, userInfo.UserID, device))
 		if err != nil || cachedVersion == "" || cachedVersion != userInfo.LoginVersion {
 			response.FailErrCode(ctx, response.CodeUnauthorized, "Identity information error")

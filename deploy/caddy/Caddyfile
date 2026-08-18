@@ -1,0 +1,15 @@
+www.linyu.chat {
+	redir https://linyu.chat{uri} permanent
+}
+
+linyu.chat {
+	reverse_proxy official:80
+}
+
+api.linyu.chat {
+    request_body {
+        max_size 100MB
+    }
+
+    reverse_proxy api:9088
+}
