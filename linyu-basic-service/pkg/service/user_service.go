@@ -127,7 +127,7 @@ func (s *userService) RegisterByEmail(email, account, password string) error {
 	user := &basicModel.User{
 		ID:       utils.GenerateSfIDString(),
 		Email:    &email,
-		Username: utils.RandUsername("林语"),
+		Username: account,
 		Account:  account,
 		Password: hashedPwd,
 	}
@@ -151,7 +151,7 @@ func (s *userService) CreateUserByKV(kvs ...interface{}) (*basicModel.User, erro
 	//构建基础用户信息map
 	userMap := map[string]interface{}{
 		"id":         utils.GenerateSfIDString(),
-		"username":   utils.RandUsername("林语"),
+		"username":   account,
 		"account":    account,
 		"created_at": localtime.Now(),
 		"updated_at": localtime.Now(),
