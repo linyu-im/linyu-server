@@ -1,9 +1,12 @@
 package dao
 
 import (
-	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
-	"gorm.io/gorm"
+	"fmt"
 	"time"
+
+	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
+	commondb "github.com/linyu-im/linyu-server/linyu-common/pkg/db"
+	"gorm.io/gorm"
 )
 
 var MomentDao = newMomentDao()
@@ -43,18 +46,20 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 			Order("t_moment.created_at DESC")
 	}
 
+	dateSub := commondb.DateSubDaysExpr(db, "ms.expire_days")
+
 	// 查看指定好友
 	if viewUserId != "" {
 		// 过期规则：NULL/0=永久；>0=最近 N 天；-1=对他人不可见
 		now := time.Now()
-		tx = tx.Where(`(
+		tx = tx.Where(fmt.Sprintf(`(
 				ms.expire_days IS NULL
 				OR ms.expire_days = 0
 				OR (
 					ms.expire_days > 0
-					AND t_moment.created_at >= DATE_SUB(?, INTERVAL ms.expire_days DAY)
+					AND t_moment.created_at >= %s
 				)
-			)`, now)
+			)`, dateSub), now)
 		tx = tx.Where("t_moment.user_id = ?", viewUserId)
 		tx = d.buildVisibilityWhere(tx, userId)
 		return tx.Order("t_moment.created_at DESC")
@@ -62,7 +67,7 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 
 	// 查看全部：自己的 + 好友的（自己的不受可见性和过期限制）
 	now := time.Now()
-	tx = tx.Where(`(
+	tx = tx.Where(fmt.Sprintf(`(
 		t_moment.user_id = ?
 		OR (
 			t_moment.user_id IN (
@@ -73,11 +78,11 @@ func (d momentDao) BuildMomentQuery(db *gorm.DB, userId string, viewUserId strin
 				OR ms.expire_days = 0
 				OR (
 					ms.expire_days > 0
-					AND t_moment.created_at >= DATE_SUB(?, INTERVAL ms.expire_days DAY)
+					AND t_moment.created_at >= %s
 				)
 			)
 		)
-	)`, userId, userId, now)
+	)`, dateSub), userId, userId, now)
 	tx = d.buildVisibilityWhere(tx, userId)
 
 	return tx.Order("t_moment.created_at DESC")

@@ -35,7 +35,7 @@ func (d *groupDao) GetMaxGroupNumber(gdb *gorm.DB) (string, error) {
 
 	var maxNumber string
 	err := gdb.Model(&basicModel.Group{}).
-		Select("COALESCE(MAX(CAST(group_number AS UNSIGNED)), 0)").
+		Select("COALESCE(MAX(CAST(group_number AS INTEGER)), 0)").
 		Scan(&maxNumber).Error
 	if err != nil {
 		return "", err

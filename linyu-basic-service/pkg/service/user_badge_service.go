@@ -63,6 +63,10 @@ func (s *userBadgeService) getOrCreateBadge(userId string, badgeCode string) (*b
 		LastReadID: "0",
 	}
 	if err := basicDao.UserBadgeDao.Create(db.RDB, badge); err != nil {
+		// 并发创建时可能撞唯一键，重查已有行
+		if exist := basicDao.UserBadgeDao.GetByUserIdAndCode(db.RDB, userId, badgeCode); exist != nil {
+			return exist, nil
+		}
 		return nil, err
 	}
 	return badge, nil

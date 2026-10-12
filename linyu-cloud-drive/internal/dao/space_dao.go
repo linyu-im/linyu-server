@@ -46,7 +46,7 @@ func (d *spaceDao) DecUsedBytesById(db *gorm.DB, id string, size int64, fileCoun
 	return db.Model(&driveModel.Space{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
-			"used_bytes": gorm.Expr("GREATEST(used_bytes - ?, 0)", size),
-			"file_count": gorm.Expr("GREATEST(file_count - ?, 0)", fileCount),
+			"used_bytes": gorm.Expr("CASE WHEN used_bytes >= ? THEN used_bytes - ? ELSE 0 END", size, size),
+			"file_count": gorm.Expr("CASE WHEN file_count >= ? THEN file_count - ? ELSE 0 END", fileCount, fileCount),
 		}).Error
 }

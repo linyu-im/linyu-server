@@ -3,6 +3,7 @@ package dao
 import (
 	driveModel "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/model"
 	driveResult "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/result"
+	commondb "github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -205,7 +206,7 @@ func (d *spaceFileDao) UpdateDescendantsPathAndLevel(db *gorm.DB, spaceId, oldPa
 	return db.Model(&driveModel.SpaceFile{}).
 		Where("space_id = ? AND path LIKE ?", spaceId, oldPath+"/%").
 		Updates(map[string]interface{}{
-			"path":  gorm.Expr("CONCAT(?, SUBSTRING(path, ?))", newPath, len(oldPath)+1),
+			"path":  commondb.PrefixPathExpr(db, newPath, len(oldPath)),
 			"level": gorm.Expr("level + ?", levelDelta),
 		}).Error
 }
