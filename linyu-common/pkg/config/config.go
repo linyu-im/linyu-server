@@ -40,11 +40,13 @@ type Config struct {
 	} `mapstructure:"jwt"`
 
 	Email struct {
-		Host     string `mapstructure:"host"`
-		Port     int    `mapstructure:"port"`
-		FormAddr string `mapstructure:"form-addr"`
-		Password string `mapstructure:"password"`
-		Username string `mapstructure:"username"`
+		Host      string `mapstructure:"host"`
+		Port      int    `mapstructure:"port"`
+		FormAddr  string `mapstructure:"form-addr"`
+		Password  string `mapstructure:"password"`
+		Username  string `mapstructure:"username"`
+		LogCode   bool   `mapstructure:"log-code"`
+		FixedCode string `mapstructure:"fixed-code"`
 	} `mapstructure:"email"`
 
 	Storage struct {

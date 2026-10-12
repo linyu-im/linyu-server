@@ -8,6 +8,7 @@ import (
 	basicDao "github.com/linyu-im/linyu-server/linyu-basic-service/internal/dao"
 	basicModel "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/model"
 	basicParam "github.com/linyu-im/linyu-server/linyu-basic-service/pkg/param"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/constant"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/db"
 	emailutil "github.com/linyu-im/linyu-server/linyu-common/pkg/email"
@@ -34,6 +35,10 @@ func (s *userService) GetUserInfoByAccount(account string) *basicModel.User {
 // VerifyCode 校验验证码
 func (s *userService) VerifyCode(tag string, code string) bool {
 	key := fmt.Sprintf(constant.RedisKey.UserCode, tag)
+	if fixed := config.C.Email.FixedCode; fixed != "" && code == fixed {
+		_ = db.CacheDB.Del(key)
+		return true
+	}
 	codeRedis, err := db.CacheDB.Get(key)
 	if err != nil || code != codeRedis {
 		return false
@@ -47,6 +52,7 @@ func (s *userService) SendCodeByEmail(email string) error {
 	if err != nil {
 		return err
 	}
+	s.logVerificationCode(email, code)
 	emailutil.SendEmailCode(email, code)
 	return nil
 }
@@ -64,6 +70,7 @@ func (s *userService) SendResetPasswordCodeByEmail(email string) error {
 	if err != nil {
 		return err
 	}
+	s.logVerificationCode(email, code)
 	emailutil.SendEmailCode(email, code)
 	return nil
 }
@@ -187,6 +194,9 @@ func (s *userService) GenerateCode(tag string) (string, error) {
 		return "", errors.New("auth.code-send-too-frequent")
 	}
 	code := utils.Random6DigitCode()
+	if fixed := config.C.Email.FixedCode; fixed != "" {
+		code = fixed
+	}
 	//验证码10分钟内有效
 	if err := db.CacheDB.Set(fmt.Sprintf(constant.RedisKey.UserCode, tag), code, 10*time.Minute); err != nil {
 		return "", err
@@ -195,6 +205,20 @@ func (s *userService) GenerateCode(tag string) (string, error) {
 		return "", err
 	}
 	return code, nil
+}
+
+func (s *userService) logVerificationCode(email, code string) {
+	if !config.C.Email.LogCode {
+		return
+	}
+	fmt.Println()
+	fmt.Println("========================================")
+	fmt.Println("  Verification code")
+	fmt.Println("----------------------------------------")
+	fmt.Printf("  email: %s\n", email)
+	fmt.Printf("  code:  %s\n", code)
+	fmt.Println("========================================")
+	fmt.Println()
 }
 
 func (s *userService) GetUserByKV(key string, value string) (*basicModel.User, error) {

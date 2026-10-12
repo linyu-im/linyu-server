@@ -2,6 +2,8 @@ package gateway
 
 import (
 	"fmt"
+	"net"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/linyu-im/linyu-server/linyu-ai/pkg/api"
 	_ "github.com/linyu-im/linyu-server/linyu-application/pkg/api"
@@ -10,6 +12,7 @@ import (
 	_ "github.com/linyu-im/linyu-server/linyu-cloud-drive/pkg/api"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/config"
 	"github.com/linyu-im/linyu-server/linyu-common/pkg/route"
+	"github.com/linyu-im/linyu-server/linyu-common/pkg/utils"
 	"github.com/linyu-im/linyu-server/linyu-gateway/pkg/middleware"
 	_ "github.com/linyu-im/linyu-server/linyu-im/pkg/api"
 	_ "github.com/linyu-im/linyu-server/linyu-voip-chat/pkg/api"
@@ -42,9 +45,14 @@ func Run() {
 
 		}
 	}
+	addr := fmt.Sprintf(":%d", config.C.Server.Port)
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		panic("app start error: " + err.Error())
+	}
+	utils.PrintServerAddresses(config.C.Server.Port)
 	go func() {
-		err := engine.Run(fmt.Sprintf(":%d", config.C.Server.Port))
-		if err != nil {
+		if err := engine.RunListener(ln); err != nil {
 			panic("app start error: " + err.Error())
 		}
 	}()

@@ -13,6 +13,9 @@ email:
   form-addr: linyuteam@163.com
   password: 123456
   username: 林语团队
+  # 局域网/离线用：生产公网务必关闭 / 留空
+  log-code: false          # true 时把验证码打到服务端日志
+  fixed-code: ""           # 非空则生成与校验均接受该固定码
 
 livekit:
   enabled: true

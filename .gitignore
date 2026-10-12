@@ -4,24 +4,32 @@
 *.dll
 *.so
 *.dylib
-
-# Test binary, built with `go test -c`
 *.test
+
+# Debug / build leftovers
 *.tmp
-
-# Output of the go coverage tool
 **/*.out
+__debug_bin*
+bin/
+dist/
 
-# IDE files
-.vscode
+# IDE / OS
+.vscode/
+.idea/
 .DS_Store
-.idea
 
 # Dependencies
 /vendor/
-vendor/
-vendor
 /Godeps/
 
-# Local tools
-bin/
+# Runtime data (sqlite / chromem / local storage)
+/linyu/
+
+# Upload temp chunks
+/temp/
+
+# Packaged release artifacts
+server.tar
+*.tar
+*.tar.gz
+*.zip
